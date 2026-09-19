@@ -21,7 +21,7 @@ from contracts.models import (
 )
 from app.reasoning.consistency import agree, comparable_groups, most_precise
 from app.reasoning.context import RunContext
-from app.retrieval.context import entities_mentioned, period_of
+from app.retrieval.context import period_of
 from app.tools.calculator import calculate
 
 
@@ -224,7 +224,7 @@ def search_evidence(ctx: RunContext, a: SearchEvidenceArgs) -> dict:
     if a.entity:
         cands = ctx.repo.resolve_entity(ctx.dataset_version_id, a.entity)
         want_entity = cands[0].label if cands else a.entity
-    hits = ctx.repo.search_lexical(ctx.dataset_version_id, a.query, k=150 if scoped else a.k)
+    hits = ctx.search(a.query, k=150 if scoped else a.k)
     rows = []
     for h in hits:
         sc = ctx.span_context(h.span)
@@ -242,7 +242,7 @@ def search_evidence(ctx: RunContext, a: SearchEvidenceArgs) -> dict:
         if sc.entity:
             row["entity"] = sc.entity
         else:
-            named = entities_mentioned(part, ctx.entity_labels())
+            named = ctx.entities_in(part)
             if named:
                 row["mentions"] = named[:3]   # a multi-entity table or list: this row is about these
         rows.append(row)
@@ -298,18 +298,17 @@ def find_candidates(ctx: RunContext, a: FindCandidatesArgs) -> dict:
     Entities whose matches concentrate in one period (one quarter's narrative) get a bonus, because
     these questions describe a single reporting period.
     """
-    labels = ctx.entity_labels()
     best: dict[str, dict[str, dict]] = {}                       # entity -> clue -> best match
     by_period: dict[tuple[str, str], dict[str, float]] = {}     # (entity, period) -> clue -> weight
     for clue in a.clues:
         ct = _terms(clue)
-        hits = ctx.repo.search_lexical(ctx.dataset_version_id, clue, k=a.k_per_clue)
+        hits = ctx.search(clue, k=a.k_per_clue)
         for rank, h in enumerate(hits):
             ov = _overlap(ct, h.text)
             if ov < 0.34:
                 continue
             sc = ctx.span_context(h.span)
-            owners = [sc.entity] if sc.entity else entities_mentioned(_best_part(h.text, clue), labels)[:1]
+            owners = [sc.entity] if sc.entity else ctx.entities_in(_best_part(h.text, clue))[:1]
             weight = ov * ov * (1.0 if sc.entity else 0.5) / (1 + 0.15 * rank)
             period = period_of(sc.block) if sc.entity else None
             for ent in owners:
@@ -324,6 +323,22 @@ def find_candidates(ctx: RunContext, a: FindCandidatesArgs) -> dict:
                 best[ent][clue] = {"w": weight, "handle": handle, "where": sc.label[:140],
                                    "snippet": _snippet(h.text, clue), "overlap": round(ov, 2)}
 
+    # Second pass: generic clues ("dividend increase") return many entities' passages, so a strong
+    # candidate may have missing clues simply because other entities outranked it. Look for each
+    # missing clue inside the leading candidates' own sections before scoring.
+    prelim = sorted(best, key=lambda e: -sum(c["w"] for c in best[e].values()))[:5]
+    for ent in prelim:
+        for clue in a.clues:
+            if clue in best[ent]:
+                continue
+            hit = _scoped_hit(ctx, clue, ent)
+            if hit:
+                hit["w"] *= 0.6          # found by a targeted search, so weaker evidence than a corpus-wide hit
+                best[ent][clue] = hit
+                if hit.get("period"):
+                    cell = by_period.setdefault((ent, hit["period"]), {})
+                    cell[clue] = max(cell.get(clue, 0.0), hit["w"])
+
     # A clue that strongly matches many entities ("record net income") says little about which one is
     # meant; weight each clue by how few entities it matches strongly.
     spread = Counter(clue for clues in best.values() for clue, m in clues.items() if m["overlap"] >= 0.6)
@@ -337,20 +352,57 @@ def find_candidates(ctx: RunContext, a: FindCandidatesArgs) -> dict:
         periods = [(p, sum(w.values()), len(w)) for (e, p), w in by_period.items() if e == ent]
         top_period = max(periods, key=lambda x: x[1], default=(None, 0.0, 0))
         strong = sum(c["overlap"] >= 0.6 for c in clues.values())
-        scored.append((ent, overall + 0.5 * top_period[1], strong, top_period, clues))
+        # matching every clue beats matching a few well; a clue only counts fully when matched strongly
+        coverage = sum(min(1.0, c["overlap"] / 0.6) for c in clues.values()) / max(1, len(a.clues))
+        scored.append((ent, (overall + 0.5 * top_period[1]) * coverage, strong, top_period, clues))
     scored.sort(key=lambda x: (-x[1], -x[2], x[0]))
     out = []
-    for ent, score, strong, (period, _, n_in_period), clues in scored[:5]:
+    for rank_i, (ent, score, strong, (period, _, n_in_period), clues) in enumerate(scored[:5]):
+        if period and rank_i < 2:
+            # These questions describe one reporting period: prefer evidence from inside that period's block,
+            # so citations point at the quarter's own narrative rather than summary tables or other periods.
+            for clue in a.clues:
+                hit = _scoped_hit(ctx, clue, ent, period)
+                if hit:
+                    clues[clue] = hit
+            n_in_period = sum(v.get("in_period", False) for v in clues.values())
         out.append({
             "entity": ent, "score": round(score, 3), "clues_strongly_matched": strong, "of": len(a.clues),
             "likely_period": period, "clues_in_that_period": n_in_period,
-            "evidence": [{"clue": c, "handle": v["handle"], "where": v["where"], "snippet": v["snippet"]}
+            "evidence": [{"clue": c, "handle": v["handle"], "where": v["where"], "snippet": v["snippet"],
+                          **({"in_period": True} if v.get("in_period") else {})}
                          for c, v in clues.items()],
             "missing_clues": [c for c in a.clues if c not in clues],
         })
     return {"candidates": out,
-            "note": "Ranked by clue match strength, with a bonus for clues that fall in one period. Verify the "
-                    "leader and any close runner-up before answering; cite one handle per clue."}
+            "note": "Ranked by clue match strength and coverage, with a bonus for clues that fall in one period. "
+                    "Verify the leader and any close runner-up before answering; cite one handle per clue, "
+                    "preferring in_period evidence."}
+
+
+def _scoped_hit(ctx: RunContext, clue: str, entity: str, period: Optional[str] = None) -> Optional[dict]:
+    """Best evidence for a clue inside one entity's own sections (and one period's block, if given)."""
+    ct = _terms(clue)
+    best, best_ov = None, 0.34
+    for h in ctx.search(clue, k=150):
+        sc = ctx.span_context(h.span)
+        if sc.entity != entity:
+            continue
+        if period and period_of(sc.block) != period:
+            continue
+        ov = _overlap(ct, h.text)
+        if ov > best_ov:
+            best, best_ov = (h, sc), ov
+    if best is None:
+        return None
+    h, sc = best
+    fact = ctx.repo.get_fact(ctx.dataset_version_id, h.evidence_id) if h.kind == EvidenceKind.fact else None
+    handle = ctx.add_evidence(h.kind, h.evidence_id, h.span, fact=fact, text=h.text)
+    hit = {"w": best_ov * best_ov, "handle": handle, "where": sc.label[:140], "snippet": _snippet(h.text, clue),
+           "overlap": round(best_ov, 2), "period": period_of(sc.block)}
+    if period:
+        hit["in_period"] = True
+    return hit
 
 
 def get_source_span(ctx: RunContext, a: GetSourceSpanArgs) -> dict:

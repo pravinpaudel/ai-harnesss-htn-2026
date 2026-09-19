@@ -96,3 +96,27 @@ def test_ticker_matches_company_name_prefix_only_for_long_tickers():
     assert _mentions("Shopify grew faster", "SHOP")
     assert not _mentions("a quarterly result", "RY")
     assert _mentions("RY (Royal Bank)", "RY")
+
+
+def test_entity_matcher_uses_names_not_ticker_shape():
+    from app.retrieval.context import EntityMatcher
+    m = EntityMatcher({"RY": ["royal bank of canada"], "Acme Corp": ["acme corporation"], "NA": ["national bank"]})
+    assert m.find("Royal Bank of Canada beat estimates") == ["RY"]
+    assert m.find("a quarterly note on the national average") == []        # 'RY'/'NA' never match inside words
+    assert m.find("Shares of Acme Corporation fell; National Bank rose") == ["Acme Corp", "NA"]
+
+
+def test_subjects_are_entities_with_their_own_sections_with_fallback():
+    ctx = _ctx(MemoryEvidenceRepository())
+    assert ctx.subjects() == {"IVN", "SHOP"}                  # only these have ### sections in the excerpts
+    assert ctx.entities_in("| **Revenue Growth** | WPM (+85%) |") == ["WPM"]   # falls back to other entities
+    assert ctx.entities_in("Ivanhoe Mines and WPM") == ["IVN"]                 # sections' owners win
+
+
+def test_find_candidates_prefers_evidence_inside_the_likely_period():
+    ctx = _ctx(MemoryEvidenceRepository())
+    out = find_candidates(ctx, FindCandidatesArgs(clues=["payable sales logistical constraints",
+                                                         "Kipushi record zinc 70,177t"]))
+    top = out["candidates"][0]
+    assert top["entity"] == "IVN" and top["likely_period"] == "Q2 2026"
+    assert all(e.get("in_period") for e in top["evidence"])

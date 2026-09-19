@@ -9,7 +9,7 @@ from uuid import UUID
 
 from pydantic import ValidationError
 
-from contracts.models import AnswerResponse
+from contracts.models import AnswerResponse, Budget
 from app.audit.recorder import MemoryRecorder, Recorder
 from app.llm.client import LLMClient, LLMTurn
 from app.reasoning import policy
@@ -23,17 +23,27 @@ PROMPTS = Path(__file__).parent / "prompts"
 
 class ResearchEngine:
     def __init__(self, repo: EvidenceSource, llm: LLMClient, settings: EngineSettings,
-                 recorder: Optional[Recorder] = None):
-        self.repo, self.llm, self.settings = repo, llm, settings
+                 recorder: Optional[Recorder] = None, embedder=None):
+        self.repo, self.llm, self.settings, self.embedder = repo, llm, settings, embedder
         self.recorder = recorder or MemoryRecorder()
         self.instructions = (PROMPTS / f"{settings.htn_prompt_version}.md").read_text(encoding="utf-8")
 
     # ------------------------------------------------------------------------
     def ask(self, question: str, dataset: str | UUID = "latest", version: str | UUID = "latest",
-            session_id: Optional[str] = None) -> AnswerResponse:
+            session_id: Optional[str] = None, budget: Optional[Budget] = None) -> AnswerResponse:
+        if budget is not None:   # per-request limits can only tighten the configured ones
+            s0 = self.settings
+            scoped = s0.model_copy(update={
+                "htn_max_tool_rounds": min(budget.max_tool_rounds, s0.htn_max_tool_rounds),
+                "htn_max_tokens": min(budget.max_tokens, s0.htn_max_tokens),
+                "htn_max_cost_usd": min(budget.max_cost_usd, s0.htn_max_cost_usd),
+                "htn_max_latency_ms": min(budget.max_latency_ms, s0.htn_max_latency_ms)})
+            return ResearchEngine(self.repo, self.llm, scoped, self.recorder, self.embedder).ask(
+                question, dataset, version, session_id)
         info = self.repo.version_info(dataset, version)
         ctx = RunContext(repo=self.repo, dataset_id=info.dataset_id, dataset_version_id=info.dataset_version_id,
-                         source_hash=info.source_hash, parser_version=info.parser_version, question=question)
+                         source_hash=info.source_hash, parser_version=info.parser_version, question=question,
+                         embedder=self.embedder)
         s = self.settings
         rec = self.recorder
         rec.start(ctx.run_id, ctx.dataset_version_id, question, session_id, source_hash=ctx.source_hash,
@@ -42,7 +52,10 @@ class ResearchEngine:
         t0 = time.monotonic()
         plan = route(ctx)
         rec.event(ctx.run_id, "policy", "route", input={"question": question},
-                  output={"kind": plan.kind, "entity_matches": plan.entity_matches},
+                  output={"kind": plan.kind, "entity_matches": plan.entity_matches,
+                          "retrieval": "hybrid" if (self.embedder and getattr(self.repo, "has_embeddings", None)
+                                                    and self.repo.has_embeddings(ctx.dataset_version_id))
+                          else "lexical"},
                   latency_ms=int((time.monotonic() - t0) * 1000))
 
         tools = tool_specs()

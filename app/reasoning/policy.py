@@ -20,7 +20,6 @@ from contracts.models import (
 )
 from app.reasoning.context import RunContext
 from app.reasoning.verifier import verify_span
-from app.retrieval.context import entities_mentioned
 from app.tools.registry import SubmitAnswerArgs
 
 _MARKER = re.compile(r"\[(\d+)\]")
@@ -242,14 +241,15 @@ def finalize(ctx: RunContext, sub: SubmitAnswerArgs, *, model: str, prompt_versi
     named = next((v.value_text for v in sub.values if v.label.strip().lower() in ("company", "entity") and v.value_text),
                  None)
     if named and cites.items:
-        label = _entity_label(named, ctx.entity_labels())
+        found = ctx.entities_in(named)
+        label = found[0] if found else _entity_label(named, ctx.entity_labels())
         if label:
             off = []
             for n, c in cites.items.items():
                 sc = ctx.span_context(c.span)
                 if sc.entity == label:
                     continue
-                if sc.entity is None and label in entities_mentioned(c.span.exact_text, {label}):
+                if sc.entity is None and label in ctx.entities_in(c.span.exact_text):
                     continue
                 off.append((n, sc.entity))
             for n, other in off:

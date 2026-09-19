@@ -7,8 +7,10 @@ from app.settings import settings
 from app.ingest.service import FileIngestService
 from app.ingest.storage import ImmutableRawStorage
 from contracts.models import IngestRequest, IngestReport
+from app.api.queries import router as queries_router
 
 app = FastAPI(title="Finance Research Harness", version="0.1.0")
+app.include_router(queries_router)
 
 
 def ingest_service() -> FileIngestService:
