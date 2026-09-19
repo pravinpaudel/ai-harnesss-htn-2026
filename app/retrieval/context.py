@@ -8,52 +8,12 @@ when the evidence store provides it; this fills the gap when it does not.
 from __future__ import annotations
 
 import re
-from bisect import bisect_right
 from dataclasses import dataclass, field
 from typing import Optional
 
-_HEADING = re.compile(r"^(#{1,6})\s+(.+?)\s*(?:\{#[^}]*\})?\s*$")
-_TAG = re.compile(r"<[^>]+>")
+from app.markdown import Outline, block_label, period_of  # noqa: F401  (re-exported)
+
 _TICKER = re.compile(r"^[A-Z][A-Z0-9.]{0,7}$")
-
-
-@dataclass
-class Outline:
-    headings: list[tuple[int, int, str]] = field(default_factory=list)   # (line, level, text)
-    blocks: list[tuple[int, int, str]] = field(default_factory=list)     # (start, end, summary text)
-    _lines: list[int] = field(default_factory=list)
-
-    @classmethod
-    def parse(cls, text: str) -> "Outline":
-        o = cls()
-        open_block: Optional[int] = None
-        summary = ""
-        for i, line in enumerate(text.split("\n"), start=1):
-            m = _HEADING.match(line)
-            if m:
-                o.headings.append((i, len(m.group(1)), m.group(2).strip()))
-            s = line.strip()
-            if s.startswith("<details"):
-                open_block, summary = i, ""
-            elif "<summary>" in s and open_block is not None and not summary:
-                summary = " ".join(_TAG.sub(" ", s).split())
-            elif s.startswith("</details>") and open_block is not None:
-                o.blocks.append((open_block, i, summary))
-                open_block = None
-        o._lines = [h[0] for h in o.headings]
-        return o
-
-    def path(self, line: int) -> list[str]:
-        stack: list[tuple[int, str]] = []
-        for ln, level, text in self.headings[: bisect_right(self._lines, line)]:
-            stack = [x for x in stack if x[0] < level] + [(level, text)]
-        return [t for _, t in stack]
-
-    def block(self, line: int) -> Optional[str]:
-        for start, end, summary in self.blocks:
-            if start <= line <= end:
-                return summary or None
-        return None
 
 
 @dataclass
@@ -61,6 +21,12 @@ class SpanContext:
     heading_path: list[str]
     block: Optional[str]           # the <summary> of the enclosing <details> block, e.g. "Q3 FY2026 — ..."
     entity: Optional[str]          # entity label the section is about, if a heading names one
+    row_period: Optional[str] = None   # for a table row whose first cell names a reporting period
+
+    @property
+    def period(self) -> Optional[str]:
+        """The reporting period this span belongs to: its <details> block, or the row's period cell."""
+        return period_of(self.block) or self.row_period
 
     @property
     def label(self) -> str:
@@ -89,13 +55,6 @@ def entities_mentioned(text: str, labels: set[str]) -> list[str]:
         if m:
             found[label] = m.start()
     return sorted(found, key=found.get)
-
-
-def period_of(block: Optional[str]) -> Optional[str]:
-    """Leading period label of a <summary>, e.g. 'Q3 FY2026 (Jul 31, 2026)' from 'Q3 FY2026 (Jul 31, 2026) — Full Summary'."""
-    if not block:
-        return None
-    return re.split(r"\s+[—–]\s+", block, maxsplit=1)[0].strip() or None
 
 
 class EntityMatcher:

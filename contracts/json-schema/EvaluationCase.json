@@ -55,6 +55,13 @@
      "title": "Must Cite",
      "type": "array"
     },
+    "must_cite_any": {
+     "items": {
+      "$ref": "#/$defs/SpanAnchor"
+     },
+     "title": "Must Cite Any",
+     "type": "array"
+    },
     "must_mention": {
      "items": {
       "type": "string"

@@ -34,13 +34,47 @@ def test_raw_storage_is_content_addressed_and_immutable(tmp_path):
 def test_mcp_adapter_discovers_and_snapshots_text_documents():
     class Client:
         def list_tools(self):
-            return [{"name": "corpus"}]
+            return [{"name": "corpus", "inputSchema": {"type": "object", "properties": {"dataset_name": {}}}}]
 
         def call_tool(self, name, arguments):
             assert (name, arguments) == ("corpus", {"dataset_name": "fixture"})
             return {"documents": [{"name": "source.md", "content": "# Source"}]}
 
     adapter = McpSourceAdapter(Client())
-    assert adapter.discover().tools == [{"name": "corpus"}]
+    assert adapter.discover().tools[0]["name"] == "corpus"
     docs = adapter.snapshot(IngestRequest(source=SourceType.mcp, mcp_tool="corpus", dataset_name="fixture"))
     assert docs[0].content == b"# Source"
+
+
+def test_mcp_adapter_sends_only_declared_arguments_and_keeps_filenames():
+    """The RBC endpoint's financialDataRetrieval takes no arguments and returns structuredContent.documents."""
+    class Client:
+        def list_tools(self):
+            return [{"name": "financialDataRetrieval",
+                     "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False}}]
+
+        def call_tool(self, name, arguments):
+            assert arguments == {}
+            return {"isError": False, "content": [],
+                    "structuredContent": {"file_count": 1, "documents": [
+                        {"filename": "canadian-mining-research.md", "path": "financial-data/x.md", "content": "# M"}]}}
+
+    docs = McpSourceAdapter(Client()).snapshot(
+        IngestRequest(source=SourceType.mcp, mcp_tool="financialDataRetrieval", dataset_name="rbc"))
+    assert [d.name for d in docs] == ["canadian-mining-research.md"]
+
+
+def test_mcp_tool_error_fails_the_ingest_instead_of_becoming_a_document():
+    class Client:
+        def list_tools(self):
+            return [{"name": "corpus", "inputSchema": {"properties": {}}}]
+
+        def call_tool(self, name, arguments):
+            return {"isError": True, "content": [{"type": "text", "text": "1 validation error"}]}
+
+    try:
+        McpSourceAdapter(Client()).snapshot(IngestRequest(source=SourceType.mcp, mcp_tool="corpus", dataset_name="x"))
+    except RuntimeError as e:
+        assert "validation error" in str(e)
+    else:
+        raise AssertionError("tool error was not raised")

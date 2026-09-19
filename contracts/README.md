@@ -1,4 +1,4 @@
-# Shared contract — v1.1
+# Shared contract — v1.2
 
 This folder is the "Shared contract — complete before parallel work" from `developer-work-plan.md`. It's the only thing Developer A (Evidence Platform) and Developer B (Research Engine) share until Checkpoint 1. A change needs both developers, a bump of `CONTRACT_VERSION` in `models.py`, and a migration if the schema changes.
 
@@ -10,6 +10,7 @@ uv run python -m contracts.check
 
 ## Changes
 
+- **1.2** — `Expectation.must_cite_any`: the answer must cite at least one of these spans (additive). Used where the same evidence appears in two places, e.g. a quarter's narrative block and its row in the quarterly table.
 - **1.1** — `QuestionCategory.identification` added for RBC-style "which company…" questions (additive; no schema change).
 
 ## Contents

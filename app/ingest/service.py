@@ -12,9 +12,13 @@ from app.settings import settings
 from contracts.models import DatasetProfile, DatasetStatus, DocumentReport, IngestReport, IngestRequest, ProfileEntry, SourceType
 
 from .adapters import FileSourceAdapter, McpSourceAdapter, SnapshotDocument
+from .embeddings import EmbeddingProvider, NoopEmbeddingProvider, default_embedding_provider
 from .canonical import CanonicalDocument, canonicalize_text
 from .normalize import normalize_number
-from .parse import ParsedTable, parse_csv_table, parse_markdown_tables
+from .parse import _DIVIDER as _TABLE_DIVIDER, ParsedTable, parse_csv_table, parse_markdown_tables
+from app.markdown import Outline, block_label, period_of
+from app.retrieval.context import entity_from_path
+from .entities import build_catalog
 from .storage import ImmutableRawStorage
 
 
@@ -30,11 +34,14 @@ def get_ingest_service() -> "FileIngestService":
 class FileIngestService:
     """Writes raw, citable evidence only to a new immutable dataset version."""
 
+    embed_batch = 128
+
     def __init__(self, engine: Engine, storage: ImmutableRawStorage, parser_version: str,
-                 mcp_adapter: McpSourceAdapter | None = None) -> None:
+                 mcp_adapter: McpSourceAdapter | None = None, embedder: EmbeddingProvider | None = None) -> None:
         self.engine, self.storage, self.parser_version = engine, storage, parser_version
         self.adapter = FileSourceAdapter()
         self.mcp_adapter = mcp_adapter
+        self.embedder = embedder if embedder is not None else default_embedding_provider()
 
     def submit(self, request: IngestRequest) -> UUID:
         with self.engine.begin() as conn:
@@ -120,12 +127,42 @@ class FileIngestService:
             version_id = self._version(conn, dataset_id, source_hash)
             reports = [self._ingest_document(conn, version_id, raw) for raw in documents]
             findings = self._validate_duplicates(conn, version_id)
+            conn.execute(text("UPDATE dataset_version SET status = 'validating' WHERE dataset_version_id = :id"),
+                         {"id": version_id})
+        parsed_ms = round((time.monotonic() - started) * 1000)
+        # Raw evidence is committed; embeddings come second and can never undo it.
+        embedded, warnings = self._embed_chunks(version_id)
+        with self.engine.begin() as conn:
             conn.execute(text("UPDATE dataset_version SET status = 'ready', ready_at = now() WHERE dataset_version_id = :id"), {"id": version_id})
         elapsed = round((time.monotonic() - started) * 1000)
         return IngestReport(job_id=uuid4(), dataset_id=dataset_id, dataset_version_id=version_id,
                             status=DatasetStatus.ready, source=request.source, source_hash=source_hash,
                             parser_version=self.parser_version, documents=reports, findings=findings,
-                            timings_ms={"total": elapsed})
+                            warnings=warnings,
+                            timings_ms={"parse": parsed_ms, "embed": elapsed - parsed_ms, "total": elapsed})
+
+    def _embed_chunks(self, version: UUID) -> tuple[int, list[str]]:
+        """Embed every chunk of a version in batches. Returns (count embedded, warnings)."""
+        if isinstance(self.embedder, NoopEmbeddingProvider):
+            return 0, ["chunk embeddings skipped: no embedding provider configured (semantic search disabled)"]
+        with self.engine.connect() as conn:
+            rows = conn.execute(text("SELECT chunk_id, text FROM chunk WHERE dataset_version_id = :v "
+                                     "AND embedding IS NULL ORDER BY chunk_id"), {"v": version}).all()
+        done = 0
+        for i in range(0, len(rows), self.embed_batch):
+            batch = rows[i:i + self.embed_batch]
+            try:
+                vectors = self.embedder.embed([r.text for r in batch])
+            except Exception as exc:  # noqa: BLE001 - provider/API failure must not block ingest
+                return done, [f"chunk embeddings stopped after {done}/{len(rows)}: {type(exc).__name__}: {exc}"[:300]]
+            if len(vectors) != len(batch):
+                return done, [f"embedding provider returned {len(vectors)} vectors for {len(batch)} chunks"]
+            with self.engine.begin() as conn:
+                conn.execute(text("UPDATE chunk SET embedding = CAST(:e AS vector) WHERE chunk_id = :id"),
+                             [{"id": r.chunk_id, "e": "[" + ",".join(f"{x:.7g}" for x in vec) + "]"}
+                              for r, vec in zip(batch, vectors)])
+            done += len(batch)
+        return done, []
 
     def _dataset(self, conn, request: IngestRequest) -> UUID:
         row = conn.execute(text("""INSERT INTO dataset (name, source_type, source_uri)
@@ -140,15 +177,25 @@ class FileIngestService:
                             {"dataset": dataset_id, "number": version_no, "hash": source_hash, "parser": self.parser_version}).scalar_one()
 
     def _span(self, conn, version: UUID, document: UUID, canonical: CanonicalDocument, line_start: int, line_end: int,
-              char_start: int | None = None, char_end: int | None = None) -> UUID:
+              char_start: int | None = None, char_end: int | None = None, label: str | None = None) -> UUID:
         if char_start is None or char_end is None:
             char_start, char_end, exact = canonical.span_for_lines(line_start, line_end)
         else:
             exact = canonical.text[char_start:char_end]
-        return conn.execute(text("""INSERT INTO source_span (dataset_version_id, document_id, line_start, line_end, char_start, char_end, exact_text)
-            VALUES (:version, :document, :start_line, :end_line, :start, :end, :exact) RETURNING span_id"""),
+        path = self._heading_path(line_start) + ([label] if label else [])
+        return conn.execute(text("""INSERT INTO source_span (dataset_version_id, document_id, line_start, line_end, char_start, char_end, exact_text, heading_path)
+            VALUES (:version, :document, :start_line, :end_line, :start, :end, :exact, :path) RETURNING span_id"""),
                             {"version": version, "document": document, "start_line": line_start, "end_line": line_end,
-                             "start": char_start, "end": char_end, "exact": exact}).scalar_one()
+                             "start": char_start, "end": char_end, "exact": exact, "path": path}).scalar_one()
+
+    def _heading_path(self, line: int) -> list[str]:
+        """Section headings in effect at a line, plus the period of an enclosing <details> block."""
+        outline = getattr(self, "_outline", None)
+        if outline is None:
+            return []
+        path = outline.path(line)
+        period = period_of(outline.block(line))
+        return path + [period] if period else path
 
     def _ingest_document(self, conn, version: UUID, raw: SnapshotDocument) -> DocumentReport:
         key, digest = self.storage.put(raw.content)
@@ -161,11 +208,15 @@ class FileIngestService:
             VALUES (:version, :name, :media, :hash, :key, :body, :lines, CAST(:metadata AS jsonb)) RETURNING document_id"""),
             {"version": version, "name": raw.name, "media": raw.media_type, "hash": digest, "key": key,
              "body": canonical.text, "lines": len(canonical.lines), "metadata": "{}"}).scalar_one()
-        chunks = self._chunks(conn, version, document_id, canonical)
+        self._outline = Outline.parse(canonical.text)
         tables = parse_markdown_tables(canonical) if raw.name.lower().endswith((".md", ".markdown", ".txt")) else []
         if raw.name.lower().endswith(".csv"):
             table = parse_csv_table(canonical)
             tables = [table] if table else []
+        self._catalog = build_catalog(self._outline, tables)
+        self._entity_ids = {label: self._entity(conn, version, label, aliases)
+                            for label, aliases in self._catalog.aliases.items()}
+        chunks = self._chunks(conn, version, document_id, canonical)
         cells, facts = 0, 0
         for table in tables:
             table_cells, table_facts = self._table(conn, version, document_id, canonical, table)
@@ -176,17 +227,39 @@ class FileIngestService:
                               untyped_cells=cells - facts)
 
     def _chunks(self, conn, version: UUID, document: UUID, canonical: CanonicalDocument) -> int:
-        count, start = 0, None
-        for index, line in enumerate(canonical.lines, start=1):
-            if line.text.strip() and start is None:
-                start = index
-            if start is not None and (not line.text.strip() or index == len(canonical.lines)):
-                end = index - 1 if not line.text.strip() else index
-                span = self._span(conn, version, document, canonical, start, end)
-                body = canonical.span_for_lines(start, end)[2]
-                conn.execute(text("INSERT INTO chunk (dataset_version_id, span_id, text, token_count) VALUES (:version, :span, :body, :tokens)"),
-                             {"version": version, "span": span, "body": body, "tokens": len(body.split())})
-                count, start = count + 1, None
+        """Citable text chunks. Prose: one chunk per blank-line block (sub-sections such as
+        '**1. Headline Results**' are their own blocks). Tables: one chunk per data row, whose
+        searchable text carries the header row but whose span is the row itself, so a hit on one
+        row of a multi-entity table is attributed to that row only."""
+        lines = [line.text for line in canonical.lines]
+        count, i, n = 0, 0, len(lines)
+
+        def emit(start: int, end: int, body: str | None = None) -> None:
+            nonlocal count
+            label = block_label(lines[start - 1])
+            span = self._span(conn, version, document, canonical, start, end, label=label)
+            body = body if body is not None else canonical.span_for_lines(start, end)[2]
+            conn.execute(text("INSERT INTO chunk (dataset_version_id, span_id, text, token_count) VALUES (:version, :span, :body, :tokens)"),
+                         {"version": version, "span": span, "body": body, "tokens": len(body.split())})
+            count += 1
+
+        while i < n:
+            if not lines[i].strip():
+                i += 1
+                continue
+            is_table = "|" in lines[i] and i + 1 < n and _TABLE_DIVIDER.match(lines[i + 1])
+            if is_table:
+                header, j = lines[i].strip(), i + 2
+                while j < n and lines[j].strip() and "|" in lines[j]:
+                    emit(j + 1, j + 1, f"{header}\n{lines[j].strip()}")
+                    j += 1
+                i = j
+                continue
+            j = i
+            while j < n and lines[j].strip() and not ("|" in lines[j] and j + 1 < n and _TABLE_DIVIDER.match(lines[j + 1])):
+                j += 1
+            emit(i + 1, j)
+            i = j
         return count
 
     def _table(self, conn, version: UUID, document: UUID, canonical: CanonicalDocument, table: ParsedTable) -> tuple[int, int]:
@@ -197,9 +270,16 @@ class FileIngestService:
         facts = 0
         for row_index, (row, line_number) in enumerate(zip(table.rows, table.row_lines)):
             entity_label = row[0] or None
-            entity_id = self._entity(conn, version, entity_label) if entity_label else None
+            owners = [self._catalog.owner_of(c) for c in row]
+            named = [o for o in owners if o]
+            # a row about one entity (comparison / screening tables), else the enclosing entity section
+            row_entity = named[0] if len(set(named)) == 1 else None
+            section_entity = entity_from_path(self._outline.path(line_number), self._catalog.labels())
             cursor = 0
             for col_index, cell in enumerate(row):
+                owner = owners[col_index] if len(set(named)) > 1 else None   # multi-entity row: the cell's own
+                label_for_fact = owner or row_entity or section_entity
+                entity_id = self._entity_ids.get(label_for_fact) if label_for_fact else None
                 line = canonical.lines[line_number - 1]
                 column = line.text.find(cell, cursor)
                 column = column if column >= 0 else cursor
@@ -226,20 +306,47 @@ class FileIngestService:
                 conn.execute(text("UPDATE table_cell SET typed = true WHERE span_id = :span"), {"span": cell_span})
         return len(table.rows) * len(table.headers), facts
 
-    def _entity(self, conn, version: UUID, label: str) -> UUID:
-        return conn.execute(text("""INSERT INTO entity (dataset_version_id, label) VALUES (:version, :label)
+    def _entity(self, conn, version: UUID, label: str, aliases: set[str] = frozenset()) -> UUID:
+        entity_id = conn.execute(text("""INSERT INTO entity (dataset_version_id, label) VALUES (:version, :label)
             ON CONFLICT (dataset_version_id, label) DO UPDATE SET label = EXCLUDED.label RETURNING entity_id"""),
-                            {"version": version, "label": label}).scalar_one()
+                                 {"version": version, "label": label}).scalar_one()
+        for alias in sorted(aliases):
+            conn.execute(text("""INSERT INTO entity_alias (dataset_version_id, entity_id, alias, origin)
+                VALUES (:version, :entity, :alias, 'document') ON CONFLICT DO NOTHING"""),
+                         {"version": version, "entity": entity_id, "alias": alias})
+        return entity_id
 
     def _validate_duplicates(self, conn, version: UUID) -> int:
-        """Persist duplicate claims with incompatible numeric values; other rules follow the same pattern."""
-        groups = conn.execute(text("""SELECT entity_id, metric, period_label, basis, array_agg(fact_id) ids, array_agg(span_id) spans
-            FROM fact WHERE dataset_version_id = :version GROUP BY entity_id, metric, period_label, basis
-            HAVING COUNT(DISTINCT value) > 1"""), {"version": version}).mappings()
+        """duplicate_claim: the same entity, metric, stated period and basis with values that disagree
+        beyond rounding. Facts without a stated period are never compared (eight quarters of revenue
+        are not conflicting claims)."""
+        groups = conn.execute(text("""SELECT entity_id, metric, period_label, basis,
+                   array_agg(fact_id ORDER BY fact_id) ids, array_agg(span_id ORDER BY fact_id) spans,
+                   array_agg(value ORDER BY fact_id) vals, array_agg(original_value ORDER BY fact_id) raws,
+                   array_agg(scale ORDER BY fact_id) scales
+            FROM fact WHERE dataset_version_id = :version AND period_label IS NOT NULL AND value IS NOT NULL
+            GROUP BY entity_id, metric, period_label, basis HAVING COUNT(DISTINCT value) > 1"""),
+                              {"version": version}).mappings()
         count = 0
-        for group in groups:
-            conn.execute(text("""INSERT INTO validation_finding (dataset_version_id, rule, rule_version, severity, explanation, fact_ids, span_ids)
-              VALUES (:version, 'duplicate_claim', '0.1.0', 'medium', 'Conflicting values share the same entity, metric, period, and basis.', :facts, :spans)"""),
-                         {"version": version, "facts": group["ids"], "spans": group["spans"]})
+        for g in groups:
+            tolerance = max(_precision_step(raw, scale) for raw, scale in zip(g["raws"], g["scales"])) / 2
+            if max(g["vals"]) - min(g["vals"]) <= tolerance + 1e-9:
+                continue   # same number written at different precisions ($153M vs $152.6M)
+            conn.execute(text("""INSERT INTO validation_finding (dataset_version_id, rule, rule_version, severity, explanation,
+                                     fact_ids, span_ids, expected, observed)
+              VALUES (:version, 'duplicate_claim', '0.2.0', 'medium', :why, :facts, :spans, :expected, :observed)"""),
+                         {"version": version, "facts": g["ids"], "spans": g["spans"],
+                          "why": f"{g['metric']} for {g['period_label']} is stated with different values: "
+                                 + ", ".join(g["raws"]),
+                          "expected": "one value per entity, metric, period and basis",
+                          "observed": " vs ".join(g["raws"])})
             count += 1
         return count
+
+
+def _precision_step(original: str, scale: float) -> float:
+    """Smallest increment the written value can express: '$152.6M' -> 0.1 * 1e6."""
+    import re as _re
+    m = _re.search(r"\d[\d,]*(?:\.(\d+))?", original or "")
+    decimals = len(m.group(1) or "") if m else 0
+    return (10 ** -decimals) * (scale or 1.0)

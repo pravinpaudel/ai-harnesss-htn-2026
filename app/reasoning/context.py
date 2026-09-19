@@ -172,8 +172,26 @@ class RunContext:
             self.outlines[span.document_name] = Outline.parse(body)
         o = self.outlines[span.document_name]
         path = list(span.heading_path) or o.path(span.line_start)
-        return SpanContext(path, o.block(span.line_start), entity_from_path(path, self.entity_labels()))
+        block = o.block(span.line_start)
+        row_period = None
+        if block is None and span.exact_text.lstrip().startswith("|"):
+            # a quarterly-table row: "| Q3 FY2026 (Jul 31, 2026) | ..." belongs to that period
+            first = span.exact_text.strip().strip("|").split("|", 1)[0].strip()
+            row_period = _match_period(first, o.periods())
+        return SpanContext(path, block, entity_from_path(path, self.entity_labels()), row_period)
 
     def fact_by_handle(self, handle: str) -> Optional[Fact]:
         ev = self.evidence.get(handle)
         return ev.fact if ev else None
+
+
+def _match_period(cell: str, periods: list[str]) -> Optional[str]:
+    """The block period a table row's first cell names ('Q3 FY2026 (Jul 31/26)' -> 'Q3 FY2026 (Jul 31, 2026)'),
+    matched on the leading label before any parenthesis."""
+    head = cell.split("(")[0].strip().lower()
+    if not head:
+        return None
+    for p in periods:
+        if p.split("(")[0].strip().lower() == head:
+            return p
+    return None
