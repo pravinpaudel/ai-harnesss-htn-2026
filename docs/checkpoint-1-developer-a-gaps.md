@@ -1,5 +1,20 @@
 # Checkpoint 1 — gaps in the evidence store (for Developer A)
 
+> **Status (all resolved).** Every gap below has been fixed on branches `feat/ingest-fixes` → `feat/ingest-entities`
+> → `feat/ingest-facts` → `feat/ingest-validators` → `feat/grants-mcp-capabilities` (merge in that order):
+>
+> | Gap | Fix | Evidence |
+> |---|---|---|
+> | MCP ingest broken (wrong tool argument; errors stored as documents) | arguments follow the tool's schema; tool errors fail the ingest | real endpoint: 3 docs, hashes identical to repo copies |
+> | No chunk embeddings | OpenAI embedding provider; written after raw evidence commits | 1,812 chunks embedded in ~17 s; engine runs hybrid |
+> | Empty `heading_path`, whole-table chunks | heading path (section, entity, period, sub-section) on every span; one chunk per table row | 0 spans without a path |
+> | Junk entities, no aliases | entities from heading subjects and identifier columns; aliases from names | 30 → 19 entities; "Ivanhoe" → IVN |
+> | No period labels / missing fact types | new extraction (vs pairs, summary lines, ranks, counts, trends, events, periods) | fixture facts 143/143, known-corpus facts 73/73 |
+> | No validators | count_claim, rank_order, trend_direction, duplicate_claim, unit_currency_mix | fixture findings 5/5; full reports: 10 reviewed, genuine findings |
+> | Engine role not enforced; MCP capabilities not recorded | `app/db/grants.sql` via `htn db init` and compose init scripts; capabilities stored on the version | tests + fresh-container check |
+>
+> Live after the fixes: RBC suite 29/30 (30/30 correct company); CP1 fixture suite on real ingest 8/10 (was 2/10).
+
 **Run:** `htn ingest contracts/fixture/raw --dataset-name fixture` on the merged `main` (commit 754ea14), Postgres from the root `docker-compose.yml`, schema from `app.db.bootstrap.apply_contract_v1`. Then `htn eval --dataset fixture` as the read-only `htn_engine` role.
 
 **Result:** ingest succeeded: a ready version in 0.2 s, document hashes matching `contracts/fixture/sources.json`. The store holds **56 facts, 32 of which match the 143 in `contracts/fixture/expected_facts.csv`, plus 0 of the 5 findings in `expected_findings.json`**. That stops three of the four Checkpoint 1 cases from passing for the right reason.
@@ -37,6 +52,6 @@ RBC's sample questions (`question-set.md`) are all **"which company…"** questi
 
 ## Still to agree (from Checkpoint 0)
 
-- Add the `htn_engine` role grants (`tests/engine/grants.sql`) to the first migration and the root compose setup. Today the engine can connect as `harness`, which has full write access.
+- ~~Add the `htn_engine` role grants to the migration and compose setup.~~ Done: `app/db/grants.sql`, applied by `htn db init` and the compose init scripts.
 - `contracts/repositories.py` says A implements `EvidenceRepository`, but B implemented `PgEvidenceRepository` (per the work plan's B1.1). Update the docstring and bump the contract to 1.1.
 - FX08 in `contracts/fixture/questions.json` no longer requires specific citation lines. The currency mix appears in two places.

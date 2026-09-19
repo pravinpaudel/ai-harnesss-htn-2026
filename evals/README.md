@@ -19,9 +19,7 @@ Every case is scored on naming the right company (the ticker, matched as a whole
 
 ```bash
 docker compose up -d postgres
-uv run python -c "from app.db import create_engine; from app.db.bootstrap import apply_contract_v1; \
-  apply_contract_v1(create_engine('postgresql+psycopg://harness:harness@localhost:5432/harness'))"   # empty DB only
-docker compose exec -T postgres psql -U harness -d harness < tests/engine/grants.sql            # engine role
+uv run htn db init            # schema (if empty) + read-only htn_engine role; compose does this on a fresh volume
 
 mkdir -p /tmp/rbc && cp canadian-*-research.md /tmp/rbc/
 uv run htn ingest /tmp/rbc --dataset-name rbc-sample
