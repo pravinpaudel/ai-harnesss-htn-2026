@@ -1,0 +1,32 @@
+[project]
+name = "finance-research-harness"
+version = "0.1.0"
+description = "Versioned evidence-first finance research harness"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115,<1",
+  "alembic>=1.14,<2",
+  "pydantic-settings>=2.6,<3",
+  "sqlalchemy>=2.0,<3",
+  "psycopg[binary]>=3.2,<4",
+  "typer>=0.15,<1",
+  "uvicorn[standard]>=0.32,<1",
+]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*", "contracts*"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9", "httpx>=0.28,<1"]
+
+[project.scripts]
+htn = "app.cli.main:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["."]
