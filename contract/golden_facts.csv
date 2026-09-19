@@ -1,0 +1,74 @@
+golden_id,doc_id,line,entity_id,concept_key,basis,role,period_label,period_end,period_type,value_num,value_text,value_low,value_high,unit,currency,is_estimate,snippet
+G01,financials,38,RY,roe,,actual,Q3 FY2026,2026-07-31,fiscal,17.9,,,,pct,,false,| 17.9% |
+G02,financials,38,RY,cet1,,actual,Q3 FY2026,2026-07-31,fiscal,13.5,,,,pct,,false,| 13.5% |
+G03,financials,38,RY,dividend_per_quarter,,actual,Q3 FY2026,2026-07-31,fiscal,1.76,,,,money,,false,| $1.76 |
+G04,financials,39,TD,cet1,,actual,Q3 FY2026,2026-07-31,fiscal,14.3,,,,pct,,false,| 14.3% |
+G05,financials,39,TD,eps,adjusted,actual,Q3 FY2026,2026-07-31,fiscal,2.77,,,,money,,false,| $2.77 |
+G06,financials,39,TD,eps_yoy_pct,,actual,Q3 FY2026,2026-07-31,fiscal,26,,,,pct,,false,| +26% |
+G07,financials,40,BMO,roe,,actual,Q3 FY2026,2026-07-31,fiscal,13.5,,,,pct,,true,| ~13.5% |
+G08,financials,41,BNS,revenue,,actual,Q3 FY2026,2026-07-31,fiscal,10540000000,,,,money,,false,| $10.54B |
+G09,financials,42,CM,eps_yoy_pct,,actual,Q3 FY2026,2026-07-31,fiscal,26,,,,pct,,false,| +26% |
+G10,financials,43,NA,revenue_yoy_pct,,actual,Q3 FY2026,2026-07-31,fiscal,18,,,,pct,,false,| +18% |
+G11,financials,43,NA,market_cap,,actual,,2026-09-17,point,55000000000,,,,money,CAD,true,| ~$55B |
+G12,financials,54,RY,pcl,,actual,Q3 FY2026,2026-07-31,fiscal,36,,,,bps,,false,| 36 bps |
+G13,financials,55,TD,efficiency_ratio,,actual,Q3 FY2026,2026-07-31,fiscal,50.2,,,,pct,,false,| 50.2% |
+G14,financials,57,BNS,pcl,,actual,Q3 FY2026,2026-07-31,fiscal,56,,,,bps,,false,| 56 bps |
+G15,financials,59,NA,efficiency_ratio,,actual,Q3 FY2026,2026-07-31,fiscal,49.8,,,,pct,,false,| 49.8% |
+G16,financials,232,RY,revenue,,actual,"Q3 FY2026 (Jul 31, 2026)",2026-07-31,fiscal,18540000000,,,,money,,false,| $18.54B |
+G17,financials,232,RY,eps,adjusted,actual,"Q3 FY2026 (Jul 31, 2026)",2026-07-31,fiscal,4.28,,,,money,,false,$4.28 adj
+G18,financials,232,RY,eps,,estimate,"Q3 FY2026 (Jul 31, 2026)",2026-07-31,fiscal,4.04,,,,money,,false,$4.04 est
+G19,financials,232,RY,beat_miss,,attribute,"Q3 FY2026 (Jul 31, 2026)",2026-07-31,fiscal,,Beat,,,text,,false,| Beat |
+G20,financials,501,TD,eps,,trend,trailing 8Q,2026-07-31,range,,↑,1.72,2.77,money,,false,EPS ↑ ($1.72 → $2.77
+G21,financials,512,TD,revenue,adjusted,actual,"Q4 FY2024 (Oct 31, 2024)",2024-10-31,fiscal,14900000000,,,,money,CAD,false,C$14.9B (adj)
+G22,financials,512,TD,eps,,actual,"Q4 FY2024 (Oct 31, 2024)",2024-10-31,fiscal,1.72,,,,money,CAD,false,C$1.72
+G23,financials,512,TD,eps,,estimate,"Q4 FY2024 (Oct 31, 2024)",2024-10-31,fiscal,1.82,,,,money,CAD,false,C$1.82
+G24,financials,512,TD,beat_miss,,attribute,"Q4 FY2024 (Oct 31, 2024)",2024-10-31,fiscal,,Miss (-5%),,,text,,false,Miss (-5%)
+G25,financials,1320,CM,eps_beat_count,,count,trailing 8Q,2026-07-31,range,8,8/8,,,count,,false,Beat 8/8
+G26,financials,1324,CM,eps,,actual,"Q3 FY2026 (Jul 31, 2026)",2026-07-31,fiscal,2.73,,,,money,,false,$2.73
+G27,financials,1324,CM,eps,,estimate,"Q3 FY2026 (Jul 31, 2026)",2026-07-31,fiscal,2.50,,,,money,,false,$2.50
+G28,financials,1915,RY,screening_rank,,rank,,2026-09-17,point,1,,,,rank,,false,| 1 | RY |
+G29,mining,39,ABX,revenue,,actual,Q2 2026,2026-06-30,calendar,5292000000,,,,money,,false,"| $5,292M |"
+G30,mining,40,AEM,market_cap,,actual,,2026-09-17,point,102000000000,,,,money,USD,true,| ~$102B |
+G31,mining,41,TECK.B,eps,adjusted,actual,Q2 2026,2026-06-30,calendar,1.93,,,,money,CAD,false,C$1.93 (adj)
+G32,mining,42,FM,market_cap,,actual,,2026-09-17,point,30000000000,,,,money,CAD,true,~C$30B
+G33,mining,43,WPM,revenue_yoy_pct,,actual,Q2 2026,2026-06-30,calendar,85,,,,pct,,false,| +85% |
+G34,mining,44,IVN,market_cap,,actual,,2026-09-17,point,17100000000,,,,money,CAD,false,| C$17.1B |
+G35,mining,44,IVN,eps_yoy_pct,,actual,Q2 2026,2026-06-30,calendar,,N/M,,,text,,false,| N/M |
+G36,mining,57,TECK.B,production,,actual,Q2 2026,2026-06-30,calendar,135900,,,,quantity,,false,"135,900t Cu (Q2)"
+G37,mining,58,FM,net_debt_to_ebitda,,actual,Q2 2026,2026-06-30,calendar,3.0,,,,x,,false,| 3.0x |
+G38,mining,751,AEM,eps,,estimate,Q2 2026,2026-06-30,calendar,,,2.89,3.10,money,,false,$2.89-$3.10 est
+G39,mining,751,AEM,beat_miss,,attribute,Q2 2026,2026-06-30,calendar,,Beat/In-line,,,text,,false,(Beat/In-line)
+G40,mining,1011,TECK.B,revenue,,actual,Q2 2026,2026-06-30,calendar,3605000000,,,,money,CAD,false,"Revenue C$3,605M"
+G41,mining,1631,IVN,beat_miss,,attribute,Q1 2025,2025-03-31,calendar,,Beat,,,text,,false,(Beat)
+G42,mining,1695,IVN,eps,,estimate,Q3 2025,2025-09-30,calendar,-0.02,,,,money,,false,vs -$0.02 est
+G43,mining,1791,IVN,revenue,,actual,Q2 2026,2026-06-30,calendar,152600000,,,,money,,false,Revenue $152.6M
+G44,mining,1791,IVN,eps,,actual,Q2 2026,2026-06-30,calendar,0.03,,,,money,,false,EPS $0.03
+G45,mining,1791,IVN,eps,,estimate,Q2 2026,2026-06-30,calendar,0.06,,,,money,,false,vs $0.06 est
+G46,mining,1791,IVN,beat_miss,,attribute,Q2 2026,2026-06-30,calendar,,Miss,,,text,,false,(Miss)
+G47,mining,1864,WPM,catalyst,,event,"Nov 5, 2026",2026-11-05,point,,Q3 2026 earnings,,,text,,false,| Q3 2026 earnings |
+G48,mining,1898,AEM,revenue_yoy_pct,,rank,Q2 2026,2026-06-30,calendar,3,AEM (+35%),,,rank,,false,AEM (+35%)
+G49,mining,1898,IVN,revenue_yoy_pct,,rank,Q2 2026,2026-06-30,calendar,4,IVN (+58%),,,rank,,false,IVN (+58%)
+G50,mining,1898,IVN,revenue_yoy_pct,,actual,Q2 2026,2026-06-30,calendar,58,,,,pct,,false,IVN (+58%)
+G51,mining,1899,IVN,eps_beat_count,,count,trailing 8Q,2026-06-30,range,3,3/8,,,count,,false,IVN (3/8)
+G52,mining,1899,TECK.B,eps_beat_count,,count,trailing 8Q,2026-06-30,range,8,8/8,,,count,,false,TECK.B (8/8)
+G53,technology,9,SHOP,payments_penetration,,trend,,,unspecified,,↑,58,68,pct,,false,Payments penetration expanding (58% → 68%)
+G54,technology,38,SHOP,market_cap,,actual,,2026-09-17,point,185000000000,,,,money,CAD,true,~$185B CAD
+G55,technology,39,CSU,eps,gaap,actual,Q2 2026,2026-06-30,calendar,12.93,,,,money,,false,$12.93 (GAAP)
+G56,technology,39,CSU,eps,adjusted,actual,Q2 2026,2026-06-30,calendar,31.62,,,,money,,true,~$31.62 (adj)
+G57,technology,40,GIB.A,revenue_yoy_pct,,actual,Q3 FY2026,2026-06-30,fiscal,2.5,,,,pct,,false,| +2.5% |
+G58,technology,41,OTEX,revenue_yoy_pct,,actual,Q4 FY2026,2026-06-30,fiscal,2.9,,,,pct,,false,| +2.9% |
+G59,technology,42,DSG,revenue,,actual,Q2 FY2027,2026-07-31,fiscal,201100000,,,,money,,false,$201.1M (Q2 FY2027)
+G60,technology,43,KXS,eps,adjusted,actual,Q2 2026,2026-06-30,calendar,1.19,,,,money,,false,$1.19 (adj)
+G61,technology,58,DSG,rule_of_40,,actual,Q2 FY2027,2026-07-31,fiscal,59,,,,score,,true,~59
+G62,technology,59,KXS,arr,,actual,Q2 2026,2026-06-30,calendar,465600000,,,,money,,false,ARR $465.6M
+G63,technology,241,SHOP,payments_penetration,,trend,trailing 8Q,2026-06-30,range,,↑,62,68,pct,,false,Payments penetration ↑ (62% → 68%)
+G64,technology,241,SHOP,eps_beat_or_met_count,,count,trailing 8Q,2026-06-30,range,6,6/8,,,count,,false,Beat/Met 6/8
+G65,technology,245,SHOP,revenue,,actual,Q2 2026 (Jun 30),2026-06-30,calendar,3580000000,,,,money,,false,| $3.58B |
+G66,technology,245,SHOP,eps,,actual,Q2 2026 (Jun 30),2026-06-30,calendar,0.42,,,,money,,false,$0.42
+G67,technology,245,SHOP,eps,,estimate,Q2 2026 (Jun 30),2026-06-30,calendar,0.39,,,,money,,false,vs $0.39
+G68,technology,250,SHOP,beat_miss,,attribute,Q1 2025 (Mar 31),2025-03-31,calendar,,Miss (-3.9%),,,text,,false,Miss (-3.9%)
+G69,technology,514,CSU,fcfe,,trend,trailing 8Q,2026-06-30,range,,↑,362000000,345000000,money,,false,FCFE ↑ ($362M → $345M
+G70,technology,518,CSU,eps,gaap,actual,Q2 2026 (Jun 30),2026-06-30,calendar,12.93,,,,money,,false,$12.93 ($31.62 adj)
+G71,technology,518,CSU,eps,,estimate,Q2 2026 (Jun 30),2026-06-30,calendar,27.87,,,,money,,false,vs $27.87 est
+G72,technology,1337,DSG,beat_miss,,attribute,"Q2 FY2027 (Jul 31, 2026)",2026-07-31,fiscal,,Met (Rev beat ~1%),,,text,,false,Met (Rev beat ~1%)
+G73,technology,1611,KXS,revenue,,actual,Q1 2026 (Mar 31),2026-03-31,calendar,165600000,,,,money,,false,| $165.6M |

@@ -70,50 +70,14 @@ Both developers write this together in the first 30 minutes, commit it as `contr
 
 `contract/` contains:
 1. `schema.sql` — the DuckDB schema below.
-2. `fixture.duckdb` + `fixture_raw/` — a hand-built mini-store: the IVN §6 summaries, mining §10 revenue-growth row, SHOP §1 bullet and §6 row, 2 conflicts, ~40 facts, ~10 chunks. Lane 2 develops against this; Lane 1 must be able to regenerate an equivalent from the real files.
-3. `golden_facts.csv` — ~60 facts both people read off the sample by hand (entity, concept, period, value, source line). Lane 1's parser test; Lane 2's answer test.
+2. `fixture/` (built by `build_fixture.py`) — a hand-built mini-store over the mining and technology reports: IVN §3/§6, mining §10 rank rows, SHOP §1/§3/§5/§6, 87 facts, 12 chunks, 3 conflicts, plus `fixture/raw/` and 15 fixture questions. Lane 2 develops against this; Lane 1 must be able to regenerate an equivalent from the real files.
+3. `golden_facts.csv` — 73 facts read off all three reports by hand (entity, concept, period, value, source line, verbatim snippet). Lane 1's parser test; Lane 2's answer test.
 4. `answer.schema.json` — the Answer contract below.
+5. `README.md` — identifier formats and fact conventions (concept normalization, units, currency, periods, roles). See it for the full rules; the schema below is a summary.
 
-**Store schema (`store.duckdb`)** — Lane 1 writes, Lane 2 reads only.
+**Store schema** — full definition in `contract/schema.sql`; Lane 1 writes, Lane 2 reads only. Tables: `meta`, `document`, `section`, `entity`, `entity_alias`, `fact`, `chunk`, `conflict`. Each `fact` row carries a typed value (`value_num` / `value_text` / `value_low`–`value_high`, `unit`, `currency`, `scale`, `basis`, `is_estimate`), a resolved period (`period_label`, `period_end`, `period_type`), a `role` (actual, estimate, attribute, rank, count, trend, target, guidance, event) and its verbatim source span (`line_start`, `line_end`, `exact_text`).
 
-```sql
-document(doc_id, filename, sector, title, as_of_date, snapshot_sha256, line_count)
-section(section_id, doc_id, number, heading, anchor, line_start, line_end)
-entity(entity_id, ticker, name, sector, doc_id)                 -- from §3
-entity_alias(alias, entity_id)                                  -- ticker variants, short names, "Teck", "CGI"
-fact(
-  fact_id, doc_id, section_id, entity_id,                       -- entity_id null for sector-level facts
-  concept, concept_key,                                         -- raw header text; normalized snake_case key
-  value_num, value_text, value_low, value_high,
-  unit,            -- pct | bps | x | count | money | ratio | text
-  currency,        -- CAD | USD | null
-  scale,           -- 1 | 1e3 | 1e6 | 1e9
-  is_estimate,     -- bool
-  period_label,    -- as written: "Q3 FY2026"
-  period_end,      -- resolved calendar date, THE sort key
-  period_type,     -- fiscal | calendar | ttm | point
-  role,            -- actual | estimate | rank | count | trend | target | guidance
-  line_start, line_end, exact_text,                             -- verbatim source span
-  extractor        -- table | summary_line | kv | trend_line | rank_matrix
-)
-chunk(chunk_id, doc_id, section_id, entity_id, heading_path, text, line_start, line_end)
-conflict(conflict_id, check_type, severity, entity_id, concept_key, description,
-         fact_id_a, fact_id_b, expected_value, observed_value)
-```
-
-**Answer contract** — Lane 2 produces; `--json` emits it verbatim.
-
-```
-run_id, question, status: answered | conflict | declined | partial
-answer_text                     every claim footnoted [n]
-value                           typed scalar/list for quantitative questions
-citations: [ {n, doc, section, anchor, line_start, line_end, quote} ]
-conflicts: [ {conflict_id, claim_a, claim_b, citations} ]
-decline_reason                  not_in_corpus | false_premise | ambiguous | cross_currency
-confidence: high | medium | low + one-line reason
-cost: {input_tokens, output_tokens, usd, latency_ms, tool_calls}
-corpus_sha256, model, prompt_version
-```
+**Answer contract** — full definition in `contract/answer.schema.json`; Lane 2 produces it and `--json` emits it verbatim. Fields: `run_id`, `question`, `status` (answered | conflict | declined | partial), `answer_text` with `[n]` footnotes, typed `value`, verified `citations` (doc, section, lines, quote), `conflicts` (claim A vs claim B), `decline_reason`, `confidence`, `cost` (tokens, $, latency, tool calls) and `provenance` (corpus SHA-256, contract version, model, prompt version).
 
 **Handoff:** `htn ingest` (Lane 2's CLI) calls exactly one Lane 1 function:
 ```python
@@ -155,7 +119,7 @@ build_store(source: "mcp" | Path, out_dir: Path) -> IngestReport   # docs, facts
 
 ## 6. Lane 2 — Question → Cited Answer (Developer B)
 
-**Goal:** Every question returns an Answer contract with verified citations, the right status, and cost metering — built entirely against `contract/fixture.duckdb` until integration.
+**Goal:** Every question returns an Answer contract with verified citations, the right status, and cost metering — built entirely against `contract/fixture/store.duckdb` until integration.
 
 | # | Deliverable | Done when |
 |---|---|---|
