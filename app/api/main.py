@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from uuid import UUID
 
@@ -8,8 +9,21 @@ from app.ingest.service import FileIngestService, get_ingest_service
 from contracts.models import IngestRequest, IngestReport
 from app.api.queries import router as queries_router
 
-app = FastAPI(title="Finance Research Harness", version="0.1.0")
-app.include_router(queries_router)
+def create_app(*, cors_origins: list[str] | None = None) -> FastAPI:
+    """Create the HTTP API with browser access limited to configured origins."""
+    api = FastAPI(title="Finance Research Harness", version="0.1.0")
+    api.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins if cors_origins is not None else list(settings.allowed_cors_origins),
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Content-Type"],
+    )
+    api.include_router(queries_router)
+    return api
+
+
+app = create_app()
 
 
 def ingest_service() -> FileIngestService:
