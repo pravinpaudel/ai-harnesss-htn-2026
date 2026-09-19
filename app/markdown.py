@@ -72,3 +72,32 @@ def period_of(block: Optional[str]) -> Optional[str]:
     if not block:
         return None
     return re.split(r"\s+[—–]\s+", block, maxsplit=1)[0].strip() or None
+
+
+_SUBJECT_SPLIT = re.compile(r"\s+[—–]\s+|\s+-\s+|:\s+")
+_NAMED_LABEL = re.compile(r"^(?P<name>.+?)\s*\((?P<label>[A-Z][A-Z0-9.&-]{0,9})\)$")
+
+
+def heading_subject(text: str) -> Optional[tuple[str, str]]:
+    """(label, name) a heading is about, in either common style:
+    'ABX — Barrick Mining Corporation [— tail]' / 'ABX: Barrick …' or 'Barrick Mining Corporation (ABX)[: tail]'."""
+    parts = _SUBJECT_SPLIT.split(text.strip(), maxsplit=1)
+    head = parts[0].strip()
+    m = _NAMED_LABEL.match(head)
+    if m:
+        return m.group("label"), m.group("name").strip()
+    if len(parts) > 1:
+        rest = _SUBJECT_SPLIT.split(parts[1], maxsplit=1)[0].strip()
+        return head, rest
+    return None
+
+
+def heading_period(path: list[str]) -> Optional[str]:
+    """Period of the deepest heading that starts with one ('#### 3Q24 — Revenue …' -> '3Q24')."""
+    from app.periods import leading_period
+    for text in reversed(path):
+        p = leading_period(text)
+        if p:
+            return p[0]
+    return None
+

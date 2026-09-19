@@ -105,11 +105,22 @@ def run(cases: list[EvaluationCase], ask: Callable[[str], AnswerResponse], *, su
     started = datetime.now(timezone.utc)
     results: list[CaseResult] = []
     answers: list[AnswerResponse] = []
+    pairs: list[tuple[CaseResult, AnswerResponse]] = []
     for case in cases:
-        ans = ask(case.question)
+        try:
+            ans = ask(case.question)
+        except Exception as exc:  # noqa: BLE001 - one broken case must not end the suite
+            res = CaseResult(case_id=case.case_id, category=case.category, run_id=None, passed=False,
+                             status_ok=False, values_ok=False, citations_valid=True, anchors_hit=False,
+                             detail=f"error: {type(exc).__name__}: {exc}"[:300])
+            results.append(res)
+            if on_result:
+                on_result(res, None)
+            continue
         res = score(case, ans)
         results.append(res)
         answers.append(ans)
+        pairs.append((res, ans))
         if on_result:
             on_result(res, ans)
     finished = datetime.now(timezone.utc)
@@ -117,8 +128,8 @@ def run(cases: list[EvaluationCase], ask: Callable[[str], AnswerResponse], *, su
     by_cat: dict[QuestionCategory, list[bool]] = {}
     for r in results:
         by_cat.setdefault(r.category, []).append(r.passed)
-    conflict_cases = [(r, a) for r, a in zip(results, answers) if r.category == QuestionCategory.conflict]
-    unsupported = [(r, a) for r, a in zip(results, answers)
+    conflict_cases = [(r, a) for r, a in pairs if r.category == QuestionCategory.conflict]
+    unsupported = [(r, a) for r, a in pairs
                    if r.category in (QuestionCategory.decline, QuestionCategory.false_premise)]
     lat = sorted(a.provenance.usage.latency_ms for a in answers) or [0]
     cites = [c for a in answers for c in a.citations]
