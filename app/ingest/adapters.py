@@ -68,7 +68,11 @@ class McpSourceAdapter:
             raise ValueError("McpSourceAdapter requires an MCP IngestRequest")
         if not request.mcp_tool:
             raise ValueError("mcp_tool is required after MCP capability discovery")
-        payload = self.client.call_tool(request.mcp_tool, {"dataset_name": request.dataset_name})
+        payload = self.client.call_tool(request.mcp_tool, self._arguments(request))
+        if isinstance(payload, dict) and payload.get("isError"):
+            # A tool error must fail the ingest; never snapshot the error text as if it were a document.
+            detail = " ".join(item.get("text", "") for item in payload.get("content", []) if isinstance(item, dict))
+            raise RuntimeError(f"MCP tool {request.mcp_tool!r} returned an error: {detail.strip()[:500]}")
         items = self._documents(payload)
         documents: list[SnapshotDocument] = []
         for index, item in enumerate(items):
@@ -79,6 +83,15 @@ class McpSourceAdapter:
         if not documents:
             raise ValueError("MCP tool returned no text documents")
         return documents
+
+    def _arguments(self, request: IngestRequest) -> dict[str, Any]:
+        """Only send arguments the tool's discovered input schema declares (e.g. none for financialDataRetrieval)."""
+        schema = next((t.get("inputSchema") or {} for t in self.client.list_tools()
+                       if t.get("name") == request.mcp_tool), None)
+        if schema is None:
+            raise ValueError(f"MCP tool {request.mcp_tool!r} not offered by the server")
+        properties = schema.get("properties") or {}
+        return {"dataset_name": request.dataset_name} if "dataset_name" in properties else {}
 
     @staticmethod
     def _documents(payload: Any) -> list[dict[str, Any]]:
