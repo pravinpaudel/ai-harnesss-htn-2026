@@ -3,7 +3,7 @@
 **Hack the North 2026 | Waterloo | Code window: Sat Sep 19, 12:00 AM → Sun Sep 20, 8:00 AM EDT (32 hours)**
 
 **Target prizes:** RBC *Best Business Value* **[BV]** and RBC *Top Tech Performance* **[TP]**.
-**Team:** 2 developers, 2 isolated lanes, 1 shared contract.
+**Team:** 3 developers, 3 isolated lanes, 1 shared contract. Lane 1 builds the fact store, Lane 2 the CLI answer engine, Lane 3 the web app that demos them.
 
 ---
 
@@ -57,7 +57,10 @@ A **CLI research harness** (`htn`) over financial research corpora delivered by 
                      │  writes                                            │ reads (read-only)
                      ▼                                                    │
              corpus/<name>/store.duckdb  +  corpus/<name>/raw/*.md  ──────┘
-                           THE CONTRACT (§4) — the only thing both lanes share
+                           THE CONTRACT (§4) — the only thing the lanes share
+                                          ▲
+                                          │ reads store/runs (read-only) + `htn … --json`
+                    LANE 3 — Web App: FastAPI adapter + React UI (webapp/REQUIREMENTS.md)
 ```
 
 **Structured facts are the main path.** Numeric, comparative, ranking, counting and aggregation questions are answered by SQL over `fact`. The prose chunks (`<details>` bodies, thesis/risk bullets) are a secondary path for narrative questions ("why did NA shares fall after Q3 FY2025?"). Every answer, either path, cites a verified source span.
@@ -135,6 +138,7 @@ build_store(source: "mcp" | Path, out_dir: Path) -> IngestReport   # docs, facts
 | 2.10 | `htn brief --sector <s>`: cited one-pager from §1/§3/§10 facts | Every line footnoted and verified |
 | 2.11 | `htn config`: provider/model, `--local-only` (Ollama), `--budget-usd` | Switching provider needs no code change |
 | 2.12 | Packaging: `uv` project, `pipx install .`, works on a clean laptop | Fresh-machine install in < 2 min |
+| 2.13 | `--json` output for `conflicts`, `brief`, `trace`, `eval` and `ingest` in the shapes agreed with Lane 3 at CP1 (`webapp/REQUIREMENTS.md` §6) | Lane 3's `CliBackend` works with no adapter code |
 
 **Lane 2 does not touch:** Markdown parsing. If an answer needs a fact the store doesn't have, it's logged as a store gap for Lane 1 at the next checkpoint — never patched with an ad-hoc regex over raw text.
 
@@ -155,7 +159,29 @@ build_store(source: "mcp" | Path, out_dir: Path) -> IngestReport   # docs, facts
 
 ---
 
-## 7. Evaluation
+## 7. Lane 3 — Web App (Developer C)
+
+**Goal:** the demo surface for both RBC prizes. A judge sees a cited answer, clicks a footnote and lands on the highlighted source line; sees the contradictions report as a deliverable; sees cost, confidence and audit trail on every answer. Full spec: **`webapp/REQUIREMENTS.md`**.
+
+**Isolation:** Lane 3 depends only on published contracts. It gets answers by running `htn … --json` and reads `store.duckdb`, `runs.duckdb` and `raw/*.md` **read-only**. It never imports Lane 1/Lane 2 code, never calls an LLM or MCP, and never computes an answer. Until CP1 it runs on a mock backend (hand-written Answers for `contract/fixture/questions.json`, validated against `answer.schema.json`) with the source viewer, conflicts and corpus screens reading the real fixture store. Switching to the real CLI is `HTN_BACKEND=cli`.
+
+| # | Deliverable | Priority | Done when |
+|---|---|---|---|
+| 3.1 | Scaffold: Vite + React + TS + Tailwind, FastAPI adapter, `make dev`, TS types generated from `answer.schema.json` | P0 | Runs on a clean laptop |
+| 3.2 | Mock backend + 15 fixture Answers + schema-validation test | P0 | Every status (answered, conflict, declined, partial) renders |
+| 3.3 | Ask screen: status badge, footnotes, typed value, confidence, cost strip, provenance | P0 | Matches `webapp/REQUIREMENTS.md` §4.1 |
+| 3.4 | Source viewer: raw lines with line numbers, cited span + quote highlighted | P0 | Every footnote opens the exact cited lines |
+| 3.5 | Conflicts screen + export (calls `htn conflicts --export`) | P0 | Lists every `conflict` row; export identical to CLI |
+| 3.6 | Corpus screen + live ingest button showing the ingest report | P0 | Demo step 2 works in the browser |
+| 3.7 | `CliBackend` wired to real `htn` | P0 | Same screens on real data, config change only |
+| 3.8 | Batch → memo, Trace, Scorecard, Brief | P1 | Demo steps 6–7 work in the browser |
+| 3.9 | `DEMO_MODE=cached` (labelled "cached"), projector pass, light/dark, keyboard shortcuts | P1 | Four run-throughs without touching the terminal |
+
+**Lane 3 does not touch:** parsing, retrieval, prompts or answer logic. If the UI needs data the JSON doesn't carry, it's raised at the next checkpoint as a contract change, not worked around.
+
+---
+
+## 8. Evaluation
 
 Question set (`question-set.md`, 47 questions) converted to JSON by Lane 2:
 
@@ -183,25 +209,25 @@ Types: `scalar` | `entity` | `ordered_list` | `conflict` | `decline` | `false_pr
 
 ---
 
-## 8. Timeline and integration checkpoints
+## 9. Timeline and integration checkpoints
 
-Lanes work in parallel; they meet **only** at the checkpoints below. Sleep is staggered so one developer is always awake.
+Lanes work in parallel; they meet **only** at the checkpoints below. Sleep is staggered so at least one developer is always awake.
 
-| Time | Lane 1 (Dev A) | Lane 2 (Dev B) |
-|---|---|---|
-| **12:00–12:30 AM** | **Together:** pull corpus via MCP, write `contract/` (schema, fixture, golden facts, answer schema). Commit. Split. | ← |
-| 12:30–3:00 AM | 1.1–1.5: MCP client, splitter, table parser, value + period resolvers | 2.1–2.3: CLI skeleton, tools, agent loop on fixture |
-| **3:00 AM — CP1** | **Swap fixture for real store.** Goal: `htn ask` answers one A-tier question with a verified citation from real data. Exchange store-gap list. | ← |
-| 3:00–7:00 AM | 1.6–1.7: entity registry, all section parsers, `golden_facts` → 100% | 2.4–2.6: citation verifier, status logic, run_log + trace |
-| 7:00–11:00 AM | Dev A sleeps | 2.7–2.8: eval + baseline; convert question set to JSON |
-| 11:00 AM–3:00 PM | 1.8–1.9: chunker, validator (4 checks) | Dev B sleeps |
-| **3:00 PM — CP2** | **Full eval on real store.** Scorecard v1. Exchange failure list. RBC Power Hour (Room 4C) — show scorecard + conflicts. | ← |
-| 3:00–9:00 PM | 1.10: fake-industry held-out test; fix every break; ingest < 30 s | 2.9–2.11: exports, brief, config, local-only |
-| **9:00 PM — CP3** | **Phase 2 rehearsal:** cold `htn ingest` on the fake-industry corpus, run 15 unseen questions. | ← |
-| 9:00 PM–2:00 AM | Fix CP3 failures on the store side | Fix CP3 failures on the answer side; 2.12 packaging |
-| 2:00–5:00 AM | **Feature freeze.** Both: clean-machine install, eval re-run, demo script. | ← |
-| 5:00–7:30 AM | Four full demo run-throughs. Submit Devpost by 7:30. | ← |
-| **8:00 AM Sun** | Hard code freeze. | ← |
+| Time | Lane 1 (Dev A) | Lane 2 (Dev B) | Lane 3 (Dev C) |
+|---|---|---|---|
+| **12:00–12:30 AM** | **Together:** pull corpus via MCP, write `contract/` (schema, fixture, golden facts, answer schema). Commit. Split. | ← | ← (reads `webapp/REQUIREMENTS.md`) |
+| 12:30–3:00 AM | 1.1–1.5: MCP client, splitter, table parser, value + period resolvers | 2.1–2.3: CLI skeleton, tools, agent loop on fixture | 3.1–3.4: scaffold, mock backend, Ask screen, source viewer on fixture |
+| **3:00 AM — CP1** | **Swap fixture for real store.** Goal: `htn ask` answers one A-tier question with a verified citation from real data. Exchange store-gap list. **Agree the web API JSON shapes** (`webapp/REQUIREMENTS.md` §6) and add them to `contract/`. | ← | ← |
+| 3:00–7:00 AM | 1.6–1.7: entity registry, all section parsers, `golden_facts` → 100% | 2.4–2.6: citation verifier, status logic, run_log + trace | 3.5–3.6: Conflicts screen + export, Corpus screen |
+| 7:00–11:00 AM | Dev A sleeps | 2.7–2.8: eval + baseline; convert question set to JSON | Dev C sleeps |
+| 11:00 AM–3:00 PM | 1.8–1.9: chunker, validator (4 checks) | Dev B sleeps | 3.7: `CliBackend` on real `htn` for ask, conflicts, corpus, source |
+| **3:00 PM — CP2** | **Full eval on real store.** Scorecard v1. Exchange failure list. RBC Power Hour (Room 4C) — **demo from the web app**: scorecard + conflicts + a cited answer. | ← | ← |
+| 3:00–9:00 PM | 1.10: fake-industry held-out test; fix every break; ingest < 30 s | 2.9–2.11, 2.13: exports, brief, config, local-only, `--json` for all commands | 3.8: Batch, Trace, Scorecard, Brief |
+| **9:00 PM — CP3** | **Phase 2 rehearsal:** cold ingest from the web app on the fake-industry corpus, run 15 unseen questions in the browser. | ← | ← |
+| 9:00 PM–2:00 AM | Fix CP3 failures on the store side | Fix CP3 failures on the answer side; 2.12 packaging | 3.9: cached demo mode, projector pass, error states |
+| 2:00–5:00 AM | **Feature freeze.** All: clean-machine install, eval re-run, demo script. | ← | ← |
+| 5:00–7:30 AM | Four full demo run-throughs (web app, CLI as fallback). Submit Devpost by 7:30. | ← | ← |
+| **8:00 AM Sun** | Hard code freeze. | ← | ← |
 
 Devpost draft and badge IDs in by **1:30 PM Saturday**. Book RBC judging slots the instant links drop Sunday ~8:30 AM.
 
@@ -209,10 +235,11 @@ Devpost draft and badge IDs in by **1:30 PM Saturday**. Book RBC judging slots t
 - CP1 missed → Lane 2 falls back to the long-context baseline behind the same Answer contract; Lane 1 keeps going.
 - CP2 missed → drop prose chunks and `brief`; structured facts + conflicts only.
 - CP3 breaks → the fix list decides the rest of the night; `--local-only` and HTML export are cut first.
+- Web app behind at any checkpoint → cut Lane 3's P1 screens (Brief, Scorecard, Trace, Batch, in that order); Ask + source viewer + Conflicts + Corpus are the whole demo. If the web app fails on demo day, run the same script in the CLI.
 
 ---
 
-## 9. Prize strategy and demo
+## 10. Prize strategy and demo
 
 **Primary: both RBC prizes.** One build, two pitches.
 
@@ -223,20 +250,20 @@ Devpost draft and badge IDs in by **1:30 PM Saturday**. Book RBC judging slots t
 
 **Secondary (zero extra cost only):** Rox *Best AI Agent* with the agent loop as built. **Declined:** Elastic, GPTZero, Sentry, OpenAI, Baseten — each costs a judging slot during the RBC window.
 
-**Demo (3 minutes, business first):**
+**Demo (3 minutes, business first — run in the web app; the CLI is the fallback and appears in step 7):**
 1. **Problem (20s).** "An analyst gets this pack at 7 AM and a PM meeting at 9."
-2. **Cold ingest (30s).** `htn ingest` on the Phase 2 corpus live → documents, facts, **N conflicts found**.
-3. **Cited answer (30s).** `htn ask` → answer with footnotes, quotes, cost and latency.
-4. **Contradiction (30s).** A question hitting a conflict → both claims, both sources.
+2. **Cold ingest (30s).** "Ingest from RBC" on the Corpus screen (runs `htn ingest`) on the Phase 2 corpus live → documents, facts, **N conflicts found**.
+3. **Cited answer (30s).** Ask screen → answer with footnotes, cost and latency; click a footnote → the highlighted source line.
+4. **Contradiction (30s).** A question hitting a conflict → both claims side by side, both sources.
 5. **Honest no (20s).** False premise or absent metric → declines with a reason.
-6. **Deliverable (30s).** `htn conflicts --export html` and `htn batch` output.
-7. **Deployable (20s).** Scorecard, `trace`, `--local-only`.
+6. **Deliverable (30s).** Conflicts screen → download the error report; Batch → the meeting memo.
+7. **Deployable (20s).** Scorecard vs baseline, Trace for audit, and the same answer from `htn ask` in a terminal with `--local-only`.
 
 Live demo only. Video-only and slideshow-only submissions are not accepted.
 
 ---
 
-## 10. Risks and cut lines
+## 11. Risks and cut lines
 
 | Risk | Mitigation | Cut line |
 |---|---|---|
@@ -247,20 +274,21 @@ Live demo only. Video-only and slideshow-only submissions are not accepted.
 | Agent loop slow or unreliable | Bounded steps; `find_facts` handles most questions in one call | Deterministic router: quantitative → SQL, narrative → FTS |
 | LLM rate limits mid-demo | Budget cap; second provider in config | Cached answers for the rehearsed path |
 | One developer blocked or asleep | Lanes independent by design; each has a fixture/golden set to test alone | — |
+| Web app and CLI JSON drift apart | API shapes added to `contract/` at CP1; mocks validated against the schema; `CliBackend` switch tested at CP2 | Demo runs in the CLI |
 
-**Non-negotiables:** no graph database; no LLM in Lane 1's critical path; no citation reaches the user without the quote-in-source check; no web UI until CP3 passes.
+**Non-negotiables:** no graph database; no LLM in Lane 1's critical path; no citation reaches the user without the quote-in-source check; the web app only renders harness output and never computes, rewrites or caches an answer without labelling it.
 
 ---
 
-## 11. After the CLI (only if CP3 is green)
+## 12. After the demo (only if CP3 is green)
 
 1. HTML report polish (conflicts + batch).
-2. Thin web UI reading `--json`: question box, clickable citations opening the source span, conflicts tab.
+2. Web app P2: Settings screen, streaming progress during long answers.
 3. MCP server wrapper around `htn` so analysts can use it from their own AI assistant.
 
 ---
 
-## 12. Questions for the RBC team
+## 13. Questions for the RBC team
 
 1. **How will judging-day answers be scored?** Live questions from judges, or a fixed set run through our system? What counts as a correct citation: document + section, a quoted span, or a line reference? Will questions include no-answer, false-premise or planted-contradiction cases?
 2. **How big is the Phase 2 dataset, and how is it delivered?** Same `financialDataRetrieval` tool and endpoint? One industry report or several, and roughly how large compared with the ~440K-character sample?
@@ -268,7 +296,7 @@ Live demo only. Video-only and slideshow-only submissions are not accepted.
 
 ---
 
-## 13. Reference
+## 14. Reference
 
 - Wi-Fi: `Hack the North` / `hackthenorth2026`
 - Slack: hackthenorth.slack.com — RBC channel
