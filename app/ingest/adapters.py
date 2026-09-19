@@ -93,14 +93,14 @@ class McpSourceAdapter:
         return documents
 
     def _arguments(self, request: IngestRequest) -> dict[str, Any]:
-        """Only send arguments the tool's discovered input schema declares (e.g. none for financialDataRetrieval)."""
+        """Check the tool is offered and send only what its input schema declares. The dataset name is
+        our own snapshot namespace, never a tool parameter, so a schemaless tool is called with {}."""
         self._tools = self.client.list_tools()
         schema = next((t.get("inputSchema") or {} for t in self._tools
                        if t.get("name") == request.mcp_tool), None)
         if schema is None:
             raise ValueError(f"MCP tool {request.mcp_tool!r} not offered by the server")
-        properties = schema.get("properties") or {}
-        return {"dataset_name": request.dataset_name} if "dataset_name" in properties else {}
+        return {}
 
     @staticmethod
     def _documents(payload: Any) -> list[dict[str, Any]]:

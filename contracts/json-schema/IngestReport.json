@@ -143,6 +143,11 @@
    "title": "Parser Version",
    "type": "string"
   },
+  "reused": {
+   "default": false,
+   "title": "Reused",
+   "type": "boolean"
+  },
   "source": {
    "$ref": "#/$defs/SourceType"
   },

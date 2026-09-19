@@ -29,11 +29,20 @@ from .storage import ImmutableRawStorage
 
 
 def get_ingest_service() -> "FileIngestService":
-    """Factory used by the CLI and any future HTTP/worker entrypoints."""
+    """Factory used by the CLI, API, and worker entrypoints."""
+    mcp_adapter = None
+    source_uri = None
+    if settings.mcp_url:
+        from .http_mcp import HttpMcpClient
+
+        mcp_adapter = McpSourceAdapter(HttpMcpClient(settings.mcp_url))
+        source_uri = f"{settings.mcp_url}#{settings.mcp_financial_data_tool}"
     return FileIngestService(
         create_engine(settings.database_url),
         ImmutableRawStorage(settings.raw_storage_path),
         settings.parser_version,
+        mcp_adapter=mcp_adapter,
+        source_uri=source_uri,
     )
 
 
@@ -43,10 +52,12 @@ class FileIngestService:
     embed_batch = 128
 
     def __init__(self, engine: Engine, storage: ImmutableRawStorage, parser_version: str,
-                 mcp_adapter: McpSourceAdapter | None = None, embedder: EmbeddingProvider | None = None) -> None:
+                 mcp_adapter: McpSourceAdapter | None = None, embedder: EmbeddingProvider | None = None,
+                 source_uri: str | None = None) -> None:
         self.engine, self.storage, self.parser_version = engine, storage, parser_version
         self.adapter = FileSourceAdapter()
         self.mcp_adapter = mcp_adapter
+        self.source_uri = source_uri
         self.embedder = embedder if embedder is not None else default_embedding_provider()
 
     def submit(self, request: IngestRequest) -> UUID:
@@ -130,22 +141,35 @@ class FileIngestService:
         else:
             raise RuntimeError("MCP ingestion requires a configured McpSourceAdapter")
         source_hash = hashlib.sha256("".join(sorted(hashlib.sha256(d.content).hexdigest() for d in documents)).encode()).hexdigest()
+        warnings: list[str] = []
         with self.engine.begin() as conn:
+            # A refresh may fetch concurrently, but only one transaction may
+            # decide whether this dataset needs a new immutable version.
+            conn.execute(text("SELECT pg_advisory_xact_lock(hashtext(:name))"), {"name": request.dataset_name})
             dataset_id = self._dataset(conn, request)
-            version_id = self._version(conn, dataset_id, source_hash)
-            reports = [self._ingest_document(conn, version_id, raw) for raw in documents]
-            findings = self._validate_duplicates(conn, version_id) + run_validators(conn, version_id)
-            conn.execute(text("UPDATE dataset_version SET status = 'validating', mcp_capabilities = CAST(:caps AS jsonb) "
-                              "WHERE dataset_version_id = :id"),
-                         {"id": version_id, "caps": json.dumps(capabilities) if capabilities else None})
+            existing_version_id = self._existing_version(conn, dataset_id, source_hash)
+            version_id = existing_version_id or self._version(conn, dataset_id, source_hash)
+            if existing_version_id is None:
+                reports = [self._ingest_document(conn, version_id, raw) for raw in documents]
+                findings = self._validate_duplicates(conn, version_id) + run_validators(conn, version_id)
+                conn.execute(text("UPDATE dataset_version SET status = 'validating', mcp_capabilities = CAST(:caps AS jsonb) "
+                                  "WHERE dataset_version_id = :id"),
+                             {"id": version_id, "caps": json.dumps(capabilities) if capabilities else None})
         parsed_ms = round((time.monotonic() - started) * 1000)
-        # Raw evidence is committed; embeddings come second and can never undo it.
-        embedded, warnings = self._embed_chunks(version_id)
-        with self.engine.begin() as conn:
-            conn.execute(text("UPDATE dataset_version SET status = 'ready', ready_at = now() WHERE dataset_version_id = :id"), {"id": version_id})
+        if existing_version_id is None:
+            # Raw evidence is committed; embeddings come second and can never undo it.
+            embedded, warnings = self._embed_chunks(version_id)
+            with self.engine.begin() as conn:
+                conn.execute(text("UPDATE dataset_version SET status = 'ready', ready_at = now() WHERE dataset_version_id = :id"), {"id": version_id})
+        else:                                   # an identical corpus: keep the version that is already ready
+            profile = self.profile(existing_version_id)
+            reports = profile.documents
+            findings = sum(profile.findings_by_rule.values())
+            capabilities = None
         elapsed = round((time.monotonic() - started) * 1000)
         return IngestReport(job_id=uuid4(), dataset_id=dataset_id, dataset_version_id=version_id,
                             status=DatasetStatus.ready, source=request.source, source_hash=source_hash,
+                            reused=existing_version_id is not None,
                             parser_version=self.parser_version, mcp_capabilities=capabilities,
                             documents=reports, findings=findings,
                             warnings=warnings,
@@ -175,10 +199,18 @@ class FileIngestService:
         return done, []
 
     def _dataset(self, conn, request: IngestRequest) -> UUID:
+        source_uri = self.source_uri if request.source == SourceType.mcp and self.source_uri else request.path or ""
         row = conn.execute(text("""INSERT INTO dataset (name, source_type, source_uri)
             VALUES (:name, :source, :uri) ON CONFLICT (name) DO UPDATE SET source_uri = EXCLUDED.source_uri
-            RETURNING dataset_id"""), {"name": request.dataset_name, "source": request.source.value, "uri": request.path or ""}).scalar_one()
+            RETURNING dataset_id"""), {"name": request.dataset_name, "source": request.source.value, "uri": source_uri}).scalar_one()
         return row
+
+    def _existing_version(self, conn, dataset_id: UUID, source_hash: str) -> UUID | None:
+        """The ready version of an identical corpus read by this parser, if there is one."""
+        return conn.execute(text("""SELECT dataset_version_id FROM dataset_version
+            WHERE dataset_id = :dataset AND source_hash = :hash AND parser_version = :parser AND status = 'ready'
+            ORDER BY version_no DESC LIMIT 1"""),
+            {"dataset": dataset_id, "hash": source_hash, "parser": self.parser_version}).scalar_one_or_none()
 
     def _version(self, conn, dataset_id: UUID, source_hash: str) -> UUID:
         version_no = conn.execute(text("SELECT COALESCE(MAX(version_no), 0) + 1 FROM dataset_version WHERE dataset_id = :id"), {"id": dataset_id}).scalar_one()

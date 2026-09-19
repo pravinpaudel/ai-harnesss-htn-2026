@@ -37,7 +37,7 @@ def test_mcp_adapter_discovers_and_snapshots_text_documents():
             return [{"name": "corpus", "inputSchema": {"type": "object", "properties": {"dataset_name": {}}}}]
 
         def call_tool(self, name, arguments):
-            assert (name, arguments) == ("corpus", {"dataset_name": "fixture"})
+            assert (name, arguments) == ("corpus", {})
             return {"documents": [{"name": "source.md", "content": "# Source"}]}
 
     adapter = McpSourceAdapter(Client())
