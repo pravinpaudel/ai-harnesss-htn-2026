@@ -23,52 +23,52 @@ retrieved corpus.
 
 ```mermaid
 flowchart LR
-    user[Researcher / API client] --> api[FastAPI service]
-    cli[Typer CLI] --> api
+    user[Researcher] --> cli[Typer CLI]
+    user --> api[FastAPI service]
 
     subgraph sources[Corpus sources]
-        mcp[RBC MCP server]
-        files[Local files: MD, CSV, JSON, XLSX, PDF]
+        mcp[MCP financial-data endpoint]
+        files[Local files: MD, CSV, JSON, TXT]
     end
 
-    subgraph ingest[Ingestion and validation worker]
-        adapter[MCP and file adapters]
-        snapshot[Snapshot, hash, version]
-        extract[Generic parser and normalizer]
-        validate[Validation and conflict detection]
-        embed[OpenAI embeddings]
+    subgraph ingest[Current ingestion path]
+        adapter[File or MCP adapter]
+        snapshot[Snapshot, canonicalize, hash, version]
+        extract[Markdown/CSV parser and numeric normalizer]
+        validate[Duplicate-claim validation]
+        worker[PostgreSQL job worker]
     end
 
-    mcp --> adapter
+    mcp -->|htn refresh: full corpus| adapter
     files --> adapter
     adapter --> snapshot --> extract --> validate
-    extract --> embed
+    cli -->|synchronous ingest or refresh| adapter
+    api -->|queues ingest job| worker
+    worker --> adapter
 
     subgraph evidence[PostgreSQL + pgvector]
         versions[Dataset versions]
         raw[Raw source snapshots and source spans]
         structured[Entities, tables, cells, typed facts]
-        index[Full-text and vector indexes]
         findings[Validation findings]
-        memory[Scoped research memory]
         audit[Jobs, answer runs, tool events]
     end
 
-    snapshot --> versions
+    snapshot -->|changed hash: new immutable version| versions
+    snapshot -->|unchanged hash: reuse ready version| versions
     snapshot --> raw
     extract --> structured
-    embed --> index
     validate --> findings
+    api --> audit
+    worker --> audit
 
-    api --> router[Question router and policy gate]
+    cli --> router[Question router and policy gate]
     router --> retrieval[Hybrid retrieval]
     retrieval --> structured
-    retrieval --> index
     retrieval --> raw
     router --> tools[Typed evidence tools]
     tools --> calculator[Deterministic calculator]
     tools --> findings
-    tools --> memory
 
     router <--> openai[OpenAI Responses API]
     openai --> tools
@@ -76,14 +76,11 @@ flowchart LR
     retrieval --> verifier
     findings --> verifier
     verifier --> response[Cited answer, conflict, partial, or decline]
-    response --> api
-    api --> user
+    response --> cli
+    cli --> user
 
-    api --> audit
     tools --> audit
     verifier --> audit
-    worker[PostgreSQL job worker] --> ingest
-    worker --> audit
 ```
 
 ## 2. Chosen architecture
@@ -298,7 +295,7 @@ are never written to application logs.
 ### CLI
 
 ```bash
-htn ingest --source mcp
+htn refresh
 htn ingest --path ./new-industry-corpus
 htn dataset show --version latest
 htn ask --dataset latest "Which company had the highest margin?"
@@ -360,7 +357,7 @@ Do not start Phase 2 rehearsal until:
 ### Cold-start workflow
 
 1. Configure the MCP endpoint and request the new corpus through the same
-   `htn ingest --source mcp` command.
+   `htn refresh` command.
 2. Snapshot, hash, parse, normalize, embed, validate, and index it as a new
    dataset version.
 3. Generate a dataset profile showing document count, extracted entities,

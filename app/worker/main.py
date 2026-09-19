@@ -6,15 +6,14 @@ import time
 
 from app.db import create_engine, create_session_factory
 from app.db.jobs import JobRepository
-from app.ingest.service import FileIngestService
-from app.ingest.storage import ImmutableRawStorage
+from app.ingest.service import get_ingest_service
 from app.settings import settings
 
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO)
     factory = create_session_factory(create_engine(settings.database_url))
-    service = FileIngestService(create_engine(settings.database_url), ImmutableRawStorage(settings.raw_storage_path), settings.parser_version)
+    service = get_ingest_service()
     while True:
         with factory.begin() as session:
             job = JobRepository(session).claim_next("ingest")

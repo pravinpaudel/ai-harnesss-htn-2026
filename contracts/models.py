@@ -258,6 +258,7 @@ class IngestReport(_Model):
     status: DatasetStatus
     source: SourceType
     source_hash: Optional[str] = None        # sha256 over sorted document hashes
+    reused: bool = False                      # true when an identical ready version was reused
     parser_version: str
     mcp_capabilities: Optional[dict] = None  # tools, argument schema, payload type as discovered
     documents: list[DocumentReport] = Field(default_factory=list)

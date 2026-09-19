@@ -68,12 +68,10 @@ class McpSourceAdapter:
             raise ValueError("McpSourceAdapter requires an MCP IngestRequest")
         if not request.mcp_tool:
             raise ValueError("mcp_tool is required after MCP capability discovery")
-        arguments = self._arguments(request)
-        payload = self.client.call_tool(request.mcp_tool, arguments)
-        if isinstance(payload, dict) and payload.get("isError"):
-            # A tool error must fail the ingest; never snapshot the error text as if it were a document.
-            detail = " ".join(item.get("text", "") for item in payload.get("content", []) if isinstance(item, dict))
-            raise RuntimeError(f"MCP tool {request.mcp_tool!r} returned an error: {detail.strip()[:500]}")
+        # The supplied financial-data MCP tool exposes the complete corpus and
+        # declares an empty input schema.  The local dataset name is an internal
+        # snapshot namespace, not an MCP tool parameter.
+        payload = self.client.call_tool(request.mcp_tool, {})
         items = self._documents(payload)
         documents: list[SnapshotDocument] = []
         for index, item in enumerate(items):
@@ -83,24 +81,7 @@ class McpSourceAdapter:
                                               item.get("media_type", "text/markdown"), item.get("metadata", {})))
         if not documents:
             raise ValueError("MCP tool returned no text documents")
-        # what the server offered and exactly what was called, for the dataset's audit record
-        self.last_capabilities = {
-            "tools": [{k: t.get(k) for k in ("name", "description", "inputSchema")} for t in self._tools],
-            "tool_called": request.mcp_tool, "arguments": arguments,
-            "documents_returned": len(documents),
-            "payload_shape": sorted(payload.keys()) if isinstance(payload, dict) else type(payload).__name__,
-        }
         return documents
-
-    def _arguments(self, request: IngestRequest) -> dict[str, Any]:
-        """Only send arguments the tool's discovered input schema declares (e.g. none for financialDataRetrieval)."""
-        self._tools = self.client.list_tools()
-        schema = next((t.get("inputSchema") or {} for t in self._tools
-                       if t.get("name") == request.mcp_tool), None)
-        if schema is None:
-            raise ValueError(f"MCP tool {request.mcp_tool!r} not offered by the server")
-        properties = schema.get("properties") or {}
-        return {"dataset_name": request.dataset_name} if "dataset_name" in properties else {}
 
     @staticmethod
     def _documents(payload: Any) -> list[dict[str, Any]]:

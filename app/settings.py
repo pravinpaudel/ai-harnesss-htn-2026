@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     openai_reasoning_effort: Literal["none", "low", "medium", "high", "xhigh", "max"] = "medium"
     mcp_url: str | None = None
     mcp_financial_data_tool: str = "financialDataRetrieval"
+    mcp_dataset_name: str = "mcp-financial-data"
 
 
 class ModelPrice(BaseModel):
