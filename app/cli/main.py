@@ -24,28 +24,19 @@ err = Console(stderr=True)
 
 
 def _repo():
-    from app.retrieval.repository import PgEvidenceRepository
+    from app.reasoning.factory import build_repo
 
-    return PgEvidenceRepository(engine_settings().database_url_engine)
+    return build_repo()
 
 
 def _engine(audit: bool = True):
-    from app.audit.recorder import MemoryRecorder, PgRecorder
-    from app.llm.client import OpenAIResponsesClient
-    from app.reasoning.engine import ResearchEngine
+    from app.reasoning.factory import EngineConfigError, build_engine
 
-    s = engine_settings()
-    if not s.htn_model:
-        err.print("[red]HARNESS_OPENAI_MODEL is not set.[/] Set it in the environment or .env.")
+    try:
+        return build_engine(audit=audit)
+    except EngineConfigError as e:
+        err.print(f"[red]{e}.[/] Set it in the environment or .env.")
         raise typer.Exit(2)
-    if not s.openai_api_key:
-        err.print("[red]OPENAI_API_KEY is not set.[/]")
-        raise typer.Exit(2)
-    repo = _repo()
-    llm = OpenAIResponsesClient(s.htn_model, api_key=s.openai_api_key.get_secret_value(),
-                                timeout=s.htn_llm_timeout_s)
-    recorder = PgRecorder(repo.engine) if audit else MemoryRecorder()
-    return ResearchEngine(repo, llm, s, recorder)
 
 
 def _version(dataset: str, version: str):

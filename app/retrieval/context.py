@@ -96,3 +96,31 @@ def period_of(block: Optional[str]) -> Optional[str]:
     if not block:
         return None
     return re.split(r"\s+[—–]\s+", block, maxsplit=1)[0].strip() or None
+
+
+class EntityMatcher:
+    """Finds which entities a piece of text is about, by label or alias.
+
+    Short all-caps terms (tickers, acronyms) match case-sensitively as whole words; longer names
+    and aliases match case-insensitively. Terms under four characters that are not all-caps are
+    ignored (too ambiguous). Nothing here assumes entities are stock tickers.
+    """
+
+    def __init__(self, names: dict[str, list[str]]):
+        self._patterns: list[tuple[str, re.Pattern]] = []
+        for label, aliases in names.items():
+            for term in sorted({label, *aliases}, key=len, reverse=True):
+                term = term.strip()
+                exact = term.isupper() and 2 <= len(term) <= 8
+                if not exact and len(term) < 4:
+                    continue
+                pat = re.compile(rf"(?<![A-Za-z0-9]){re.escape(term)}(?![A-Za-z0-9])", 0 if exact else re.IGNORECASE)
+                self._patterns.append((label, pat))
+
+    def find(self, text: str) -> list[str]:
+        first: dict[str, int] = {}
+        for label, pat in self._patterns:
+            m = pat.search(text)
+            if m and (label not in first or m.start() < first[label]):
+                first[label] = m.start()
+        return sorted(first, key=first.get)

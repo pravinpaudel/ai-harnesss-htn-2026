@@ -27,7 +27,8 @@ def reset_schema(admin_url: str) -> None:
     eng.dispose()
 
 
-def seed(admin_url: str, data: FixtureData, version_no: int = 1) -> None:
+def seed(admin_url: str, data: FixtureData, version_no: int = 1, embedder=None) -> None:
+    """Load one fixture version; with an embedder, also write chunk embeddings (stands in for A's ingest)."""
     eng = create_engine(admin_url)
     v = str(data.dataset_version_id)
     with eng.begin() as c:
@@ -75,10 +76,13 @@ def seed(admin_url: str, data: FixtureData, version_no: int = 1) -> None:
                        "cur": f.currency, "sc": f.scale, "est": f.is_estimate, "b": f.basis, "r": f.role,
                        "pl": f.period_label, "pe": f.period_end, "pt": f.period_type})
         for ch in data.chunks:
-            c.execute(text("""INSERT INTO chunk (chunk_id, dataset_version_id, span_id, text, token_count)
-                              VALUES (:id, :v, :s, :t, :n)"""),
+            emb = None
+            if embedder is not None:
+                emb = "[" + ",".join(f"{x:.7g}" for x in embedder.embed_query(ch.text)) + "]"
+            c.execute(text("""INSERT INTO chunk (chunk_id, dataset_version_id, span_id, text, token_count, embedding)
+                              VALUES (:id, :v, :s, :t, :n, CAST(:e AS vector))"""),
                       {"id": str(ch.chunk_id), "v": v, "s": str(ch.span.span_id), "t": ch.text,
-                       "n": len(ch.text.split())})
+                       "n": len(ch.text.split()), "e": emb})
         for fd in data.findings:
             c.execute(text("""INSERT INTO validation_finding (finding_id, dataset_version_id, rule, rule_version,
                                 severity, explanation, fact_ids, span_ids, expected, observed)

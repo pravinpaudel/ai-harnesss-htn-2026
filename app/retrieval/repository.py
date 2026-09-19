@@ -301,8 +301,26 @@ class PgEvidenceRepository:
                             text=r.body, score=float(r.score), score_components={"lexical": float(r.score)},
                             span=_span(r)) for r in rows]
 
+    def has_embeddings(self, dataset_version_id: UUID) -> bool:
+        with self.engine.connect() as c:
+            return bool(c.execute(text("""SELECT EXISTS (SELECT 1 FROM chunk
+                WHERE dataset_version_id = :v AND embedding IS NOT NULL)"""), {"v": str(dataset_version_id)}).scalar())
+
     def search_semantic(self, dataset_version_id: UUID, embedding: list[float], k: int = 20) -> list[EvidenceHit]:
-        return []  # enabled after Checkpoint 1, once chunk embeddings exist
+        """Nearest chunks by cosine distance (pgvector). Empty when the version has no embeddings."""
+        vec = "[" + ",".join(f"{x:.7g}" for x in embedding) + "]"
+        sql = """
+        SELECT 'chunk' AS kind, k.chunk_id AS id, k.text AS body, 1 - (k.embedding <=> CAST(:e AS vector)) AS score,
+               s.span_id, s.line_start, s.line_end, s.char_start, s.char_end, s.exact_text, s.heading_path,
+               d.document_id, d.name AS document_name, d.sha256 AS document_hash
+        FROM chunk k JOIN source_span s ON s.span_id = k.span_id JOIN document d ON d.document_id = s.document_id
+        WHERE k.dataset_version_id = :v AND k.embedding IS NOT NULL
+        ORDER BY k.embedding <=> CAST(:e AS vector) LIMIT :k"""
+        with self.engine.connect() as c:
+            rows = c.execute(text(sql), {"v": str(dataset_version_id), "e": vec, "k": k}).all()
+        return [EvidenceHit(kind=EvidenceKind.chunk, evidence_id=r.id, dataset_version_id=dataset_version_id,
+                            text=r.body, score=float(r.score), score_components={"semantic": float(r.score)},
+                            span=_span(r)) for r in rows]
 
     # ------------------------------------------------------------ sources --
 
