@@ -13,7 +13,23 @@ Built from the answer key in `question-set.md`:
 uv run python -m evals.build_rbc_sample
 ```
 
-Every case is scored on naming the right company (the ticker, matched as a whole word). 22 of the 30 also require at least one citation inside that company's quarter block in §6, where the answer key pins a single quarter with high confidence. That stops an answer from passing on the right name from the wrong evidence. Medium-confidence and multi-quarter cases check the company only.
+Every case is scored on naming the right company (the ticker, matched as a whole word) and on citing
+the evidence the answer key itself points at. All 30 cases carry citation anchors, and any one of
+them satisfies the case:
+
+- each line the key's **Evidence** column lists, widened to the narrative unit that holds it — the
+  quarter's `<details>` block, or the paragraph when the line sits outside one, because a report
+  states the same fact in several subsections of a quarter and the key lists only one of them;
+- the block of the quarter the key names, whether it marks that quarter certain or not;
+- for a claim the key spans over several quarters ("Trailing 8Q", a year, a range), the company
+  profile's own summary paragraph, which is where the report restates what its sector summary says.
+
+Anchors stay small — a median of 2.1% of a report and at most 4.9% — so an answer that names the
+right company from unrelated evidence still fails. `tests/unit/test_rbc_sample_anchors.py` holds
+that line. The limit of the check: questions that genuinely share evidence (MIN02 and MIN09 both
+describe the Antamina deal; MIN06 and MIN10 both describe TECK.B's trailing eight quarters) accept
+each other's citations — 7 of the 28 same-company case pairs do. The suite measures each answer
+against its own key, not against the other questions.
 
 ## Running it
 
