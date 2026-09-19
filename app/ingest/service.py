@@ -17,6 +17,8 @@ from .canonical import CanonicalDocument, canonicalize_text
 from .normalize import normalize_number
 from .parse import _DIVIDER as _TABLE_DIVIDER, ParsedTable, parse_csv_table, parse_markdown_tables
 from app.markdown import Outline, block_label, period_of
+from app.retrieval.context import entity_from_path
+from .entities import build_catalog
 from .storage import ImmutableRawStorage
 
 
@@ -207,11 +209,14 @@ class FileIngestService:
             {"version": version, "name": raw.name, "media": raw.media_type, "hash": digest, "key": key,
              "body": canonical.text, "lines": len(canonical.lines), "metadata": "{}"}).scalar_one()
         self._outline = Outline.parse(canonical.text)
-        chunks = self._chunks(conn, version, document_id, canonical)
         tables = parse_markdown_tables(canonical) if raw.name.lower().endswith((".md", ".markdown", ".txt")) else []
         if raw.name.lower().endswith(".csv"):
             table = parse_csv_table(canonical)
             tables = [table] if table else []
+        self._catalog = build_catalog(self._outline, tables)
+        self._entity_ids = {label: self._entity(conn, version, label, aliases)
+                            for label, aliases in self._catalog.aliases.items()}
+        chunks = self._chunks(conn, version, document_id, canonical)
         cells, facts = 0, 0
         for table in tables:
             table_cells, table_facts = self._table(conn, version, document_id, canonical, table)
@@ -265,9 +270,16 @@ class FileIngestService:
         facts = 0
         for row_index, (row, line_number) in enumerate(zip(table.rows, table.row_lines)):
             entity_label = row[0] or None
-            entity_id = self._entity(conn, version, entity_label) if entity_label else None
+            owners = [self._catalog.owner_of(c) for c in row]
+            named = [o for o in owners if o]
+            # a row about one entity (comparison / screening tables), else the enclosing entity section
+            row_entity = named[0] if len(set(named)) == 1 else None
+            section_entity = entity_from_path(self._outline.path(line_number), self._catalog.labels())
             cursor = 0
             for col_index, cell in enumerate(row):
+                owner = owners[col_index] if len(set(named)) > 1 else None   # multi-entity row: the cell's own
+                label_for_fact = owner or row_entity or section_entity
+                entity_id = self._entity_ids.get(label_for_fact) if label_for_fact else None
                 line = canonical.lines[line_number - 1]
                 column = line.text.find(cell, cursor)
                 column = column if column >= 0 else cursor
@@ -294,20 +306,47 @@ class FileIngestService:
                 conn.execute(text("UPDATE table_cell SET typed = true WHERE span_id = :span"), {"span": cell_span})
         return len(table.rows) * len(table.headers), facts
 
-    def _entity(self, conn, version: UUID, label: str) -> UUID:
-        return conn.execute(text("""INSERT INTO entity (dataset_version_id, label) VALUES (:version, :label)
+    def _entity(self, conn, version: UUID, label: str, aliases: set[str] = frozenset()) -> UUID:
+        entity_id = conn.execute(text("""INSERT INTO entity (dataset_version_id, label) VALUES (:version, :label)
             ON CONFLICT (dataset_version_id, label) DO UPDATE SET label = EXCLUDED.label RETURNING entity_id"""),
-                            {"version": version, "label": label}).scalar_one()
+                                 {"version": version, "label": label}).scalar_one()
+        for alias in sorted(aliases):
+            conn.execute(text("""INSERT INTO entity_alias (dataset_version_id, entity_id, alias, origin)
+                VALUES (:version, :entity, :alias, 'document') ON CONFLICT DO NOTHING"""),
+                         {"version": version, "entity": entity_id, "alias": alias})
+        return entity_id
 
     def _validate_duplicates(self, conn, version: UUID) -> int:
-        """Persist duplicate claims with incompatible numeric values; other rules follow the same pattern."""
-        groups = conn.execute(text("""SELECT entity_id, metric, period_label, basis, array_agg(fact_id) ids, array_agg(span_id) spans
-            FROM fact WHERE dataset_version_id = :version GROUP BY entity_id, metric, period_label, basis
-            HAVING COUNT(DISTINCT value) > 1"""), {"version": version}).mappings()
+        """duplicate_claim: the same entity, metric, stated period and basis with values that disagree
+        beyond rounding. Facts without a stated period are never compared (eight quarters of revenue
+        are not conflicting claims)."""
+        groups = conn.execute(text("""SELECT entity_id, metric, period_label, basis,
+                   array_agg(fact_id ORDER BY fact_id) ids, array_agg(span_id ORDER BY fact_id) spans,
+                   array_agg(value ORDER BY fact_id) vals, array_agg(original_value ORDER BY fact_id) raws,
+                   array_agg(scale ORDER BY fact_id) scales
+            FROM fact WHERE dataset_version_id = :version AND period_label IS NOT NULL AND value IS NOT NULL
+            GROUP BY entity_id, metric, period_label, basis HAVING COUNT(DISTINCT value) > 1"""),
+                              {"version": version}).mappings()
         count = 0
-        for group in groups:
-            conn.execute(text("""INSERT INTO validation_finding (dataset_version_id, rule, rule_version, severity, explanation, fact_ids, span_ids)
-              VALUES (:version, 'duplicate_claim', '0.1.0', 'medium', 'Conflicting values share the same entity, metric, period, and basis.', :facts, :spans)"""),
-                         {"version": version, "facts": group["ids"], "spans": group["spans"]})
+        for g in groups:
+            tolerance = max(_precision_step(raw, scale) for raw, scale in zip(g["raws"], g["scales"])) / 2
+            if max(g["vals"]) - min(g["vals"]) <= tolerance + 1e-9:
+                continue   # same number written at different precisions ($153M vs $152.6M)
+            conn.execute(text("""INSERT INTO validation_finding (dataset_version_id, rule, rule_version, severity, explanation,
+                                     fact_ids, span_ids, expected, observed)
+              VALUES (:version, 'duplicate_claim', '0.2.0', 'medium', :why, :facts, :spans, :expected, :observed)"""),
+                         {"version": version, "facts": g["ids"], "spans": g["spans"],
+                          "why": f"{g['metric']} for {g['period_label']} is stated with different values: "
+                                 + ", ".join(g["raws"]),
+                          "expected": "one value per entity, metric, period and basis",
+                          "observed": " vs ".join(g["raws"])})
             count += 1
         return count
+
+
+def _precision_step(original: str, scale: float) -> float:
+    """Smallest increment the written value can express: '$152.6M' -> 0.1 * 1e6."""
+    import re as _re
+    m = _re.search(r"\d[\d,]*(?:\.(\d+))?", original or "")
+    decimals = len(m.group(1) or "") if m else 0
+    return (10 ** -decimals) * (scale or 1.0)
