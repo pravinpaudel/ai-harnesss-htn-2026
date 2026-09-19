@@ -9,7 +9,7 @@ from sqlalchemy import Engine, text
 
 from contracts.models import DatasetProfile, DatasetStatus, DocumentReport, IngestReport, IngestRequest, ProfileEntry, SourceType
 
-from .adapters import FileSourceAdapter, SnapshotDocument
+from .adapters import FileSourceAdapter, McpSourceAdapter, SnapshotDocument
 from .canonical import CanonicalDocument, canonicalize_text
 from .normalize import normalize_number
 from .parse import ParsedTable, parse_csv_table, parse_markdown_tables
@@ -19,9 +19,11 @@ from .storage import ImmutableRawStorage
 class FileIngestService:
     """Writes raw, citable evidence only to a new immutable dataset version."""
 
-    def __init__(self, engine: Engine, storage: ImmutableRawStorage, parser_version: str) -> None:
+    def __init__(self, engine: Engine, storage: ImmutableRawStorage, parser_version: str,
+                 mcp_adapter: McpSourceAdapter | None = None) -> None:
         self.engine, self.storage, self.parser_version = engine, storage, parser_version
         self.adapter = FileSourceAdapter()
+        self.mcp_adapter = mcp_adapter
 
     def submit(self, request: IngestRequest) -> UUID:
         with self.engine.begin() as conn:
@@ -94,10 +96,13 @@ class FileIngestService:
                               findings_by_rule={FindingRule(rule): count for rule, count in findings.items()})
 
     def run_sync(self, request: IngestRequest) -> IngestReport:
-        if request.source != SourceType.file:
-            raise NotImplementedError("MCP ingestion is not configured yet")
         started = time.monotonic()
-        documents = self.adapter.snapshot(request)
+        if request.source == SourceType.file:
+            documents = self.adapter.snapshot(request)
+        elif self.mcp_adapter:
+            documents = self.mcp_adapter.snapshot(request)
+        else:
+            raise RuntimeError("MCP ingestion requires a configured McpSourceAdapter")
         source_hash = hashlib.sha256("".join(sorted(hashlib.sha256(d.content).hexdigest() for d in documents)).encode()).hexdigest()
         with self.engine.begin() as conn:
             dataset_id = self._dataset(conn, request)
@@ -107,7 +112,7 @@ class FileIngestService:
             conn.execute(text("UPDATE dataset_version SET status = 'ready', ready_at = now() WHERE dataset_version_id = :id"), {"id": version_id})
         elapsed = round((time.monotonic() - started) * 1000)
         return IngestReport(job_id=uuid4(), dataset_id=dataset_id, dataset_version_id=version_id,
-                            status=DatasetStatus.ready, source=SourceType.file, source_hash=source_hash,
+                            status=DatasetStatus.ready, source=request.source, source_hash=source_hash,
                             parser_version=self.parser_version, documents=reports, findings=findings,
                             timings_ms={"total": elapsed})
 

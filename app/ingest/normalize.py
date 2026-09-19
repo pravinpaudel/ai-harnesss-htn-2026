@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from contracts.models import Unit
 
-_NUMBER = re.compile(r"^\s*([+-]?)\s*(?:C\$|US\$|\$)?\s*([\d,]+(?:\.\d+)?)\s*(%|bps|x|[kKmMbB])?\s*$")
+_NUMBER = re.compile(r"^\s*(?:~|≈)?\s*(\(?[+-]?)\s*(?:C\$|US\$|\$)?\s*([\d,]+(?:\.\d+)?)\s*(%|bps|x|[kKmMbB])?\s*\)?\s*$")
 
 
 @dataclass(frozen=True)
@@ -23,7 +23,7 @@ def normalize_number(raw: str, header: str = "") -> NormalizedValue | None:
     if not match:
         return None
     sign, number, suffix = match.groups()
-    value = float(number.replace(",", "")) * (-1 if sign == "-" else 1)
+    value = float(number.replace(",", "")) * (-1 if "-" in sign or "(" in sign else 1)
     prefix = raw.strip()
     currency = "CAD" if prefix.startswith("C$") else "USD" if prefix.startswith("US$") else None
     if currency is None and "$" in prefix:

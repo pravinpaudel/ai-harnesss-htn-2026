@@ -4,7 +4,7 @@ import hashlib
 
 import pytest
 
-from app.ingest.adapters import FileSourceAdapter
+from app.ingest.adapters import FileSourceAdapter, McpSourceAdapter
 from app.ingest.storage import ImmutableRawStorage
 from contracts.models import IngestRequest, SourceType
 
@@ -29,3 +29,18 @@ def test_raw_storage_is_content_addressed_and_immutable(tmp_path):
     assert digest == hashlib.sha256(b"source bytes").hexdigest()
     assert storage.read(key) == b"source bytes"
     assert storage.put(b"source bytes") == (key, digest)
+
+
+def test_mcp_adapter_discovers_and_snapshots_text_documents():
+    class Client:
+        def list_tools(self):
+            return [{"name": "corpus"}]
+
+        def call_tool(self, name, arguments):
+            assert (name, arguments) == ("corpus", {"dataset_name": "fixture"})
+            return {"documents": [{"name": "source.md", "content": "# Source"}]}
+
+    adapter = McpSourceAdapter(Client())
+    assert adapter.discover().tools == [{"name": "corpus"}]
+    docs = adapter.snapshot(IngestRequest(source=SourceType.mcp, mcp_tool="corpus", dataset_name="fixture"))
+    assert docs[0].content == b"# Source"

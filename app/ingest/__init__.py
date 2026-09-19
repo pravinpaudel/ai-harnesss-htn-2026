@@ -1,4 +1,4 @@
-from .adapters import FileSourceAdapter
+from .adapters import FileSourceAdapter, McpSourceAdapter
 from .storage import ImmutableRawStorage
 
-__all__ = ["FileSourceAdapter", "ImmutableRawStorage"]
+__all__ = ["FileSourceAdapter", "McpSourceAdapter", "ImmutableRawStorage"]
