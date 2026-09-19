@@ -20,7 +20,6 @@ from contracts.models import (
 )
 from app.reasoning.context import RunContext
 from app.reasoning.verifier import verify_span
-from app.retrieval.context import entities_mentioned
 from app.tools.registry import SubmitAnswerArgs
 
 _MARKER = re.compile(r"\[(\d+)\]")
@@ -203,7 +202,12 @@ def finalize(ctx: RunContext, sub: SubmitAnswerArgs, *, model: str, prompt_versi
     seen_findings = set()
     findings = [ctx.findings[h] for h in dict.fromkeys(finding_handles) if h in ctx.findings]
     if cited_fact_ids:
-        findings += ctx.repo.list_findings(ctx.dataset_version_id, fact_ids=list(dict.fromkeys(cited_fact_ids)))
+        cited = set(cited_fact_ids)
+        for f in ctx.repo.list_findings(ctx.dataset_version_id, fact_ids=list(dict.fromkeys(cited_fact_ids))):
+            # relevant only if the answer relies on the finding's own claim, or compares 2+ of its facts
+            # (citing ABX's revenue is not affected by TECK.B's revenue being in CAD in the same column)
+            if (f.fact_ids and f.fact_ids[0] in cited) or len(cited & set(f.fact_ids)) >= 2:
+                findings.append(f)
     for f in findings:
         if f.finding_id in seen_findings:
             continue
@@ -242,14 +246,15 @@ def finalize(ctx: RunContext, sub: SubmitAnswerArgs, *, model: str, prompt_versi
     named = next((v.value_text for v in sub.values if v.label.strip().lower() in ("company", "entity") and v.value_text),
                  None)
     if named and cites.items:
-        label = _entity_label(named, ctx.entity_labels())
+        found = ctx.entities_in(named)
+        label = found[0] if found else _entity_label(named, ctx.entity_labels())
         if label:
             off = []
             for n, c in cites.items.items():
                 sc = ctx.span_context(c.span)
                 if sc.entity == label:
                     continue
-                if sc.entity is None and label in entities_mentioned(c.span.exact_text, {label}):
+                if sc.entity is None and label in ctx.entities_in(c.span.exact_text):
                     continue
                 off.append((n, sc.entity))
             for n, other in off:

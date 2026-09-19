@@ -1,4 +1,4 @@
-"""Shared service contract — Pydantic v2 models (contract version 1.1).
+"""Shared service contract — Pydantic v2 models (contract version 1.2).
 
 Both developers import these models; neither redefines them. Developer A produces
 IngestReport, DatasetProfile, ValidationFinding and the evidence records behind
@@ -518,6 +518,7 @@ class Expectation(_Model):
     values: list[ExpectedValue] = Field(default_factory=list)
     ordered_items: list[str] = Field(default_factory=list)
     must_cite: list[SpanAnchor] = Field(default_factory=list)
+    must_cite_any: list[SpanAnchor] = Field(default_factory=list)   # v1.2: at least one of these must be cited
     must_mention: list[str] = Field(default_factory=list)       # case-insensitive substrings of `answer`
     finding_rules: list[FindingRule] = Field(default_factory=list)
     requires_calculation: bool = False

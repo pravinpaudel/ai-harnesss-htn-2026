@@ -3,8 +3,8 @@
     uv run python -m evals.build_rbc_sample
 
 Each case expects the right company (by ticker), answered or partial (a caveat is fine; the name must be right). When the answer key pins a single quarter with
-high confidence, the case also requires a citation inside that company's quarter block in §6 of
-the report, so an answer that names the right company from the wrong evidence does not pass.
+high confidence, the case also requires a citation of that company's quarter in §6 of the report
+(its narrative block or its row in the quarterly table), so an answer that names the right company from the wrong evidence does not pass.
 """
 
 from __future__ import annotations
@@ -23,6 +23,20 @@ DOCS = {"Canadian Financials": "canadian-financials-research.md",
         "Canadian Technology": "canadian-technology-research.md"}
 PREFIX = {"Canadian Financials": "FIN", "Canadian Mining": "MIN", "Canadian Technology": "TEC"}
 QUARTER = re.compile(r"^(Q[1-4] (?:FY)?\d{4})(?: \(.*\))?$")
+
+
+def quarter_row(doc: str, ticker: str, quarter: str) -> int | None:
+    """Line of the ticker's §6 quarterly-table row for the quarter, e.g. '| Q3 FY2026 (Jul 31, 2026) | ...'."""
+    lines = (ROOT / doc).read_text(encoding="utf-8").split("\n")
+    in_s6, in_ticker = False, False
+    for i, line in enumerate(lines, start=1):
+        if line.startswith("## "):
+            in_s6 = line.startswith("## 6.")
+        elif line.startswith("### "):
+            in_ticker = in_s6 and line[4:].startswith(f"{ticker} —")
+        elif in_ticker and line.startswith("|") and line.strip("| ").split("|")[0].strip().startswith(quarter + " "):
+            return i
+    return None
 
 
 def quarter_block(doc: str, ticker: str, quarter: str) -> tuple[int, int] | None:
@@ -60,19 +74,22 @@ def main() -> None:
             if block is None:
                 raise SystemExit(f"{PREFIX[section]}{n}: no §6 block for {ticker} {qm.group(1)}")
             anchors = [SpanAnchor(document_name=doc, line_start=block[0], line_end=block[1])]
+            row = quarter_row(doc, ticker, qm.group(1))
+            if row:
+                anchors.append(SpanAnchor(document_name=doc, line_start=row, line_end=row))
         case = EvaluationCase(
             case_id=f"{PREFIX[section]}{int(n):02d}", question=question, category=QuestionCategory.identification,
             expect=Expectation(acceptable_statuses=[AnswerStatus.answered, AnswerStatus.partial],
-                               values=[ExpectedValue(label="company", value_text=ticker)], must_cite=anchors),
+                               values=[ExpectedValue(label="company", value_text=ticker)], must_cite_any=anchors),
             notes=f"Answer {ticker}, {quarter_col.strip()} (confidence {confidence.lower()}).")
         cases.append(json.loads(case.model_dump_json(exclude_none=True)))
     if len(cases) != 30:
         raise SystemExit(f"expected 30 cases, parsed {len(cases)}")
     out = ROOT / "evals" / "rbc_sample.json"
-    out.write_text(json.dumps({"suite": "rbc-sample", "contract_version": "1.1",
+    out.write_text(json.dumps({"suite": "rbc-sample", "contract_version": "1.2",
                                "corpus": list(DOCS.values()), "cases": cases}, indent=1, ensure_ascii=False) + "\n",
                    encoding="utf-8")
-    anchored = sum(bool(c["expect"].get("must_cite")) for c in cases)
+    anchored = sum(bool(c["expect"].get("must_cite_any")) for c in cases)
     print(f"wrote {out.relative_to(ROOT)}: {len(cases)} cases, {anchored} with a quarter-block citation anchor")
 
 

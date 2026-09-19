@@ -19,33 +19,37 @@ from contracts.models import IngestRequest, SourceType
 app = typer.Typer(no_args_is_help=True, add_completion=False, help="Evidence-first finance research harness.")
 dataset_app = typer.Typer(no_args_is_help=True, help="Inspect datasets.")
 app.add_typer(dataset_app, name="dataset")
+db_app = typer.Typer(no_args_is_help=True, help="Database setup.")
+app.add_typer(db_app, name="db")
+
+
+@db_app.command("init")
+def db_init(engine_password: Optional[str] = typer.Option(None, envvar="HARNESS_ENGINE_DB_PASSWORD",
+                                                          help="Password for the read-only htn_engine role")) -> None:
+    """Create the contract schema (if the database is empty) and the read-only htn_engine role."""
+    from app.db import create_engine
+    from app.db.bootstrap import init_database
+
+    result = init_database(create_engine(settings.database_url), engine_password)
+    typer.echo(json.dumps(result))
 console = Console()
 err = Console(stderr=True)
 
 
 def _repo():
-    from app.retrieval.repository import PgEvidenceRepository
+    from app.reasoning.factory import build_repo
 
-    return PgEvidenceRepository(engine_settings().database_url_engine)
+    return build_repo()
 
 
 def _engine(audit: bool = True):
-    from app.audit.recorder import MemoryRecorder, PgRecorder
-    from app.llm.client import OpenAIResponsesClient
-    from app.reasoning.engine import ResearchEngine
+    from app.reasoning.factory import EngineConfigError, build_engine
 
-    s = engine_settings()
-    if not s.htn_model:
-        err.print("[red]HARNESS_OPENAI_MODEL is not set.[/] Set it in the environment or .env.")
+    try:
+        return build_engine(audit=audit)
+    except EngineConfigError as e:
+        err.print(f"[red]{e}.[/] Set it in the environment or .env.")
         raise typer.Exit(2)
-    if not s.openai_api_key:
-        err.print("[red]OPENAI_API_KEY is not set.[/]")
-        raise typer.Exit(2)
-    repo = _repo()
-    llm = OpenAIResponsesClient(s.htn_model, api_key=s.openai_api_key.get_secret_value(),
-                                timeout=s.htn_llm_timeout_s)
-    recorder = PgRecorder(repo.engine) if audit else MemoryRecorder()
-    return ResearchEngine(repo, llm, s, recorder)
 
 
 def _version(dataset: str, version: str):

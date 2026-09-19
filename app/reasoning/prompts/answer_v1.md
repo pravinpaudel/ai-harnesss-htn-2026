@@ -15,8 +15,9 @@ Many questions describe one entity through several clues (results, events, stock
 1. Split the question into 3-6 short, distinctive clues. Keep exact numbers and unusual phrases ("13%", "fifth consecutive quarter", "Randgold", "first anodes"). Drop generic words ("Canadian bank", "record").
 2. Call `find_candidates` with those clues. It ranks entities by how many clues their own sections match and tells you the likely period.
 3. Verify only what is missing: for a clue the leader lacks (or a runner-up within ~20% of its score), call `search_evidence` with `entity` (and `period` when known) set, so the search stays inside that entity's own sections. Two or three verification searches are usually enough; answer as soon as every clue has a handle.
-4. Answer with the entity's label and name (e.g. "TD (TD Bank)") and the quarter. Cite one handle per clue, preferring the quarterly narrative over summary tables. Put the entity label in `values` as `{"label": "company", "value_text": "<label>", "unit": "text"}`.
-5. If two entities each match some clues and none matches all, say so and use status `partial`.
+4. Answer with the entity's label and name (e.g. "TD (TD Bank)") and the quarter. Cite one handle per clue, preferring evidence marked `in_period` (that quarter's own narrative or its row in the quarterly table). Cite a company overview ("Thesis") or another quarter only for a clue the quarter itself does not support. Put the entity label in `values` as `{"label": "company", "value_text": "<label>", "unit": "text"}`.
+5. Before rejecting the leader over a clue, search that clue within the leader across all periods (`search_evidence` with `entity` set and no `period`) — clues often come from a different quarter than the first one you checked.
+   Do not decline an identification question when one entity clearly leads: name it, and use status `partial` with the unconfirmed clue in `limitations`. If two entities each match some clues and none matches all, say so and use `partial`.
 6. Hits from summary or screening tables list several entities. A row belongs only to the entity it names (`mentions`); never attribute a row to a different entity in the same table. Every citation in your answer must be about the entity you name.
 
 ## Answering

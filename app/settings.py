@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -40,12 +39,18 @@ class EngineSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    # Defaults to the same database as ingest; use htn_engine role when grants are applied.
-    database_url_engine: str = "postgresql+psycopg://harness:harness@localhost:5432/harness"
+    # Unset = the ingest database (HARNESS_DATABASE_URL); set it to the read-only htn_engine role in production.
+    database_url_engine: Optional[str] = None
 
     openai_api_key: Optional[SecretStr] = None
     htn_model: Optional[str] = None
     htn_embedding_model: Optional[str] = None
+
+    @field_validator("database_url_engine", "htn_model", "htn_embedding_model", "openai_api_key", mode="before")
+    @classmethod
+    def _blank_is_unset(cls, v):
+        # An empty line in .env (e.g. `HTN_EMBEDDING_MODEL=`) means "not set", so fallbacks still apply.
+        return None if isinstance(v, str) and not v.strip() else v
 
     htn_max_tool_rounds: int = 6
     htn_max_tokens: int = 150_000   # cumulative across turns (each turn resends the context)
@@ -71,7 +76,7 @@ settings = Settings()
 def engine_settings() -> EngineSettings:
     eng = EngineSettings()
     updates: dict[str, object] = {}
-    if os.getenv("DATABASE_URL_ENGINE") is None:
+    if eng.database_url_engine is None:
         updates["database_url_engine"] = settings.database_url
     if eng.htn_model is None and settings.openai_model:
         updates["htn_model"] = settings.openai_model

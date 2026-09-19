@@ -71,8 +71,11 @@ def score(case: EvaluationCase, ans: AnswerResponse) -> CaseResult:
     calc_ok = (not e.requires_calculation) or any(not c.rejected for c in ans.calculation_trace)
     rules_ok = (not e.finding_rules or ans.status != AnswerStatus.conflict
                 or any(c.rule in e.finding_rules for c in ans.conflicts))
-    anchors_ok = all(any(c.span.document_name == a.document_name and c.span.line_start <= a.line_end
-                         and c.span.line_end >= a.line_start for c in ans.citations) for a in e.must_cite)
+    def hit(a) -> bool:
+        return any(c.span.document_name == a.document_name and c.span.line_start <= a.line_end
+                   and c.span.line_end >= a.line_start for c in ans.citations)
+
+    anchors_ok = all(hit(a) for a in e.must_cite) and (not e.must_cite_any or any(hit(a) for a in e.must_cite_any))
     citations_valid = all(c.verified for c in ans.citations)
 
     passed = status_ok and values_ok and mention_ok and calc_ok and rules_ok and anchors_ok and citations_valid

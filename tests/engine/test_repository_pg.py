@@ -14,6 +14,8 @@ from contracts.models import FactFilter, FindingRule, Role
 from app.audit.recorder import PgRecorder
 from app.llm.client import ScriptedLLM
 from app.reasoning.engine import ResearchEngine
+from app.llm.embeddings import HashingEmbedder
+from app.reasoning.context import RunContext
 from app.reasoning.verifier import verify_span
 from app.retrieval.repository import PgEvidenceRepository
 from tests.engine.conftest import db_url, pick, submit
@@ -33,7 +35,7 @@ def pg():
     reset_schema(url)
     v1, v2 = load("v1"), load("v2")
     seed(url, v1, 1)
-    seed(url, v2, 2)
+    seed(url, v2, 2, embedder=HashingEmbedder())    # only the newer version has chunk embeddings
     engine_url = url.replace("postgres:postgres@", "htn_engine:htn_engine@")
     return PgEvidenceRepository(engine_url), v1, v2
 
@@ -112,3 +114,22 @@ def test_lexical_search_ranks_partial_matches(pg):
     # "IVN" never appears in the narrative; AND semantics returned nothing here.
     hits = repo.search_lexical(v2.dataset_version_id, "IVN revenue miss consensus")
     assert hits and "consensus $202.1M" in hits[0].text
+
+
+def test_semantic_search_and_hybrid_fusion(pg):
+    repo, v1, v2 = pg
+    emb = HashingEmbedder()
+    assert repo.has_embeddings(v2.dataset_version_id) and not repo.has_embeddings(v1.dataset_version_id)
+    sem = repo.search_semantic(v2.dataset_version_id, emb.embed_query("payable sales logistical constraints"), k=3)
+    assert sem and "logistical" in sem[0].text
+    info = repo.version_info("fixture", str(v2.dataset_version_id))
+    ctx = RunContext(repo, info.dataset_id, info.dataset_version_id, info.source_hash, info.parser_version, "q",
+                     embedder=emb)
+    hits = ctx.search("revenue miss logistics", k=5)
+    assert ctx.search_mode == "hybrid"
+    assert any("semantic" in h.score_components for h in hits)
+    info1 = repo.version_info("fixture", str(v1.dataset_version_id))
+    ctx1 = RunContext(repo, info1.dataset_id, info1.dataset_version_id, info1.source_hash, info1.parser_version, "q",
+                      embedder=emb)
+    ctx1.search("revenue miss logistics", k=5)
+    assert ctx1.search_mode == "lexical"                   # no embeddings in v1 -> lexical only
