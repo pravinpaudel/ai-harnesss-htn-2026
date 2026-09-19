@@ -19,6 +19,11 @@ from app.settings import EngineSettings
 from app.tools.registry import SUBMIT, SubmitAnswerArgs, run_tool, tool_specs
 
 PROMPTS = Path(__file__).parent / "prompts"
+_TRANSIENT = {"APITimeoutError", "APIConnectionError", "RateLimitError", "InternalServerError", "TimeoutError"}
+
+
+class LLMUnavailable(RuntimeError):
+    """The model did not answer after a retry (timeout, connection, rate limit, 5xx)."""
 
 
 class ResearchEngine:
@@ -58,6 +63,14 @@ class ResearchEngine:
                           else "lexical"},
                   latency_ms=int((time.monotonic() - t0) * 1000))
 
+        try:
+            return self._converse(ctx, plan, question)
+        except LLMUnavailable as e:
+            # an outage must still produce an audited, well-formed answer, never a crashed request
+            return self._exhausted(ctx, f"model unavailable: {e}")
+
+    def _converse(self, ctx: RunContext, plan, question: str) -> AnswerResponse:
+        rec = self.recorder
         tools = tool_specs()
         submit_only = tool_specs({SUBMIT})
         user = f"{plan.as_prompt()}\n\nQuestion: {question}"
@@ -102,7 +115,18 @@ class ResearchEngine:
     # ------------------------------------------------------------------------
     def _llm_call(self, ctx: RunContext, name: str, fn) -> LLMTurn:
         t = time.monotonic()
-        turn = fn()
+        for attempt in (1, 2):
+            try:
+                turn = fn()
+                break
+            except Exception as e:  # noqa: BLE001 - only transient API failures are retried
+                if type(e).__name__ not in _TRANSIENT:
+                    raise
+                self.recorder.event(ctx.run_id, "llm", f"{name}_error",
+                                    output={"error": f"{type(e).__name__}: {e}"[:300], "attempt": attempt})
+                if attempt == 2:
+                    raise LLMUnavailable(type(e).__name__) from e
+                time.sleep(2)
         ctx.usage.input_tokens += turn.input_tokens
         ctx.usage.output_tokens += turn.output_tokens
         ctx.usage.cost_usd += self.settings.cost_usd(self.llm.model, turn.input_tokens, turn.output_tokens)

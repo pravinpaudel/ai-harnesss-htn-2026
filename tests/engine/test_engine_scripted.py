@@ -232,3 +232,59 @@ def test_invalid_submit_gets_one_retry(run_script):
     assert ans.status == AnswerStatus.answered
     assert llm.forced[-1] == "submit_answer"
     assert any(e["name"] == "invalid_submit" for e in rec.events[ans.run_id])
+
+
+# ------------------------------------------------------------- model outages --
+
+class APITimeoutError(Exception):
+    """Same name as the OpenAI SDK's timeout, which is what the engine keys on."""
+
+
+def _flaky(llm, failures: int):
+    real, left = llm.next, [failures]
+
+    def next_(*a, **k):
+        if left[0]:
+            left[0] -= 1
+            raise APITimeoutError("Request timed out.")
+        return real(*a, **k)
+    llm.next = next_
+
+
+def test_transient_model_error_is_retried(memory_repo, settings, monkeypatch):
+    from app.audit.recorder import MemoryRecorder
+    from app.reasoning import engine as eng_mod
+    from tests.engine.conftest import ScriptedLLM
+    monkeypatch.setattr(eng_mod.time, "sleep", lambda s: None)
+    llm = ScriptedLLM([
+        [("find_facts", {"entity": "IVN", "metric": "revenue", "period": "Q2 2026", "role": "actual"})],
+        [submit("answered", "Revenue was $152.6M [1].", [(1, pick("find_facts", source="mining-excerpt.md:95"))])],
+    ])
+    _flaky(llm, 1)
+    rec = MemoryRecorder()
+    ans = eng_mod.ResearchEngine(memory_repo, llm, settings, rec).ask(CASES["FX01"].question)
+    assert ans.status == AnswerStatus.answered
+    assert any(e["name"] == "next_error" for e in rec.events[ans.run_id])
+
+
+def test_model_outage_returns_an_audited_decline(memory_repo, settings, monkeypatch):
+    from app.audit.recorder import MemoryRecorder
+    from app.reasoning import engine as eng_mod
+    from tests.engine.conftest import ScriptedLLM
+    monkeypatch.setattr(eng_mod.time, "sleep", lambda s: None)
+    llm = ScriptedLLM([[("find_facts", {"entity": "IVN", "metric": "revenue", "role": "actual"})]])
+    _flaky(llm, 5)
+    ans = eng_mod.ResearchEngine(memory_repo, llm, settings, MemoryRecorder()).ask(CASES["FX01"].question)
+    check_contract(ans)
+    assert ans.status in (AnswerStatus.declined, AnswerStatus.partial)
+    assert ans.decline_reason == DeclineReason.budget_exhausted
+
+
+def test_eval_suite_survives_a_crashing_case():
+    from app.eval.runner import run
+    cases = [CASES["FX01"], CASES["FX02"]]
+
+    def ask(q):
+        raise RuntimeError("boom")
+    rep = run(cases, ask, suite="t")
+    assert [c.passed for c in rep.cases] == [False, False] and "boom" in rep.cases[0].detail

@@ -5,6 +5,7 @@ import hashlib
 import json
 import re
 import time
+from typing import Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import Engine, text
@@ -22,7 +23,7 @@ from app.markdown import Outline, block_label, period_of
 from app.retrieval.context import entity_from_path
 from .entities import build_catalog
 from .validators import run_all as run_validators
-from .extract import Value, cell_values, find_period, labelled_values, trend_values
+from .extract import Value, cell_values, find_period, labelled_values, leading_period, trend_values
 from contracts.models import Unit
 from .storage import ImmutableRawStorage
 
@@ -281,20 +282,22 @@ class FileIngestService:
         rank_cols = {i: int(re.sub(r"\D", "", h)) for i, h in enumerate(headers) if re.fullmatch(r"#?\s*\d{1,3}", h)}
         is_kv = len(headers) == 2 and not rank_cols
         lowered = [h.lower().strip("* ") for h in headers]
-        event_col = next((i for i, h in enumerate(lowered) if h in ("event", "catalyst", "milestone", "description")), None)
-        is_calendar = event_col is not None and lowered[0] in ("date", "expected date", "when", "timing")
+        lc = label_column(table, self._catalog, set(rank_cols))
+        date_col = date_column(table)
+        event_cols = event_columns(table, lowered, date_col, lc)
+        is_calendar = bool(event_cols) and date_col is not None
         caption = self._caption_period(canonical, table.start_line)
         facts = 0
         for row_index, (row, line_number) in enumerate(zip(table.rows, table.row_lines)):
-            row_label = row[0] or None
+            row_label = row[lc] or None
             owners = [self._catalog.owner_of(c) for c in row]
             named = [o for o in owners if o]
             # a row about one entity (comparison / screening tables), else the enclosing entity section
             row_entity = named[0] if len(set(named)) == 1 else None
             section_entity = entity_from_path(self._outline.path(line_number), self._catalog.labels())
-            period = find_period(row[0]) if row[0] and re.match(r"\s*(Q[1-4]|H[12]|FY)", row[0]) else None
+            period = leading_period(row[lc]) if row[lc] else None
             if period is None:
-                period = next((p for p in (find_period(c) for c in row[1:]) if p), None) or caption
+                period = next((p for p in (find_period(c) for i, c in enumerate(row) if i != lc) if p), None) or caption
             line = canonical.lines[line_number - 1]
             cursor = 0
             for col_index, cell in enumerate(row):
@@ -307,21 +310,20 @@ class FileIngestService:
                    VALUES (:version, :table, :span, :row, :col, :label, :headers, :raw) RETURNING cell_id"""),
                     {"version": version, "table": table_id, "span": cell_span, "row": row_index, "col": col_index,
                      "label": row_label, "headers": list(table.headers[:col_index + 1]), "raw": cell}).scalar_one()
-                if not cell or (col_index == 0 and lowered[0] not in ("rank", "#", "position")):
+                if not cell or (col_index == lc and lowered[lc] not in ("rank", "#", "position")):
                     continue
-                if is_calendar and col_index == event_col:
+                if is_calendar and col_index in event_cols:
                     owner = owners[col_index] or row_entity
                     ent = self._entity_ids.get(owner) if owner else None
-                    when = (row[0].strip(), find_period(row[0]) and find_period(row[0])[1] or _parse_date(row[0]), "point")
+                    d = row[date_col]
+                    when = (d.strip(), find_period(d) and find_period(d)[1] or _parse_date(d), "point")
                     written = self._write_values(conn, version, document, canonical, line_number, column,
                                                  [Value(0, len(cell), cell, text=cell, unit=Unit.text, role="event")],
                                                  ent, headers[col_index], when, cell_id)
-                elif is_calendar:
-                    continue
                 elif col_index in rank_cols:
                     # "| **Market Cap** | AEM ($102B) | ..." : rank + the value in parentheses, owned by the cell's entity
                     owner = owners[col_index]
-                    metric_label = row[0].strip("* ")
+                    metric_label = row[lc].strip("* ")
                     ent = self._entity_ids.get(owner) if owner else None
                     rank_v = Value(0, len(cell), cell, value=float(rank_cols[col_index]), text=cell, unit=Unit.rank,
                                    role="rank")
@@ -338,7 +340,7 @@ class FileIngestService:
                     owner = owners[col_index] if len(set(named)) > 1 else None   # multi-entity row: the cell's own
                     label_for_fact = owner or row_entity or section_entity
                     ent = self._entity_ids.get(label_for_fact) if label_for_fact else None
-                    metric_label = row[0].strip("* ") if is_kv else headers[col_index]
+                    metric_label = row[lc].strip("* ") if is_kv else headers[col_index]
                     vals = cell_values(cell, headers[col_index])
                     if owner and vals and all(v.role == "attribute" for v in vals):
                         continue    # an entity's own name/label cell is not a fact about it
@@ -398,8 +400,10 @@ class FileIngestService:
             if raw.lstrip().startswith("|") or not raw.strip():
                 continue
             section_entity = entity_from_path(self._outline.path(line.number), self._catalog.labels())
-            if "<summary>" in raw:
-                inner = re.sub(r"<[^>]+>", lambda m: " " * len(m.group(0)), raw)   # keep offsets
+            # a period's summary line: '<summary>Q3 2024 — Revenue $3,368M; EPS …</summary>', or the same
+            # text as a heading ('#### 3Q24 — Revenue …') in reports that don't use <details>
+            if "<summary>" in raw or (raw.startswith("#") and leading_period(raw.lstrip("#"))):
+                inner = re.sub(r"<[^>]+>|^#+", lambda m: " " * len(m.group(0)), raw)   # keep offsets
                 period = find_period(inner)
                 dash = re.search(r"\s[—–]\s", inner)
                 if period and dash:
@@ -474,6 +478,74 @@ class FileIngestService:
                           "observed": " vs ".join(g["raws"])})
             count += 1
         return count
+
+
+_LABEL_HEADERS = {"ticker", "symbol", "company", "name", "issuer", "entity", "field", "item", "metric", "measure",
+                  "driver", "category", "segment", "line item", "period", "quarter", "fiscal quarter", "year",
+                  "date", "rank", "#", "position"}
+
+
+def label_column(table: ParsedTable, catalog, exclude: set[int] = frozenset()) -> int:
+    """The column that names what each row is about. Usually the first, but not when columns are
+    reordered: prefer a column of entity labels, then periods, then short distinct text labels;
+    a generic label header ('Ticker', 'Field', 'Metric', 'Date') breaks ties."""
+    best, best_score = 0, -1.0
+    n = max(1, len(table.rows))
+    for i, header in enumerate(table.headers):
+        if i in exclude:
+            continue
+        cells = [r[i].strip().strip("*").strip() for r in table.rows]
+        exact = sum(1 for c in cells if c in catalog.aliases) / n
+        owners = sum(1 for c in cells if catalog.owner_of(c)) / n
+        periods = sum(1 for c in cells if leading_period(c)) / n
+        texty = sum(1 for c in cells if c and len(c) <= 40 and not re.match(r"[~≈+\-−]?\s*(?:C\$|US\$|\$)?\d", c)) / n
+        distinct = len(set(cells)) / n
+        score = (3 * exact + 2 * owners + 2 * periods + texty) * distinct \
+            + (0.5 if header.strip("* ").lower() in _LABEL_HEADERS else 0) + (0.25 if i == 0 else 0)
+        if score > best_score:
+            best, best_score = i, score
+    return best
+
+
+_EVENT_HEADERS = ("event", "catalyst", "milestone", "description")
+
+
+def date_column(table: ParsedTable) -> Optional[int]:
+    """The column that dates each row: most of its cells are a date or a period, however the header
+    is worded ('Date', 'Expected When', 'Timing')."""
+    for i in range(len(table.headers)):
+        dated = sum(1 for r in table.rows if _parse_date(r[i]) or find_period(r[i]) or _vague_date(r[i]))
+        if dated >= max(2, 0.6 * len(table.rows)):
+            return i
+    return None
+
+
+_MONTH_WORD = re.compile(r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*\d{0,2},?\s*20\d{2}\b",
+                         re.IGNORECASE)
+
+
+def _vague_date(cell: str) -> bool:
+    """'Late Nov 2026', 'Mid-2027', 'H2 2026 (targeted)': dated enough to head a row."""
+    return bool(_MONTH_WORD.search(cell or ""))
+
+
+def event_columns(table: ParsedTable, lowered: list[str], date_col: Optional[int], label_col: int) -> set[int]:
+    """In a dated table (news, catalysts), the columns that say what happened: those named as such,
+    else every phrase column, so renamed headers ('Headline', 'Effect') are still read as events.
+    A dated table that reports values (insider transactions) is left to the normal table path."""
+    named = {i for i, h in enumerate(lowered) if h in _EVENT_HEADERS}
+    if named or date_col is None:
+        return named
+    others = [i for i in range(len(lowered)) if i not in (date_col, label_col)]
+    if not others or any(_numeric_column(table, i) for i in others):
+        return set()
+    return {i for i in others if sum(len(r[i].split()) for r in table.rows) >= 3 * len(table.rows)}
+
+
+def _numeric_column(table: ParsedTable, i: int) -> bool:
+    """Most of the column's cells lead with a number or amount ('$4.2M', '12,500', '+3.1%')."""
+    hits = sum(1 for r in table.rows if re.match(r"[~≈+\-−(]?\s*(?:C\$|US\$|\$)?\d", r[i].strip()))
+    return hits >= max(2, 0.6 * len(table.rows))
 
 
 def _precision_step(original: str, scale: float) -> float:

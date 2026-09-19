@@ -17,11 +17,11 @@ from collections import Counter
 from dataclasses import dataclass, field
 from typing import Optional
 
-from app.markdown import Outline
+from app.markdown import Outline, heading_subject
+from app.periods import leading_period
 
 from .parse import ParsedTable
 
-_SPLIT = re.compile(r"\s+[—–]\s+")
 _LABEL_HEADERS = {"ticker", "symbol", "code", "id", "entity"}
 _NAME_HEADERS = {"company", "name", "issuer", "firm", "entity name", "company name"}
 _SUFFIX = re.compile(r"[,\s]+(inc\.?|corp\.?|corporation|ltd\.?|limited|plc|co\.?|group|holdings|s\.a\.|n\.v\.)$",
@@ -37,7 +37,8 @@ class EntityCatalog:
     def add(self, label: str, *names: str, from_table: bool = False) -> None:
         """Heading subjects are trusted; table values are also screened for group placeholders ('All 6')."""
         label = label.strip()
-        if not label or _PERIODISH.match(label) or len(label) > 60 or (from_table and _GROUP.match(label)):
+        if (not label or _PERIODISH.match(label) or leading_period(label) or len(label) > 60
+                or (from_table and _GROUP.match(label))):
             return
         bucket = self.aliases.setdefault(label, set())
         for n in (label, *names):
@@ -79,14 +80,14 @@ def _variants(name: str) -> set[str]:
 
 
 def heading_subjects(outline: Outline) -> dict[str, list[str]]:
-    """Leading parts of headings that head more than one section, with the names that follow them."""
-    parts = [_SPLIT.split(text) for _, level, text in outline.headings if level >= 2]
-    counts = Counter(p[0].strip() for p in parts if len(p) > 1)
+    """Subjects of headings that head more than one section, with their names:
+    'ABX — Barrick Mining Corporation' and 'Barrick Mining Corporation (ABX)' both give ABX."""
+    found = [s for s in (heading_subject(text) for _, level, text in outline.headings if level >= 2) if s]
+    counts = Counter(label for label, _ in found)
     subjects: dict[str, list[str]] = {}
-    for p in parts:
-        head = p[0].strip()
-        if len(p) > 1 and counts[head] >= 2 and len(head) <= 40:
-            subjects.setdefault(head, []).append(p[1].strip())
+    for label, name in found:
+        if counts[label] >= 2 and len(label) <= 40 and not leading_period(label):
+            subjects.setdefault(label, []).append(name)
     return subjects
 
 

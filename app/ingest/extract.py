@@ -16,9 +16,9 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from datetime import date
 from typing import Optional
 
+from app.periods import find_period, leading_period, period_spans  # noqa: F401  (re-exported)
 from contracts.models import Unit
 
 _CUR_PREFIX = r"(?:C\$|US\$|A\$|€|£|\$)"
@@ -76,11 +76,15 @@ def header_currency(header: str) -> Optional[str]:
     return "USD" if "USD" in h else "CAD" if "CAD" in h else None
 
 
+# actual vs estimate, however the comparison is worded: "$0.30 vs $0.31 est", "$0.30 versus consensus of $0.31",
+# "$0.30 against a $0.31 consensus", "$0.30 compared with $0.31 expected", "$0.30 (consensus $0.31)"
+_EST_WORD = r"(?:consensus|estimates?|est\.?|street|expectations?|expected|forecasts?)"
 _VS = re.compile(rf"(?P<a>{_AMOUNT.replace('?P<', '?P<a_')})(?:\s+(?P<abasis>adj|adjusted|GAAP|non-GAAP)\.?)?"
-                 r"(?:\s*\([^)]*\))?"
-                 rf"\s+vs\.?\s+(?P<b>{_AMOUNT.replace('?P<', '?P<b_')})"
+                 r"(?:\s*\((?!\s*" + _EST_WORD + r")[^)]*\))?"
+                 r"(?:\s+(?:vs\.?|versus|against|compared\s+(?:with|to))\s+(?:an?\s+|the\s+)?|\s*\(\s*(?=" + _EST_WORD + r"))"
+                 rf"(?:{_EST_WORD}(?:\s+of)?:?\s+)?(?P<b>{_AMOUNT.replace('?P<', '?P<b_')})"
                  rf"(?:\s*[-–]\s*(?P<bhi>{_AMOUNT.replace('?P<', '?P<h_')}))?"
-                 r"(?P<est>\s+est\.?)?(?:\s*\((?P<basis>adj|adjusted|gaap|GAAP|non-GAAP)\))?", re.IGNORECASE)
+                 r"(?P<est>\s+" + _EST_WORD + r")?\)?(?:\s*\((?P<basis>adj|adjusted|gaap|GAAP|non-GAAP)\))?", re.IGNORECASE)
 _QUANTITY = re.compile(r"(?P<est>~|≈)?(?P<num>\d[\d,]*(?:\.\d+)?)\s?(?P<unit>(?:[KMG]?t|[KM]?oz|lbs?|Koz|Moz|GEOs?|boe|bbl|MWh|GWh|tpa)\b)(?:\s+[A-Z][a-z]?\b)?")
 _COUNT = re.compile(r"(?<![\d/])(?P<n>\d+)\s*/\s*(?P<d>\d+)(?![\d/])")
 _TREND = re.compile(rf"(?P<a>{_AMOUNT.replace('?P<', '?P<a_')})\s*(?:→|->|to)\s*(?P<b>{_AMOUNT.replace('?P<', '?P<b_')})")
@@ -151,11 +155,11 @@ def cell_values(cell: str, header: str = "") -> list[Value]:
     amounts = [m for m in AMOUNT.finditer(cell) if m.group("num")]
     if len(amounts) > 1 and len(re.findall(r"[A-Za-z]{3,}", cell)) > 4:
         return []     # free-text cell ("GMV +31.6% to $115.6B; FCF margin 18%"): left to the text index
+    in_period = period_spans(cell)
     for m in amounts:
-        # skip numbers that are only part of a date or label ("Q2 2026", "Jul 31")
-        before = cell[max(0, m.start() - 4):m.start()]
-        if re.search(r"(Q[1-4]|FY|H[12])\s*$", before) or (not m.group("cur") and not m.group("suf")
-                                                         and len(amounts) > 1):
+        # skip numbers that are only part of a period label ("Q2 2026", "3Q24") or a date ("Jul 31")
+        if any(a <= m.start("num") < b for a, b in in_period) or (not m.group("cur") and not m.group("suf")
+                                                                  and len(amounts) > 1):
             continue
         v = _amount(m, hcur)
         if not m.group("cur") and not m.group("suf") and not m.group("code"):
@@ -245,41 +249,3 @@ def trend_values(text: str) -> list[Value]:
         out.append(Value(s, e, text[s:e], value=float(m.group("n")), text=text[s:e], unit=Unit.count,
                          role="count", label=m.group("label").strip()))
     return out
-
-
-# ------------------------------------------------------------------------------------------ periods --
-
-_PERIOD = re.compile(r"\b(?P<label>(?:Q[1-4]|H[12])\s+(?:FY)?\d{4}|FY\s?\d{4})(?:\s*\((?P<date>[^)]*)\))?")
-_MONTHS = {m: i for i, m in enumerate(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
-
-
-def find_period(text: str) -> Optional[tuple[str, Optional[date], str]]:
-    """First period label in a text: (label as written, end date if stated, period type)."""
-    m = _PERIOD.search(text)
-    if not m:
-        return None
-    label = m.group(0).strip()
-    ptype = "fiscal" if "FY" in m.group("label") else "calendar"
-    return label, _stated_date(m.group("date") or "", m.group("label")), ptype
-
-
-def _stated_date(hint: str, label: str) -> Optional[date]:
-    """'Jun 30' + 'Q2 2026' -> 2026-06-30; 'Jul 31, 2026'; 'Jul 31/26'. Only dates the source states."""
-    m = re.match(r"\s*([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2})(?:\s*[,/]\s*(\d{2,4}))?", hint)
-    if not m:
-        return None
-    month = _MONTHS.get(m.group(1).lower())
-    if not month:
-        return None
-    year_s = m.group(3)
-    if year_s:
-        year = int(year_s) + (2000 if len(year_s) == 2 else 0)
-    else:
-        y = re.search(r"(\d{4})", label)
-        if not y or "FY" in label:
-            return None      # a fiscal label's year is not the calendar year of the date
-        year = int(y.group(1))
-    try:
-        return date(year, month, int(m.group(2)))
-    except ValueError:
-        return None
