@@ -19,11 +19,20 @@ from .storage import ImmutableRawStorage
 
 
 def get_ingest_service() -> "FileIngestService":
-    """Factory used by the CLI and any future HTTP/worker entrypoints."""
+    """Factory used by the CLI, API, and worker entrypoints."""
+    mcp_adapter = None
+    source_uri = None
+    if settings.mcp_url:
+        from .http_mcp import HttpMcpClient
+
+        mcp_adapter = McpSourceAdapter(HttpMcpClient(settings.mcp_url))
+        source_uri = f"{settings.mcp_url}#{settings.mcp_financial_data_tool}"
     return FileIngestService(
         create_engine(settings.database_url),
         ImmutableRawStorage(settings.raw_storage_path),
         settings.parser_version,
+        mcp_adapter=mcp_adapter,
+        source_uri=source_uri,
     )
 
 
@@ -31,10 +40,11 @@ class FileIngestService:
     """Writes raw, citable evidence only to a new immutable dataset version."""
 
     def __init__(self, engine: Engine, storage: ImmutableRawStorage, parser_version: str,
-                 mcp_adapter: McpSourceAdapter | None = None) -> None:
+                 mcp_adapter: McpSourceAdapter | None = None, source_uri: str | None = None) -> None:
         self.engine, self.storage, self.parser_version = engine, storage, parser_version
         self.adapter = FileSourceAdapter()
         self.mcp_adapter = mcp_adapter
+        self.source_uri = source_uri
 
     def submit(self, request: IngestRequest) -> UUID:
         with self.engine.begin() as conn:
@@ -108,36 +118,64 @@ class FileIngestService:
 
     def run_sync(self, request: IngestRequest) -> IngestReport:
         started = time.monotonic()
+        mcp_capabilities = None
         if request.source == SourceType.file:
             documents = self.adapter.snapshot(request)
         elif self.mcp_adapter:
+            capabilities = self.mcp_adapter.discover()
+            mcp_capabilities = {"tools": capabilities.tools, "notes": capabilities.notes}
             documents = self.mcp_adapter.snapshot(request)
         else:
             raise RuntimeError("MCP ingestion requires a configured McpSourceAdapter")
         source_hash = hashlib.sha256("".join(sorted(hashlib.sha256(d.content).hexdigest() for d in documents)).encode()).hexdigest()
+        existing_version_id = None
         with self.engine.begin() as conn:
+            # A refresh may fetch concurrently, but only one transaction may
+            # decide whether this dataset needs a new immutable version.
+            conn.execute(text("SELECT pg_advisory_xact_lock(hashtext(:name))"), {"name": request.dataset_name})
             dataset_id = self._dataset(conn, request)
-            version_id = self._version(conn, dataset_id, source_hash)
-            reports = [self._ingest_document(conn, version_id, raw) for raw in documents]
-            findings = self._validate_duplicates(conn, version_id)
-            conn.execute(text("UPDATE dataset_version SET status = 'ready', ready_at = now() WHERE dataset_version_id = :id"), {"id": version_id})
+            existing_version_id = self._existing_version(conn, dataset_id, source_hash)
+            if existing_version_id is None:
+                version_id = self._version(conn, dataset_id, source_hash, mcp_capabilities)
+                reports = [self._ingest_document(conn, version_id, raw) for raw in documents]
+                findings = self._validate_duplicates(conn, version_id)
+                conn.execute(text("UPDATE dataset_version SET status = 'ready', ready_at = now() WHERE dataset_version_id = :id"), {"id": version_id})
+            else:
+                version_id = existing_version_id
+                reports = []
+                findings = 0
         elapsed = round((time.monotonic() - started) * 1000)
+        if existing_version_id is not None:
+            profile = self.profile(existing_version_id)
+            reports = profile.documents
+            findings = sum(profile.findings_by_rule.values())
         return IngestReport(job_id=uuid4(), dataset_id=dataset_id, dataset_version_id=version_id,
                             status=DatasetStatus.ready, source=request.source, source_hash=source_hash,
-                            parser_version=self.parser_version, documents=reports, findings=findings,
+                            reused=existing_version_id is not None, parser_version=self.parser_version,
+                            mcp_capabilities=mcp_capabilities, documents=reports, findings=findings,
                             timings_ms={"total": elapsed})
 
     def _dataset(self, conn, request: IngestRequest) -> UUID:
+        source_uri = self.source_uri if request.source == SourceType.mcp and self.source_uri else request.path or ""
         row = conn.execute(text("""INSERT INTO dataset (name, source_type, source_uri)
             VALUES (:name, :source, :uri) ON CONFLICT (name) DO UPDATE SET source_uri = EXCLUDED.source_uri
-            RETURNING dataset_id"""), {"name": request.dataset_name, "source": request.source.value, "uri": request.path or ""}).scalar_one()
+            RETURNING dataset_id"""), {"name": request.dataset_name, "source": request.source.value, "uri": source_uri}).scalar_one()
         return row
 
-    def _version(self, conn, dataset_id: UUID, source_hash: str) -> UUID:
+    def _existing_version(self, conn, dataset_id: UUID, source_hash: str) -> UUID | None:
+        return conn.execute(text("""SELECT dataset_version_id FROM dataset_version
+            WHERE dataset_id = :dataset AND source_hash = :hash AND parser_version = :parser AND status = 'ready'
+            ORDER BY version_no DESC LIMIT 1"""),
+            {"dataset": dataset_id, "hash": source_hash, "parser": self.parser_version}).scalar_one_or_none()
+
+    def _version(self, conn, dataset_id: UUID, source_hash: str, mcp_capabilities: dict | None = None) -> UUID:
         version_no = conn.execute(text("SELECT COALESCE(MAX(version_no), 0) + 1 FROM dataset_version WHERE dataset_id = :id"), {"id": dataset_id}).scalar_one()
-        return conn.execute(text("""INSERT INTO dataset_version (dataset_id, version_no, status, source_hash, parser_version)
-              VALUES (:dataset, :number, 'ingesting', :hash, :parser) RETURNING dataset_version_id"""),
-                            {"dataset": dataset_id, "number": version_no, "hash": source_hash, "parser": self.parser_version}).scalar_one()
+        return conn.execute(text("""INSERT INTO dataset_version
+              (dataset_id, version_no, status, source_hash, parser_version, mcp_capabilities)
+              VALUES (:dataset, :number, 'ingesting', :hash, :parser, CAST(:capabilities AS jsonb))
+              RETURNING dataset_version_id"""),
+            {"dataset": dataset_id, "number": version_no, "hash": source_hash,
+             "parser": self.parser_version, "capabilities": __import__("json").dumps(mcp_capabilities) if mcp_capabilities else None}).scalar_one()
 
     def _span(self, conn, version: UUID, document: UUID, canonical: CanonicalDocument, line_start: int, line_end: int,
               char_start: int | None = None, char_end: int | None = None) -> UUID:

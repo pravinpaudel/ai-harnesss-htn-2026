@@ -68,7 +68,10 @@ class McpSourceAdapter:
             raise ValueError("McpSourceAdapter requires an MCP IngestRequest")
         if not request.mcp_tool:
             raise ValueError("mcp_tool is required after MCP capability discovery")
-        payload = self.client.call_tool(request.mcp_tool, {"dataset_name": request.dataset_name})
+        # The supplied financial-data MCP tool exposes the complete corpus and
+        # declares an empty input schema.  The local dataset name is an internal
+        # snapshot namespace, not an MCP tool parameter.
+        payload = self.client.call_tool(request.mcp_tool, {})
         items = self._documents(payload)
         documents: list[SnapshotDocument] = []
         for index, item in enumerate(items):

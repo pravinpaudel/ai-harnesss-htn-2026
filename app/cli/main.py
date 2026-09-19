@@ -12,7 +12,7 @@ import typer
 from rich.console import Console
 
 from app.cli import render
-from app.ingest.service import FileIngestService, get_ingest_service
+from app.ingest.service import get_ingest_service
 from app.settings import engine_settings, settings
 from contracts.models import IngestRequest, SourceType
 
@@ -56,6 +56,23 @@ def _version(dataset: str, version: str):
         raise typer.Exit(1)
 
 
+def _default_dataset() -> str:
+    return settings.mcp_dataset_name
+
+
+def _refresh() -> None:
+    if not settings.mcp_url:
+        raise typer.BadParameter("HARNESS_MCP_URL must be configured")
+    report = get_ingest_service().run_sync(
+        IngestRequest(
+            source=SourceType.mcp,
+            mcp_tool=settings.mcp_financial_data_tool,
+            dataset_name=settings.mcp_dataset_name,
+        )
+    )
+    typer.echo(report.model_dump_json(indent=2))
+
+
 @app.command(name="version")
 def version_cmd() -> None:
     """Print the current platform version."""
@@ -72,48 +89,36 @@ def ingest(path: str, dataset_name: str = typer.Option(..., "--dataset-name")) -
 
 
 @app.command()
-def ingest_mcp(dataset_name: str = typer.Option(..., "--dataset-name")) -> None:
-    """Ingest the configured financial-data MCP corpus as an immutable version."""
-    if not settings.mcp_url:
-        raise typer.BadParameter("HARNESS_MCP_URL must be configured")
-    from app.ingest.adapters import McpSourceAdapter
-    from app.ingest.http_mcp import HttpMcpClient
-    from app.db import create_engine
-    from app.ingest.storage import ImmutableRawStorage
+def refresh() -> None:
+    """Fetch the complete MCP corpus and create a version only when it changed."""
+    _refresh()
 
-    adapter = McpSourceAdapter(HttpMcpClient(settings.mcp_url))
-    service = FileIngestService(
-        create_engine(settings.database_url),
-        ImmutableRawStorage(settings.raw_storage_path),
-        settings.parser_version,
-        mcp_adapter=adapter,
-    )
-    report = service.run_sync(
-        IngestRequest(
-            source=SourceType.mcp,
-            mcp_tool=settings.mcp_financial_data_tool,
-            dataset_name=dataset_name,
-        )
-    )
-    typer.echo(report.model_dump_json(indent=2))
+
+@app.command(name="ingest-mcp", hidden=True)
+def ingest_mcp() -> None:
+    """Deprecated alias for ``htn refresh``."""
+    _refresh()
 
 
 @app.command()
 def ask(
     question: str = typer.Argument(..., help="The research question"),
-    dataset: str = typer.Option("latest", help="Dataset name, or 'latest'"),
+    dataset: str = typer.Option(_default_dataset(), help="Dataset name; defaults to the refreshed MCP corpus"),
     version: str = typer.Option("latest", help="Dataset version id, or 'latest'"),
     session: Optional[str] = typer.Option(None, help="Session id for audit grouping"),
     as_json: bool = typer.Option(False, "--json", help="Print the AnswerResponse JSON only"),
     audit: bool = typer.Option(True, help="Write answer_run/tool_event rows"),
 ) -> None:
     """Answer a question from one dataset version, with verified citations."""
-    eng = _engine(audit)
     try:
-        resp = eng.ask(question, dataset=dataset, version=version, session_id=session)
+        _version(dataset, version)
     except LookupError as e:
         err.print(f"[red]{e}[/]")
+        if dataset == settings.mcp_dataset_name:
+            err.print("Run [bold]htn refresh[/] to fetch the MCP corpus before asking questions.")
         raise typer.Exit(1)
+    eng = _engine(audit)
+    resp = eng.ask(question, dataset=dataset, version=version, session_id=session)
     if as_json:
         sys.stdout.write(resp.model_dump_json(exclude_none=True) + "\n")
     else:
@@ -138,7 +143,7 @@ def trace(run_id: UUID, as_json: bool = typer.Option(False, "--json")) -> None:
 
 @app.command()
 def conflicts(
-    dataset: str = typer.Option("latest"),
+    dataset: str = typer.Option(_default_dataset()),
     version: str = typer.Option("latest"),
     fmt: str = typer.Option("markdown", "--format", help="markdown | json"),
 ) -> None:
@@ -153,7 +158,7 @@ def conflicts(
 
 @dataset_app.command("show")
 def dataset_show(
-    dataset: str = typer.Option("latest"),
+    dataset: str = typer.Option(_default_dataset()),
     version: str = typer.Option("latest"),
     as_json: bool = typer.Option(False, "--json"),
 ) -> None:
@@ -181,7 +186,7 @@ def dataset_show(
 @app.command(name="eval")
 def eval_cmd(
     questions: Path = typer.Option(Path("contracts/fixture/questions.json"), exists=True),
-    dataset: str = typer.Option("latest"),
+    dataset: str = typer.Option(_default_dataset()),
     version: str = typer.Option("latest"),
     as_json: bool = typer.Option(False, "--json"),
     audit: bool = typer.Option(True),

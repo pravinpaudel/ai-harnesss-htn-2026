@@ -4,15 +4,14 @@ from uuid import UUID
 
 from app.db import create_engine
 from app.settings import settings
-from app.ingest.service import FileIngestService
-from app.ingest.storage import ImmutableRawStorage
+from app.ingest.service import FileIngestService, get_ingest_service
 from contracts.models import IngestRequest, IngestReport
 
 app = FastAPI(title="Finance Research Harness", version="0.1.0")
 
 
 def ingest_service() -> FileIngestService:
-    return FileIngestService(create_engine(settings.database_url), ImmutableRawStorage(settings.raw_storage_path), settings.parser_version)
+    return get_ingest_service()
 
 
 @app.get("/healthz")
