@@ -22,7 +22,7 @@ from typing import Optional
 from contracts.models import Unit
 
 _CUR_PREFIX = r"(?:C\$|US\$|A\$|€|£|\$)"
-_AMOUNT = rf"(?P<est>~|≈|approximately\s+)?(?P<sign>[-+−]?)\s*(?P<cur>{_CUR_PREFIX})?\s*(?P<num>\d[\d,]*(?:\.\d+)?)\s*(?P<suf>%|bps|x|[KMBT](?![A-Za-z]))?(?:\s+(?P<code>CAD|USD|EUR|GBP|AUD))?"
+_AMOUNT = rf"(?<![A-Za-z0-9.])(?P<est>~|≈|approximately\s+)?(?P<sign>[-+−]?)\s*(?P<cur>{_CUR_PREFIX})?\s*(?P<num>\d[\d,]*(?:\.\d+)?)\s*(?P<suf>%|bps|x|[KMBT](?![A-Za-z]))?(?:\s+(?P<code>CAD|USD|EUR|GBP|AUD))?"
 AMOUNT = re.compile(_AMOUNT)
 _SCALE = {"K": 1e3, "M": 1e6, "B": 1e9, "T": 1e12}
 _CUR = {"C$": "CAD", "US$": "USD", "A$": "AUD", "€": "EUR", "£": "GBP"}
