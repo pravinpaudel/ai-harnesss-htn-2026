@@ -582,8 +582,12 @@
         }
 
         function cleanEmptyChats() {
-            // Filter out chats that have no messages
-            appState.chats = appState.chats.filter(chat => chat.messages && chat.messages.length > 0);
+            // Keep empty chats ONLY if it's the currently active chat; clean up older unused empty ones
+            appState.chats = appState.chats.filter(chat => {
+                const hasMessages = chat.messages && chat.messages.length > 0;
+                const isActive = chat.id === appState.currentChatId;
+                return hasMessages || isActive;
+            });
         }
 
         function openSettings() {
@@ -634,7 +638,7 @@
         }
 
         function createNewChat() {
-            // Clean up any other empty chats before making a brand new one
+            // Clean up old empty chats, keeping active states safe
             cleanEmptyChats();
 
             const newId = 'chat_' + Date.now();
@@ -811,7 +815,7 @@
                 currentChat.messages.push({ role: "user", content: query });
                 currentChat.messages.push({ role: "assistant", content: accumulatedText });
                 saveData();
-                renderSidebar(); // Refresh sidebar to remove empty state conditions if any happened
+                renderSidebar();
 
             } catch (err) {
                 responseDiv.innerHTML = "";
