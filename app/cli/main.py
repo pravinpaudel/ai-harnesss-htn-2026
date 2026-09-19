@@ -204,7 +204,7 @@ def eval_cmd(
     def progress(res, ans):
         if not as_json:
             mark = "[green]PASS[/]" if res.passed else "[red]FAIL[/]"
-            console.print(f"{mark} {res.case_id} {ans.status.value} {res.detail or ''}")
+            console.print(f"{mark} {res.case_id} {ans.status.value if ans else 'error'} {res.detail or ''}")
 
     rep = runner.run(
         cases,

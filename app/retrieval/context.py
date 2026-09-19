@@ -11,7 +11,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Optional
 
-from app.markdown import Outline, block_label, period_of  # noqa: F401  (re-exported)
+from app.markdown import Outline, block_label, heading_period, heading_subject, period_of  # noqa: F401  (re-exported)
 
 _TICKER = re.compile(r"^[A-Z][A-Z0-9.]{0,7}$")
 
@@ -25,8 +25,9 @@ class SpanContext:
 
     @property
     def period(self) -> Optional[str]:
-        """The reporting period this span belongs to: its <details> block, or the row's period cell."""
-        return period_of(self.block) or self.row_period
+        """The reporting period this span belongs to: its <details> block, the row's period cell, or a
+        heading that starts with a period (reports that use '#### Q3 2024 — …' instead of <details>)."""
+        return period_of(self.block) or self.row_period or heading_period(self.heading_path)
 
     @property
     def label(self) -> str:
@@ -37,11 +38,14 @@ class SpanContext:
 
 
 def entity_from_path(path: list[str], labels: set[str]) -> Optional[str]:
-    """Deepest heading whose leading token (before ' — ' / ' - ' / ':') is a known entity label."""
+    """Deepest heading about a known entity: 'ABX — Barrick …', 'ABX: …' or 'Barrick … (ABX)'."""
     for text in reversed(path):
         head = re.split(r"\s+[—–-]\s+|:", text, maxsplit=1)[0].strip()
         if head in labels:
             return head
+        subject = heading_subject(text)
+        if subject and subject[0] in labels:
+            return subject[0]
     return None
 
 
