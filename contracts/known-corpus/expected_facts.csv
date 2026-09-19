@@ -1,0 +1,74 @@
+fact_key,document_name,document_sha256,entity_label,metric_hint,role,basis,value,value_low,value_high,value_text,original_value,unit,currency,is_estimate,period_label,period_type,period_end,line_start,line_end,char_start,char_end
+G01,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,RY,roe,actual,,17.9,,,,17.9%,pct,,false,Q3 FY2026,fiscal,,38,38,3379,3384
+G02,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,RY,cet1,actual,,13.5,,,,13.5%,pct,,false,Q3 FY2026,fiscal,,38,38,3371,3376
+G03,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,RY,dividend_per_quarter,actual,,1.76,,,,$1.76,money,,false,Q3 FY2026,fiscal,,38,38,3387,3392
+G04,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,TD,cet1,actual,,14.3,,,,14.3%,pct,,false,Q3 FY2026,fiscal,,39,39,3458,3463
+G05,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,TD,eps,actual,adjusted,2.77,,,,$2.77,money,,false,Q3 FY2026,fiscal,,39,39,3427,3432
+G06,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,TD,eps_yoy_pct,actual,,26,,,,+26%,pct,,false,Q3 FY2026,fiscal,,39,39,3435,3439
+G07,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,BMO,roe,actual,,13.5,,,,~13.5%,pct,,true,Q3 FY2026,fiscal,,40,40,3563,3569
+G08,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,BNS,revenue,actual,,10540000000,,,,$10.54B,money,,false,Q3 FY2026,fiscal,,41,41,3641,3648
+G09,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,CM,eps_yoy_pct,actual,,26,,,,+26%,pct,,false,Q3 FY2026,fiscal,,42,42,3723,3727
+G10,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,NA,revenue_yoy_pct,actual,,18,,,,+18%,pct,,false,Q3 FY2026,fiscal,,43,43,3850,3854
+G11,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,NA,market_cap,actual,,55000000000,,,,~$55B,money,CAD,true,,point,2026-09-17,43,43,3818,3823
+G12,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,RY,pcl,actual,,36,,,,36 bps,bps,,false,Q3 FY2026,fiscal,,54,54,4312,4318
+G13,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,TD,efficiency_ratio,actual,,50.2,,,,50.2%,pct,,false,Q3 FY2026,fiscal,,55,55,4461,4466
+G14,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,BNS,pcl,actual,,56,,,,56 bps,bps,,false,Q3 FY2026,fiscal,,57,57,4711,4717
+G15,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,NA,efficiency_ratio,actual,,49.8,,,,49.8%,pct,,false,Q3 FY2026,fiscal,,59,59,4959,4964
+G16,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,RY,revenue,actual,,18540000000,,,,$18.54B,money,,false,"Q3 FY2026 (Jul 31, 2026)",fiscal,2026-07-31,232,232,13906,13913
+G17,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,RY,eps,actual,adjusted,4.28,,,,$4.28 adj,money,,false,"Q3 FY2026 (Jul 31, 2026)",fiscal,2026-07-31,232,232,13922,13931
+G18,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,RY,eps,estimate,,4.04,,,,$4.04 est,money,,false,"Q3 FY2026 (Jul 31, 2026)",fiscal,2026-07-31,232,232,13935,13944
+G19,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,RY,beat_miss,attribute,,,,,Beat,Beat,text,,false,"Q3 FY2026 (Jul 31, 2026)",fiscal,2026-07-31,232,232,13947,13951
+G20,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,TD,eps,trend,,,1.72,2.77,↑,EPS ↑ ($1.72 → $2.77,money,,false,trailing 8Q,trailing,,501,501,42508,42528
+G21,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,TD,revenue,actual,adjusted,14900000000,,,,C$14.9B (adj),money,CAD,false,"Q4 FY2024 (Oct 31, 2024)",fiscal,2024-10-31,512,512,43685,43698
+G22,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,TD,eps,actual,,1.72,,,,C$1.72,money,CAD,false,"Q4 FY2024 (Oct 31, 2024)",fiscal,2024-10-31,512,512,43707,43713
+G23,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,TD,eps,estimate,,1.82,,,,C$1.82,money,CAD,false,"Q4 FY2024 (Oct 31, 2024)",fiscal,2024-10-31,512,512,43717,43723
+G24,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,TD,beat_miss,attribute,,,,,Miss (-5%),Miss (-5%),text,,false,"Q4 FY2024 (Oct 31, 2024)",fiscal,2024-10-31,512,512,43726,43736
+G25,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,CM,eps_beat_count,count,,8,,,8/8,Beat 8/8,count,,false,trailing 8Q,trailing,,1320,1320,114857,114865
+G26,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,CM,eps,actual,,2.73,,,,$2.73,money,,false,"Q3 FY2026 (Jul 31, 2026)",fiscal,2026-07-31,1324,1324,115011,115016
+G27,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,CM,eps,estimate,,2.50,,,,$2.50,money,,false,"Q3 FY2026 (Jul 31, 2026)",fiscal,2026-07-31,1324,1324,115020,115025
+G28,canadian-financials-research.md,c29e4bb72c8e978cac1e20169aa9589b910402de5d3c7b5e95dabf6322396c26,RY,screening_rank,rank,,1,,,,1,rank,,false,,point,2026-09-17,1915,1915,169976,169977
+G29,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,ABX,revenue,actual,,5292000000,,,,"$5,292M",money,,false,Q2 2026,calendar,,39,39,3604,3611
+G30,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,AEM,market_cap,actual,,102000000000,,,,~$102B,money,USD,true,,point,2026-09-17,40,40,3695,3701
+G31,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,TECK.B,eps,actual,adjusted,1.93,,,,C$1.93 (adj),money,CAD,false,Q2 2026,calendar,,41,41,3800,3812
+G32,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,FM,market_cap,actual,,30000000000,,,,~C$30B,money,CAD,true,,point,2026-09-17,42,42,3918,3924
+G33,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,WPM,revenue_yoy_pct,actual,,85,,,,+85%,pct,,false,Q2 2026,calendar,,43,43,4064,4068
+G34,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,IVN,market_cap,actual,,17100000000,,,,C$17.1B,money,CAD,false,,point,2026-09-17,44,44,4146,4153
+G35,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,IVN,eps_yoy_pct,actual,,,,,N/M,N/M,text,,false,Q2 2026,calendar,,44,44,4164,4167
+G36,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,TECK.B,production,actual,,135900,,,,"135,900t Cu (Q2)",quantity,,false,Q2 2026,calendar,,57,57,5056,5072
+G37,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,FM,net_debt_to_ebitda,actual,,3.0,,,,3.0x,x,,false,Q2 2026,calendar,,58,58,5296,5300
+G38,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,AEM,eps,estimate,,,2.89,3.10,,$2.89-$3.10 est,money,,false,Q2 2026,calendar,,751,751,55339,55354
+G39,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,AEM,beat_miss,attribute,,,,,Beat/In-line,(Beat/In-line),text,,false,Q2 2026,calendar,,751,751,55355,55369
+G40,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,TECK.B,revenue,actual,,3605000000,,,,"Revenue C$3,605M",money,CAD,false,Q2 2026,calendar,,1011,1011,71096,71112
+G41,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,IVN,beat_miss,attribute,,,,,Beat,(Beat),text,,false,Q1 2025,calendar,,1631,1631,108860,108866
+G42,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,IVN,eps,estimate,,-0.02,,,,vs -$0.02 est,money,,false,Q3 2025,calendar,,1695,1695,112394,112407
+G43,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,IVN,revenue,actual,,152600000,,,,Revenue $152.6M,money,,false,Q2 2026,calendar,,1791,1791,118548,118563
+G44,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,IVN,eps,actual,,0.03,,,,EPS $0.03,money,,false,Q2 2026,calendar,,1791,1791,118565,118574
+G45,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,IVN,eps,estimate,,0.06,,,,vs $0.06 est,money,,false,Q2 2026,calendar,,1791,1791,118575,118587
+G46,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,IVN,beat_miss,attribute,,,,,Miss,(Miss),text,,false,Q2 2026,calendar,,1791,1791,118588,118594
+G47,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,WPM,catalyst,event,,,,,Q3 2026 earnings,Q3 2026 earnings,text,,false,"Nov 5, 2026",point,2026-11-05,1864,1864,124269,124285
+G48,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,AEM,revenue_yoy_pct,rank,,3,,,AEM (+35%),AEM (+35%),rank,,false,Q2 2026,calendar,,1898,1898,126734,126744
+G49,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,IVN,revenue_yoy_pct,rank,,4,,,IVN (+58%),IVN (+58%),rank,,false,Q2 2026,calendar,,1898,1898,126747,126757
+G50,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,IVN,revenue_yoy_pct,actual,,58,,,,IVN (+58%),pct,,false,Q2 2026,calendar,,1898,1898,126747,126757
+G51,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,IVN,eps_beat_count,count,,3,,,3/8,IVN (3/8),count,,false,trailing 8Q,trailing,,1899,1899,126874,126883
+G52,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,TECK.B,eps_beat_count,count,,8,,,8/8,TECK.B (8/8),count,,false,trailing 8Q,trailing,,1899,1899,126812,126824
+G53,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,SHOP,payments_penetration,trend,,,58,68,↑,Payments penetration expanding (58% → 68%),pct,,false,,unspecified,,9,9,1029,1071
+G54,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,SHOP,market_cap,actual,,185000000000,,,,~$185B CAD,money,CAD,true,,point,2026-09-17,38,38,3847,3857
+G55,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,CSU,eps,actual,gaap,12.93,,,,$12.93 (GAAP),money,,false,Q2 2026,calendar,,39,39,3990,4003
+G56,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,CSU,eps,actual,adjusted,31.62,,,,~$31.62 (adj),money,,true,Q2 2026,calendar,,39,39,4006,4019
+G57,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,GIB.A,revenue_yoy_pct,actual,,2.5,,,,+2.5%,pct,,false,Q3 FY2026,fiscal,,40,40,4110,4115
+G58,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,OTEX,revenue_yoy_pct,actual,,2.9,,,,+2.9%,pct,,false,Q4 FY2026,fiscal,,41,41,4209,4214
+G59,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,DSG,revenue,actual,,201100000,,,,$201.1M (Q2 FY2027),money,,false,Q2 FY2027,fiscal,,42,42,4301,4320
+G60,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,KXS,eps,actual,adjusted,1.19,,,,$1.19 (adj),money,,false,Q2 2026,calendar,,43,43,4430,4441
+G61,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,DSG,rule_of_40,actual,,59,,,,~59,score,,true,Q2 FY2027,fiscal,,58,58,5803,5806
+G62,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,KXS,arr,actual,,465600000,,,,ARR $465.6M,money,,false,Q2 2026,calendar,,59,59,5934,5945
+G63,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,SHOP,payments_penetration,trend,,,62,68,↑,Payments penetration ↑ (62% → 68%),pct,,false,trailing 8Q,trailing,,241,241,17765,17799
+G64,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,SHOP,eps_beat_or_met_count,count,,6,,,6/8,Beat/Met 6/8,count,,false,trailing 8Q,trailing,,241,241,17802,17814
+G65,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,SHOP,revenue,actual,,3580000000,,,,$3.58B,money,,false,Q2 2026 (Jun 30),calendar,2026-06-30,245,245,17953,17959
+G66,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,SHOP,eps,actual,,0.42,,,,$0.42,money,,false,Q2 2026 (Jun 30),calendar,2026-06-30,245,245,17971,17976
+G67,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,SHOP,eps,estimate,,0.39,,,,vs $0.39,money,,false,Q2 2026 (Jun 30),calendar,2026-06-30,245,245,17977,17985
+G68,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,SHOP,beat_miss,attribute,,,,,Miss (-3.9%),Miss (-3.9%),text,,false,Q1 2025 (Mar 31),calendar,2025-03-31,250,250,18691,18703
+G69,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,CSU,fcfe,trend,,,362000000,345000000,↑,FCFE ↑ ($362M → $345M,money,,false,trailing 8Q,trailing,,514,514,39425,39446
+G70,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,CSU,eps,actual,gaap,12.93,,,,$12.93 ($31.62 adj),money,,false,Q2 2026 (Jun 30),calendar,2026-06-30,518,518,39700,39719
+G71,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,CSU,eps,estimate,,27.87,,,,vs $27.87 est,money,,false,Q2 2026 (Jun 30),calendar,2026-06-30,518,518,39720,39733
+G72,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,DSG,beat_miss,attribute,,,,,Met (Rev beat ~1%),Met (Rev beat ~1%),text,,false,"Q2 FY2027 (Jul 31, 2026)",fiscal,2026-07-31,1337,1337,94189,94207
+G73,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,KXS,revenue,actual,,165600000,,,,$165.6M,money,,false,Q1 2026 (Mar 31),calendar,2026-03-31,1611,1611,110769,110776

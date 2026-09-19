@@ -1,0 +1,111 @@
+{
+ "run_id": "00000000-0000-4000-8000-0000000a0002",
+ "status": "conflict",
+ "answer": "The report contradicts itself. The screening table says Ivanhoe beat EPS estimates in 3 of 8 quarters [1], but the quarterly summaries show 2 beats [2][3] and 1 quarter that met the estimate [4].",
+ "values": [],
+ "citations": [
+  {
+   "citation_id": 1,
+   "span": {
+    "document_name": "mining-excerpt.md",
+    "document_hash": "d99ff713a76cef859b1d6a76070d3c822b9d89ba7d94ee38a79a497ebe7ea172",
+    "line_start": 132,
+    "line_end": 132,
+    "char_start": 9118,
+    "char_end": 9121,
+    "exact_text": "3/8",
+    "heading_path": []
+   },
+   "evidence_kind": "fact",
+   "verified": true
+  },
+  {
+   "citation_id": 2,
+   "span": {
+    "document_name": "mining-excerpt.md",
+    "document_hash": "d99ff713a76cef859b1d6a76070d3c822b9d89ba7d94ee38a79a497ebe7ea172",
+    "line_start": 70,
+    "line_end": 70,
+    "char_start": 5550,
+    "char_end": 5554,
+    "exact_text": "Beat",
+    "heading_path": []
+   },
+   "evidence_kind": "fact",
+   "verified": true
+  },
+  {
+   "citation_id": 3,
+   "span": {
+    "document_name": "mining-excerpt.md",
+    "document_hash": "d99ff713a76cef859b1d6a76070d3c822b9d89ba7d94ee38a79a497ebe7ea172",
+    "line_start": 80,
+    "line_end": 80,
+    "char_start": 5844,
+    "char_end": 5848,
+    "exact_text": "Beat",
+    "heading_path": []
+   },
+   "evidence_kind": "fact",
+   "verified": true
+  },
+  {
+   "citation_id": 4,
+   "span": {
+    "document_name": "mining-excerpt.md",
+    "document_hash": "d99ff713a76cef859b1d6a76070d3c822b9d89ba7d94ee38a79a497ebe7ea172",
+    "line_start": 85,
+    "line_end": 85,
+    "char_start": 6014,
+    "char_end": 6017,
+    "exact_text": "Met",
+    "heading_path": []
+   },
+   "evidence_kind": "fact",
+   "verified": true
+  }
+ ],
+ "calculation_trace": [],
+ "conflicts": [
+  {
+   "finding_id": "00000000-0000-4000-8000-0000000f0001",
+   "rule": "count_claim",
+   "explanation": "Screening count (3/8) does not match the quarterly records (2 beat, 1 met, 5 miss).",
+   "claims": [
+    {
+     "text": "Screening table: 3 of 8 beats",
+     "citation_ids": [
+      1
+     ]
+    },
+    {
+     "text": "Quarterly summaries: 2 beats (Q1 2025, Q3 2025), 1 met (Q4 2025)",
+     "citation_ids": [
+      2,
+      3,
+      4
+     ]
+    }
+   ]
+  }
+ ],
+ "limitations": [],
+ "evidence_status": "conflicting",
+ "dataset_version": "00000000-0000-4000-8000-00000000d002",
+ "provenance": {
+  "contract_version": "1.0",
+  "dataset_id": "00000000-0000-4000-8000-00000000d001",
+  "source_hash": "a2af78bb329854bee8625acbb08a02825f2764ab4a1e993f751b7e60fc33c5a0",
+  "parser_version": "example",
+  "prompt_version": "example",
+  "model": "example-model",
+  "usage": {
+   "input_tokens": 5100,
+   "output_tokens": 210,
+   "embedding_tokens": 0,
+   "cost_usd": 0.015,
+   "latency_ms": 4100,
+   "tool_rounds": 3
+  }
+ }
+}

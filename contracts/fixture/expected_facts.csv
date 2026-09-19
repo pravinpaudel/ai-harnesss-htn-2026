@@ -1,0 +1,144 @@
+fact_key,document_name,entity_label,metric_hint,metric_label,role,basis,value,value_low,value_high,value_text,original_value,unit,currency,scale,is_estimate,period_label,period_type,period_end,line_start,line_end,char_start,char_end,source_line
+m:ABX:market_cap:asof,mining-excerpt.md,ABX,market_cap,Mkt Cap (USD),actual,,70000000000.0,,,,~$70B,money,USD,1000000000.0,true,,point,2026-09-17,18,18,2020,2025,39
+m:ABX:revenue:comp,mining-excerpt.md,ABX,revenue,Revenue,actual,,5292000000.0,,,,"$5,292M",money,,1000000.0,false,Q2 2026,calendar,,18,18,2043,2050,39
+m:ABX:revenue_yoy:comp,mining-excerpt.md,ABX,revenue_yoy,Rev YoY%,actual,,44,,,,+44%,pct,,1.0,false,Q2 2026,calendar,,18,18,2053,2057,39
+m:AEM:market_cap:asof,mining-excerpt.md,AEM,market_cap,Mkt Cap (USD),actual,,102000000000.0,,,,~$102B,money,USD,1000000000.0,true,,point,2026-09-17,19,19,2134,2140,40
+m:AEM:revenue:comp,mining-excerpt.md,AEM,revenue,Revenue,actual,,3803000000.0,,,,"$3,803M",money,,1000000.0,false,Q2 2026,calendar,,19,19,2158,2165,40
+m:AEM:revenue_yoy:comp,mining-excerpt.md,AEM,revenue_yoy,Rev YoY%,actual,,35,,,,+35%,pct,,1.0,false,Q2 2026,calendar,,19,19,2168,2172,40
+m:TECK.B:market_cap:asof,mining-excerpt.md,TECK.B,market_cap,Mkt Cap (USD),actual,,32000000000.0,,,,~$32B,money,USD,1000000000.0,true,,point,2026-09-17,20,20,2231,2236,41
+m:TECK.B:revenue:comp,mining-excerpt.md,TECK.B,revenue,Revenue,actual,,3605000000.0,,,,"C$3,605M",money,CAD,1000000.0,false,Q2 2026,calendar,,20,20,2262,2270,41
+m:TECK.B:revenue_yoy:comp,mining-excerpt.md,TECK.B,revenue_yoy,Rev YoY%,actual,,78,,,,+78%,pct,,1.0,false,Q2 2026,calendar,,20,20,2273,2277,41
+m:FM:market_cap:asof,mining-excerpt.md,FM,market_cap,Mkt Cap (USD),actual,,30000000000.0,,,,~C$30B,money,CAD,1000000000.0,true,,point,2026-09-17,21,21,2357,2363,42
+m:FM:revenue:comp,mining-excerpt.md,FM,revenue,Revenue,actual,,1522000000.0,,,,"$1,522M",money,,1000000.0,false,Q2 2026,calendar,,21,21,2380,2387,42
+m:FM:revenue_yoy:comp,mining-excerpt.md,FM,revenue_yoy,Rev YoY%,actual,,24,,,,+24%,pct,,1.0,false,Q2 2026,calendar,,21,21,2390,2394,42
+m:WPM:market_cap:asof,mining-excerpt.md,WPM,market_cap,Mkt Cap (USD),actual,,67000000000.0,,,,~$67B,money,USD,1000000000.0,true,,point,2026-09-17,22,22,2472,2477,43
+m:WPM:revenue:comp,mining-excerpt.md,WPM,revenue,Revenue,actual,,929000000.0,,,,$929M,money,,1000000.0,false,Q2 2026,calendar,,22,22,2495,2500,43
+m:WPM:revenue_yoy:comp,mining-excerpt.md,WPM,revenue_yoy,Rev YoY%,actual,,85,,,,+85%,pct,,1.0,false,Q2 2026,calendar,,22,22,2503,2507,43
+m:IVN:market_cap:asof,mining-excerpt.md,IVN,market_cap,Mkt Cap (USD),actual,,17100000000.0,,,,C$17.1B,money,CAD,1000000000.0,false,,point,2026-09-17,23,23,2585,2592,44
+m:IVN:revenue:comp,mining-excerpt.md,IVN,revenue,Revenue,actual,,153000000.0,,,,$153M,money,,1000000.0,false,Q2 2026,calendar,,23,23,2609,2614,44
+m:IVN:revenue_yoy:comp,mining-excerpt.md,IVN,revenue_yoy,Rev YoY%,actual,,58,,,,+58%,pct,,1.0,false,Q2 2026,calendar,,23,23,2617,2621,44
+m:IVN:eps:comp,mining-excerpt.md,IVN,eps,Latest Q EPS,actual,,0.03,,,,$0.03,money,,1.0,false,Q2 2026,calendar,,23,23,2595,2600,44
+m:IVN:eps_yoy:comp,mining-excerpt.md,IVN,eps_yoy,EPS YoY%,actual,,,,,N/M,N/M,text,,1.0,false,Q2 2026,calendar,,23,23,2603,2606,44
+m:IVN:market_cap:kv:CAD,mining-excerpt.md,IVN,market_cap,Market Cap,actual,,17100000000.0,,,,C$17.1B,money,CAD,1000000000.0,false,,point,2026-09-17,32,32,2940,2947,232
+m:IVN:market_cap:kv:USD,mining-excerpt.md,IVN,market_cap,Market Cap,actual,,12400000000.0,,,,~$12.4B USD,money,USD,1000000000.0,true,,point,2026-09-17,32,32,2949,2960,232
+m:IVN:revenue:Q3 2024,mining-excerpt.md,IVN,revenue,Revenue,actual,,0.0,,,,$0M,money,,1000000.0,false,Q3 2024,calendar,,60,60,5168,5171,1567
+m:IVN:eps:Q3 2024,mining-excerpt.md,IVN,eps,EPS,actual,,0.09,,,,$0.09,money,,1.0,false,Q3 2024,calendar,,60,60,5193,5198,1567
+m:IVN:eps_estimate:Q3 2024,mining-excerpt.md,IVN,eps,EPS,estimate,,0.13,,,,$0.13,money,,1.0,false,Q3 2024,calendar,,60,60,5202,5207,1567
+m:IVN:beat_miss:Q3 2024,mining-excerpt.md,IVN,beat_miss,,attribute,,,,,Slight Miss,Slight Miss,text,,1.0,false,Q3 2024,calendar,,60,60,5213,5224,1567
+m:IVN:revenue:Q4 2024,mining-excerpt.md,IVN,revenue,Revenue,actual,,40800000.0,,,,$40.8M,money,,1000000.0,false,Q4 2024,calendar,,65,65,5348,5354,1599
+m:IVN:eps:Q4 2024,mining-excerpt.md,IVN,eps,EPS,actual,,0.07,,,,$0.07,money,,1.0,false,Q4 2024,calendar,,65,65,5360,5365,1599
+m:IVN:eps_estimate:Q4 2024,mining-excerpt.md,IVN,eps,EPS,estimate,,0.12,,,,$0.12,money,,1.0,false,Q4 2024,calendar,,65,65,5369,5374,1599
+m:IVN:beat_miss:Q4 2024,mining-excerpt.md,IVN,beat_miss,,attribute,,,,,Miss,Miss,text,,1.0,false,Q4 2024,calendar,,65,65,5380,5384,1599
+m:IVN:revenue:Q1 2025,mining-excerpt.md,IVN,revenue,Revenue,actual,,77000000.0,,,,$77.0M,money,,1000000.0,false,Q1 2025,calendar,,70,70,5518,5524,1631
+m:IVN:eps:Q1 2025,mining-excerpt.md,IVN,eps,EPS,actual,,0.1,,,,$0.10,money,,1.0,false,Q1 2025,calendar,,70,70,5530,5535,1631
+m:IVN:eps_estimate:Q1 2025,mining-excerpt.md,IVN,eps,EPS,estimate,,0.07,,,,$0.07,money,,1.0,false,Q1 2025,calendar,,70,70,5539,5544,1631
+m:IVN:beat_miss:Q1 2025,mining-excerpt.md,IVN,beat_miss,,attribute,,,,,Beat,Beat,text,,1.0,false,Q1 2025,calendar,,70,70,5550,5554,1631
+m:IVN:revenue:Q2 2025,mining-excerpt.md,IVN,revenue,Revenue,actual,,96800000.0,,,,$96.8M,money,,1000000.0,false,Q2 2025,calendar,,75,75,5667,5673,1663
+m:IVN:eps:Q2 2025,mining-excerpt.md,IVN,eps,EPS,actual,,0.03,,,,$0.03,money,,1.0,false,Q2 2025,calendar,,75,75,5679,5684,1663
+m:IVN:eps_estimate:Q2 2025,mining-excerpt.md,IVN,eps,EPS,estimate,,0.04,,,,$0.04,money,,1.0,false,Q2 2025,calendar,,75,75,5688,5693,1663
+m:IVN:beat_miss:Q2 2025,mining-excerpt.md,IVN,beat_miss,,attribute,,,,,Miss,Miss,text,,1.0,false,Q2 2025,calendar,,75,75,5699,5703,1663
+m:IVN:revenue:Q3 2025,mining-excerpt.md,IVN,revenue,Revenue,actual,,129400000.0,,,,$129.4M,money,,1000000.0,false,Q3 2025,calendar,,80,80,5810,5817,1695
+m:IVN:eps:Q3 2025,mining-excerpt.md,IVN,eps,EPS,actual,,0.02,,,,$0.02,money,,1.0,false,Q3 2025,calendar,,80,80,5823,5828,1695
+m:IVN:eps_estimate:Q3 2025,mining-excerpt.md,IVN,eps,EPS,estimate,,-0.02,,,,-$0.02,money,,1.0,false,Q3 2025,calendar,,80,80,5832,5838,1695
+m:IVN:beat_miss:Q3 2025,mining-excerpt.md,IVN,beat_miss,,attribute,,,,,Beat,Beat,text,,1.0,false,Q3 2025,calendar,,80,80,5844,5848,1695
+m:IVN:revenue:Q4 2025,mining-excerpt.md,IVN,revenue,Revenue,actual,,138400000.0,,,,$138.4M,money,,1000000.0,false,Q4 2025,calendar,,85,85,5981,5988,1727
+m:IVN:eps:Q4 2025,mining-excerpt.md,IVN,eps,EPS,actual,,0.04,,,,$0.04,money,,1.0,false,Q4 2025,calendar,,85,85,5994,5999,1727
+m:IVN:eps_estimate:Q4 2025,mining-excerpt.md,IVN,eps,EPS,estimate,,0.04,,,,$0.04,money,,1.0,false,Q4 2025,calendar,,85,85,6003,6008,1727
+m:IVN:beat_miss:Q4 2025,mining-excerpt.md,IVN,beat_miss,,attribute,,,,,Met,Met,text,,1.0,false,Q4 2025,calendar,,85,85,6014,6017,1727
+m:IVN:revenue:Q1 2026,mining-excerpt.md,IVN,revenue,Revenue,actual,,165500000.0,,,,$165.5M,money,,1000000.0,false,Q1 2026,calendar,,90,90,6145,6152,1759
+m:IVN:eps:Q1 2026,mining-excerpt.md,IVN,eps,EPS,actual,,0.0,,,,$0.00,money,,1.0,false,Q1 2026,calendar,,90,90,6158,6163,1759
+m:IVN:eps_estimate:Q1 2026,mining-excerpt.md,IVN,eps,EPS,estimate,,0.06,,,,$0.06,money,,1.0,false,Q1 2026,calendar,,90,90,6167,6172,1759
+m:IVN:beat_miss:Q1 2026,mining-excerpt.md,IVN,beat_miss,,attribute,,,,,Miss,Miss,text,,1.0,false,Q1 2026,calendar,,90,90,6178,6182,1759
+m:IVN:revenue:Q2 2026,mining-excerpt.md,IVN,revenue,Revenue,actual,,152600000.0,,,,$152.6M,money,,1000000.0,false,Q2 2026,calendar,,95,95,6324,6331,1791
+m:IVN:eps:Q2 2026,mining-excerpt.md,IVN,eps,EPS,actual,,0.03,,,,$0.03,money,,1.0,false,Q2 2026,calendar,,95,95,6337,6342,1791
+m:IVN:eps_estimate:Q2 2026,mining-excerpt.md,IVN,eps,EPS,estimate,,0.06,,,,$0.06,money,,1.0,false,Q2 2026,calendar,,95,95,6346,6351,1791
+m:IVN:beat_miss:Q2 2026,mining-excerpt.md,IVN,beat_miss,,attribute,,,,,Miss,Miss,text,,1.0,false,Q2 2026,calendar,,95,95,6357,6361,1791
+m:AEM:market_cap:rank,mining-excerpt.md,AEM,market_cap,Market Cap,rank,,1,,,AEM ($102B),AEM ($102B),rank,,1.0,false,,point,2026-09-17,130,130,8821,8832,1897
+m:AEM:market_cap:screen,mining-excerpt.md,AEM,market_cap,Market Cap,actual,,102000000000.0,,,,$102B,money,USD,1000000000.0,false,,point,2026-09-17,130,130,8826,8831,1897
+m:ABX:market_cap:rank,mining-excerpt.md,ABX,market_cap,Market Cap,rank,,2,,,ABX ($70B),ABX ($70B),rank,,1.0,false,,point,2026-09-17,130,130,8835,8845,1897
+m:ABX:market_cap:screen,mining-excerpt.md,ABX,market_cap,Market Cap,actual,,70000000000.0,,,,$70B,money,USD,1000000000.0,false,,point,2026-09-17,130,130,8840,8844,1897
+m:WPM:market_cap:rank,mining-excerpt.md,WPM,market_cap,Market Cap,rank,,3,,,WPM ($67B),WPM ($67B),rank,,1.0,false,,point,2026-09-17,130,130,8848,8858,1897
+m:WPM:market_cap:screen,mining-excerpt.md,WPM,market_cap,Market Cap,actual,,67000000000.0,,,,$67B,money,USD,1000000000.0,false,,point,2026-09-17,130,130,8853,8857,1897
+m:TECK.B:market_cap:rank,mining-excerpt.md,TECK.B,market_cap,Market Cap,rank,,4,,,TECK.B ($32B),TECK.B ($32B),rank,,1.0,false,,point,2026-09-17,130,130,8861,8874,1897
+m:TECK.B:market_cap:screen,mining-excerpt.md,TECK.B,market_cap,Market Cap,actual,,32000000000.0,,,,$32B,money,USD,1000000000.0,false,,point,2026-09-17,130,130,8869,8873,1897
+m:FM:market_cap:rank,mining-excerpt.md,FM,market_cap,Market Cap,rank,,5,,,FM (~C$30B),FM (~C$30B),rank,,1.0,false,,point,2026-09-17,130,130,8877,8888,1897
+m:FM:market_cap:screen,mining-excerpt.md,FM,market_cap,Market Cap,actual,,30000000000.0,,,,~C$30B,money,CAD,1000000000.0,true,,point,2026-09-17,130,130,8881,8887,1897
+m:IVN:market_cap:rank,mining-excerpt.md,IVN,market_cap,Market Cap,rank,,6,,,IVN (C$17B),IVN (C$17B),rank,,1.0,false,,point,2026-09-17,130,130,8891,8902,1897
+m:IVN:market_cap:screen,mining-excerpt.md,IVN,market_cap,Market Cap,actual,,17000000000.0,,,,C$17B,money,CAD,1000000000.0,false,,point,2026-09-17,130,130,8896,8901,1897
+m:WPM:revenue_yoy:rank,mining-excerpt.md,WPM,revenue_yoy,"Revenue Growth (YoY, Latest Q)",rank,,1,,,WPM (+85%),WPM (+85%),rank,,1.0,false,Latest Q,unspecified,,131,131,8944,8954,1898
+m:WPM:revenue_yoy:screen,mining-excerpt.md,WPM,revenue_yoy,"Revenue Growth (YoY, Latest Q)",actual,,85,,,,+85%,pct,,1.0,false,Latest Q,unspecified,,131,131,8949,8953,1898
+m:TECK.B:revenue_yoy:rank,mining-excerpt.md,TECK.B,revenue_yoy,"Revenue Growth (YoY, Latest Q)",rank,,2,,,TECK.B (+78%),TECK.B (+78%),rank,,1.0,false,Latest Q,unspecified,,131,131,8957,8970,1898
+m:TECK.B:revenue_yoy:screen,mining-excerpt.md,TECK.B,revenue_yoy,"Revenue Growth (YoY, Latest Q)",actual,,78,,,,+78%,pct,,1.0,false,Latest Q,unspecified,,131,131,8965,8969,1898
+m:AEM:revenue_yoy:rank,mining-excerpt.md,AEM,revenue_yoy,"Revenue Growth (YoY, Latest Q)",rank,,3,,,AEM (+35%),AEM (+35%),rank,,1.0,false,Latest Q,unspecified,,131,131,8973,8983,1898
+m:AEM:revenue_yoy:screen,mining-excerpt.md,AEM,revenue_yoy,"Revenue Growth (YoY, Latest Q)",actual,,35,,,,+35%,pct,,1.0,false,Latest Q,unspecified,,131,131,8978,8982,1898
+m:IVN:revenue_yoy:rank,mining-excerpt.md,IVN,revenue_yoy,"Revenue Growth (YoY, Latest Q)",rank,,4,,,IVN (+58%),IVN (+58%),rank,,1.0,false,Latest Q,unspecified,,131,131,8986,8996,1898
+m:IVN:revenue_yoy:screen,mining-excerpt.md,IVN,revenue_yoy,"Revenue Growth (YoY, Latest Q)",actual,,58,,,,+58%,pct,,1.0,false,Latest Q,unspecified,,131,131,8991,8995,1898
+m:ABX:revenue_yoy:rank,mining-excerpt.md,ABX,revenue_yoy,"Revenue Growth (YoY, Latest Q)",rank,,5,,,ABX (+44%),ABX (+44%),rank,,1.0,false,Latest Q,unspecified,,131,131,8999,9009,1898
+m:ABX:revenue_yoy:screen,mining-excerpt.md,ABX,revenue_yoy,"Revenue Growth (YoY, Latest Q)",actual,,44,,,,+44%,pct,,1.0,false,Latest Q,unspecified,,131,131,9004,9008,1898
+m:FM:revenue_yoy:rank,mining-excerpt.md,FM,revenue_yoy,"Revenue Growth (YoY, Latest Q)",rank,,6,,,FM (+24%),FM (+24%),rank,,1.0,false,Latest Q,unspecified,,131,131,9012,9021,1898
+m:FM:revenue_yoy:screen,mining-excerpt.md,FM,revenue_yoy,"Revenue Growth (YoY, Latest Q)",actual,,24,,,,+24%,pct,,1.0,false,Latest Q,unspecified,,131,131,9016,9020,1898
+m:TECK.B:eps_beat_count:rank,mining-excerpt.md,TECK.B,eps_beat_count,EPS Beat Rate (8Q),rank,,1,,,TECK.B (8/8),TECK.B (8/8),rank,,1.0,false,trailing 8Q,trailing,,132,132,9051,9063,1899
+m:TECK.B:eps_beat_count:screen,mining-excerpt.md,TECK.B,eps_beat_count,EPS Beat Rate (8Q),count,,8,,,8/8,8/8,count,,1.0,false,trailing 8Q,trailing,,132,132,9059,9062,1899
+m:AEM:eps_beat_count:rank,mining-excerpt.md,AEM,eps_beat_count,EPS Beat Rate (8Q),rank,,2,,,AEM (7/8),AEM (7/8),rank,,1.0,false,trailing 8Q,trailing,,132,132,9066,9075,1899
+m:AEM:eps_beat_count:screen,mining-excerpt.md,AEM,eps_beat_count,EPS Beat Rate (8Q),count,,7,,,7/8,7/8,count,,1.0,false,trailing 8Q,trailing,,132,132,9071,9074,1899
+m:WPM:eps_beat_count:rank,mining-excerpt.md,WPM,eps_beat_count,EPS Beat Rate (8Q),rank,,3,,,WPM (6/8),WPM (6/8),rank,,1.0,false,trailing 8Q,trailing,,132,132,9078,9087,1899
+m:WPM:eps_beat_count:screen,mining-excerpt.md,WPM,eps_beat_count,EPS Beat Rate (8Q),count,,6,,,6/8,6/8,count,,1.0,false,trailing 8Q,trailing,,132,132,9083,9086,1899
+m:ABX:eps_beat_count:rank,mining-excerpt.md,ABX,eps_beat_count,EPS Beat Rate (8Q),rank,,4,,,ABX (5/8),ABX (5/8),rank,,1.0,false,trailing 8Q,trailing,,132,132,9090,9099,1899
+m:ABX:eps_beat_count:screen,mining-excerpt.md,ABX,eps_beat_count,EPS Beat Rate (8Q),count,,5,,,5/8,5/8,count,,1.0,false,trailing 8Q,trailing,,132,132,9095,9098,1899
+m:FM:eps_beat_count:rank,mining-excerpt.md,FM,eps_beat_count,EPS Beat Rate (8Q),rank,,5,,,FM (5/8),FM (5/8),rank,,1.0,false,trailing 8Q,trailing,,132,132,9102,9110,1899
+m:FM:eps_beat_count:screen,mining-excerpt.md,FM,eps_beat_count,EPS Beat Rate (8Q),count,,5,,,5/8,5/8,count,,1.0,false,trailing 8Q,trailing,,132,132,9106,9109,1899
+m:IVN:eps_beat_count:rank,mining-excerpt.md,IVN,eps_beat_count,EPS Beat Rate (8Q),rank,,6,,,IVN (3/8),IVN (3/8),rank,,1.0,false,trailing 8Q,trailing,,132,132,9113,9122,1899
+m:IVN:eps_beat_count:screen,mining-excerpt.md,IVN,eps_beat_count,EPS Beat Rate (8Q),count,,3,,,3/8,3/8,count,,1.0,false,trailing 8Q,trailing,,132,132,9118,9121,1899
+t:SHOP:payments_penetration:summary,technology-excerpt.md,SHOP,payments_penetration,Payments penetration,trend,,,58,68,expanding,58% → 68%,pct,,1.0,false,,unspecified,,7,7,1056,1065,9
+t:SHOP:payments_penetration:thesis,technology-excerpt.md,SHOP,payments_penetration,penetration,trend,,,58,68,expanding,from 58% to 68% over 2 years,pct,,1.0,false,over 2 years,unspecified,,35,35,3350,3378,75
+t:SHOP:market_cap:asof,technology-excerpt.md,SHOP,market_cap,Mkt Cap,actual,,185000000000.0,,,,~$185B CAD,money,CAD,1000000000.0,true,,point,2026-09-17,14,14,1659,1669,38
+t:SHOP:revenue_yoy:Q2 2026,technology-excerpt.md,SHOP,revenue_yoy,Rev YoY%,actual,,33.7,,,,+33.7%,pct,,1.0,false,Q2 2026,calendar,,14,14,1691,1697,38
+t:CSU:market_cap:asof,technology-excerpt.md,CSU,market_cap,Mkt Cap,actual,,68000000000.0,,,,~$68B CAD,money,CAD,1000000000.0,true,,point,2026-09-17,15,15,1763,1772,39
+t:CSU:revenue_yoy:Q2 2026,technology-excerpt.md,CSU,revenue_yoy,Rev YoY%,actual,,17,,,,+17%,pct,,1.0,false,Q2 2026,calendar,,15,15,1795,1799,39
+t:GIB.A:market_cap:asof,technology-excerpt.md,GIB.A,market_cap,Mkt Cap,actual,,30000000000.0,,,,~$30B CAD,money,CAD,1000000000.0,true,,point,2026-09-17,16,16,1889,1898,40
+t:GIB.A:revenue_yoy:Q3 FY2026,technology-excerpt.md,GIB.A,revenue_yoy,Rev YoY%,actual,,2.5,,,,+2.5%,pct,,1.0,false,Q3 FY2026,fiscal,,16,16,1922,1927,40
+t:OTEX:market_cap:asof,technology-excerpt.md,OTEX,market_cap,Mkt Cap,actual,,8000000000.0,,,,~$8B CAD,money,CAD,1000000000.0,true,,point,2026-09-17,17,17,1988,1996,41
+t:OTEX:revenue_yoy:Q4 FY2026,technology-excerpt.md,OTEX,revenue_yoy,Rev YoY%,actual,,2.9,,,,+2.9%,pct,,1.0,false,Q4 FY2026,fiscal,,17,17,2021,2026,41
+t:DSG:market_cap:asof,technology-excerpt.md,DSG,market_cap,Mkt Cap,actual,,13000000000.0,,,,~$13B CAD,money,CAD,1000000000.0,true,,point,2026-09-17,18,18,2101,2110,42
+t:DSG:revenue_yoy:Q2 FY2027,technology-excerpt.md,DSG,revenue_yoy,Rev YoY%,actual,,11.8,,,,+11.8%,pct,,1.0,false,Q2 FY2027,fiscal,,18,18,2135,2141,42
+t:KXS:market_cap:asof,technology-excerpt.md,KXS,market_cap,Mkt Cap,actual,,4900000000.0,,,,~$4.9B CAD,money,CAD,1000000000.0,true,,point,2026-09-17,19,19,2200,2210,43
+t:KXS:revenue_yoy:Q2 2026,technology-excerpt.md,KXS,revenue_yoy,Rev YoY%,actual,,16.4,,,,+16.4%,pct,,1.0,false,Q2 2026,calendar,,19,19,2233,2239,43
+t:SHOP:market_cap:kv:CAD,technology-excerpt.md,SHOP,market_cap,Market Cap,actual,,185000000000.0,,,,~$185B CAD,money,CAD,1000000000.0,true,,point,2026-09-17,28,28,2644,2654,68
+t:SHOP:market_cap:kv:USD,technology-excerpt.md,SHOP,market_cap,Market Cap,actual,,135000000000.0,,,,~$135B USD,money,USD,1000000000.0,true,,point,2026-09-17,28,28,2657,2667,68
+t:SHOP:revenue:trend,technology-excerpt.md,SHOP,revenue,Rev,trend,,,2160000000.0,3580000000.0,↑,$2.16B → $3.58B,money,,1000000000.0,false,trailing 8Q,trailing,,41,41,3697,3712,241
+t:SHOP:payments_penetration:trend,technology-excerpt.md,SHOP,payments_penetration,Payments penetration,trend,,,62,68,↑,62% → 68%,pct,,1.0,false,trailing 8Q,trailing,,41,41,3791,3800,241
+t:SHOP:eps_beat_or_met_count:trend,technology-excerpt.md,SHOP,eps_beat_or_met_count,Beat/Met,count,,6,,,6/8,6/8,count,,1.0,false,trailing 8Q,trailing,,41,41,3813,3816,241
+t:SHOP:revenue:Q2 2026,technology-excerpt.md,SHOP,revenue,Revenue,actual,,3580000000.0,,,,$3.58B,money,,1000000000.0,false,Q2 2026 (Jun 30),calendar,2026-06-30,45,45,3955,3961,245
+t:SHOP:eps:Q2 2026,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),actual,,0.42,,,,$0.42,money,,1.0,false,Q2 2026 (Jun 30),calendar,2026-06-30,45,45,3973,3978,245
+t:SHOP:eps_estimate:Q2 2026,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),estimate,,0.39,,,,$0.39,money,,1.0,false,Q2 2026 (Jun 30),calendar,2026-06-30,45,45,3982,3987,245
+t:SHOP:beat_miss:Q2 2026,technology-excerpt.md,SHOP,beat_miss,Beat/Miss,attribute,,,,,Beat (+7.7%),Beat (+7.7%),text,,1.0,false,Q2 2026 (Jun 30),calendar,2026-06-30,45,45,3990,4002,245
+t:SHOP:revenue:Q1 2026,technology-excerpt.md,SHOP,revenue,Revenue,actual,,3170000000.0,,,,$3.17B,money,,1000000000.0,false,Q1 2026 (Mar 31),calendar,2026-03-31,46,46,4092,4098,246
+t:SHOP:eps:Q1 2026,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),actual,,0.36,,,,$0.36,money,,1.0,false,Q1 2026 (Mar 31),calendar,2026-03-31,46,46,4110,4115,246
+t:SHOP:eps_estimate:Q1 2026,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),estimate,,0.32,,,,$0.32,money,,1.0,false,Q1 2026 (Mar 31),calendar,2026-03-31,46,46,4119,4124,246
+t:SHOP:beat_miss:Q1 2026,technology-excerpt.md,SHOP,beat_miss,Beat/Miss,attribute,,,,,Beat (+12.5%),Beat (+12.5%),text,,1.0,false,Q1 2026 (Mar 31),calendar,2026-03-31,46,46,4127,4140,246
+t:SHOP:revenue:Q4 2025,technology-excerpt.md,SHOP,revenue,Revenue,actual,,3670000000.0,,,,$3.67B,money,,1000000000.0,false,Q4 2025 (Dec 31),calendar,2025-12-31,47,47,4227,4233,247
+t:SHOP:eps:Q4 2025:adjusted,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),actual,adjusted,0.48,,,,$0.48,money,,1.0,false,Q4 2025 (Dec 31),calendar,2025-12-31,47,47,4245,4250,247
+t:SHOP:eps_estimate:Q4 2025:adjusted,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),estimate,adjusted,0.51,,,,$0.51,money,,1.0,false,Q4 2025 (Dec 31),calendar,2025-12-31,47,47,4254,4259,247
+t:SHOP:eps:Q4 2025:gaap,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),actual,gaap,0.57,,,,$0.57,money,,1.0,false,Q4 2025 (Dec 31),calendar,2025-12-31,47,47,4267,4272,247
+t:SHOP:eps_estimate:Q4 2025:gaap,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),estimate,gaap,0.43,,,,$0.43,money,,1.0,false,Q4 2025 (Dec 31),calendar,2025-12-31,47,47,4276,4281,247
+t:SHOP:beat_miss:Q4 2025,technology-excerpt.md,SHOP,beat_miss,Beat/Miss,attribute,,,,,Mixed,Mixed,text,,1.0,false,Q4 2025 (Dec 31),calendar,2025-12-31,47,47,4291,4296,247
+t:SHOP:revenue:Q3 2025,technology-excerpt.md,SHOP,revenue,Revenue,actual,,2840000000.0,,,,$2.84B,money,,1000000000.0,false,Q3 2025 (Sep 30),calendar,2025-09-30,48,48,4387,4393,248
+t:SHOP:eps:Q3 2025,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),actual,,0.34,,,,$0.34,money,,1.0,false,Q3 2025 (Sep 30),calendar,2025-09-30,48,48,4405,4410,248
+t:SHOP:eps_estimate:Q3 2025,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),estimate,,0.34,,,,$0.34,money,,1.0,false,Q3 2025 (Sep 30),calendar,2025-09-30,48,48,4414,4419,248
+t:SHOP:beat_miss:Q3 2025,technology-excerpt.md,SHOP,beat_miss,Beat/Miss,attribute,,,,,In-line,In-line,text,,1.0,false,Q3 2025 (Sep 30),calendar,2025-09-30,48,48,4422,4429,248
+t:SHOP:revenue:Q2 2025,technology-excerpt.md,SHOP,revenue,Revenue,actual,,2680000000.0,,,,$2.68B,money,,1000000000.0,false,Q2 2025 (Jun 30),calendar,2025-06-30,49,49,4529,4535,249
+t:SHOP:eps:Q2 2025,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),actual,,0.26,,,,~$0.26,money,,1.0,true,Q2 2025 (Jun 30),calendar,2025-06-30,49,49,4545,4551,249
+t:SHOP:eps_estimate:Q2 2025,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),estimate,,0.26,,,,~$0.26,money,,1.0,true,Q2 2025 (Jun 30),calendar,2025-06-30,49,49,4555,4561,249
+t:SHOP:beat_miss:Q2 2025,technology-excerpt.md,SHOP,beat_miss,Beat/Miss,attribute,,,,,~In-line,~In-line,text,,1.0,false,Q2 2025 (Jun 30),calendar,2025-06-30,49,49,4564,4572,249
+t:SHOP:revenue:Q1 2025,technology-excerpt.md,SHOP,revenue,Revenue,actual,,2360000000.0,,,,$2.36B,money,,1000000000.0,false,Q1 2025 (Mar 31),calendar,2025-03-31,50,50,4658,4664,250
+t:SHOP:eps:Q1 2025,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),actual,,0.25,,,,$0.25,money,,1.0,false,Q1 2025 (Mar 31),calendar,2025-03-31,50,50,4676,4681,250
+t:SHOP:eps_estimate:Q1 2025,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),estimate,,0.26,,,,$0.26,money,,1.0,false,Q1 2025 (Mar 31),calendar,2025-03-31,50,50,4685,4690,250
+t:SHOP:beat_miss:Q1 2025,technology-excerpt.md,SHOP,beat_miss,Beat/Miss,attribute,,,,,Miss (-3.9%),Miss (-3.9%),text,,1.0,false,Q1 2025 (Mar 31),calendar,2025-03-31,50,50,4693,4705,250
+t:SHOP:revenue:Q4 2024,technology-excerpt.md,SHOP,revenue,Revenue,actual,,2810000000.0,,,,$2.81B,money,,1000000000.0,false,Q4 2024 (Dec 31),calendar,2024-12-31,51,51,4774,4780,251
+t:SHOP:eps:Q4 2024,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),actual,,0.44,,,,$0.44,money,,1.0,false,Q4 2024 (Dec 31),calendar,2024-12-31,51,51,4790,4795,251
+t:SHOP:eps_estimate:Q4 2024,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),estimate,,0.44,,,,$0.44,money,,1.0,false,Q4 2024 (Dec 31),calendar,2024-12-31,51,51,4799,4804,251
+t:SHOP:beat_miss:Q4 2024,technology-excerpt.md,SHOP,beat_miss,Beat/Miss,attribute,,,,,In-line,In-line,text,,1.0,false,Q4 2024 (Dec 31),calendar,2024-12-31,51,51,4807,4814,251
+t:SHOP:revenue:Q3 2024,technology-excerpt.md,SHOP,revenue,Revenue,actual,,2160000000.0,,,,$2.16B,money,,1000000000.0,false,Q3 2024 (Sep 30),calendar,2024-09-30,52,52,4901,4907,252
+t:SHOP:eps:Q3 2024:adjusted,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),actual,adjusted,0.27,,,,$0.27,money,,1.0,false,Q3 2024 (Sep 30),calendar,2024-09-30,52,52,4917,4922,252
+t:SHOP:eps_estimate:Q3 2024:adjusted,technology-excerpt.md,SHOP,eps,EPS (Act vs Est),estimate,adjusted,0.27,,,,$0.27,money,,1.0,false,Q3 2024 (Sep 30),calendar,2024-09-30,52,52,4926,4931,252
+t:SHOP:beat_miss:Q3 2024,technology-excerpt.md,SHOP,beat_miss,Beat/Miss,attribute,,,,,In-line,In-line,text,,1.0,false,Q3 2024 (Sep 30),calendar,2024-09-30,52,52,4940,4947,252

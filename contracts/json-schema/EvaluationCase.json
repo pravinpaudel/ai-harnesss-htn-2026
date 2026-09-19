@@ -1,0 +1,239 @@
+{
+ "$defs": {
+  "AnswerStatus": {
+   "enum": [
+    "answered",
+    "conflict",
+    "declined",
+    "partial"
+   ],
+   "title": "AnswerStatus",
+   "type": "string"
+  },
+  "DeclineReason": {
+   "enum": [
+    "insufficient_evidence",
+    "false_premise",
+    "incompatible_currency",
+    "ambiguous_period_or_basis",
+    "out_of_corpus_entity",
+    "future_data",
+    "budget_exhausted"
+   ],
+   "title": "DeclineReason",
+   "type": "string"
+  },
+  "Expectation": {
+   "additionalProperties": false,
+   "properties": {
+    "acceptable_statuses": {
+     "items": {
+      "$ref": "#/$defs/AnswerStatus"
+     },
+     "minItems": 1,
+     "title": "Acceptable Statuses",
+     "type": "array"
+    },
+    "decline_reasons": {
+     "items": {
+      "$ref": "#/$defs/DeclineReason"
+     },
+     "title": "Decline Reasons",
+     "type": "array"
+    },
+    "finding_rules": {
+     "items": {
+      "$ref": "#/$defs/FindingRule"
+     },
+     "title": "Finding Rules",
+     "type": "array"
+    },
+    "must_cite": {
+     "items": {
+      "$ref": "#/$defs/SpanAnchor"
+     },
+     "title": "Must Cite",
+     "type": "array"
+    },
+    "must_mention": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Must Mention",
+     "type": "array"
+    },
+    "ordered_items": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Ordered Items",
+     "type": "array"
+    },
+    "requires_calculation": {
+     "default": false,
+     "title": "Requires Calculation",
+     "type": "boolean"
+    },
+    "values": {
+     "items": {
+      "$ref": "#/$defs/ExpectedValue"
+     },
+     "title": "Values",
+     "type": "array"
+    }
+   },
+   "required": [
+    "acceptable_statuses"
+   ],
+   "title": "Expectation",
+   "type": "object"
+  },
+  "ExpectedValue": {
+   "additionalProperties": false,
+   "properties": {
+    "currency": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Currency"
+    },
+    "label": {
+     "title": "Label",
+     "type": "string"
+    },
+    "tolerance": {
+     "default": 0.0,
+     "title": "Tolerance",
+     "type": "number"
+    },
+    "value": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Value"
+    },
+    "value_text": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Value Text"
+    }
+   },
+   "required": [
+    "label"
+   ],
+   "title": "ExpectedValue",
+   "type": "object"
+  },
+  "FindingRule": {
+   "enum": [
+    "unit_currency_mix",
+    "arithmetic",
+    "rank_order",
+    "count_claim",
+    "trend_direction",
+    "duplicate_claim",
+    "period_order"
+   ],
+   "title": "FindingRule",
+   "type": "string"
+  },
+  "QuestionCategory": {
+   "enum": [
+    "lookup",
+    "comparison",
+    "calculation",
+    "narrative",
+    "cross_report",
+    "conflict",
+    "currency_ambiguity",
+    "decline",
+    "false_premise"
+   ],
+   "title": "QuestionCategory",
+   "type": "string"
+  },
+  "SpanAnchor": {
+   "additionalProperties": false,
+   "description": "A citation the answer must include: any citation overlapping these lines of this document.",
+   "properties": {
+    "document_name": {
+     "title": "Document Name",
+     "type": "string"
+    },
+    "line_end": {
+     "minimum": 1,
+     "title": "Line End",
+     "type": "integer"
+    },
+    "line_start": {
+     "minimum": 1,
+     "title": "Line Start",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "document_name",
+    "line_start",
+    "line_end"
+   ],
+   "title": "SpanAnchor",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "case_id": {
+   "title": "Case Id",
+   "type": "string"
+  },
+  "category": {
+   "$ref": "#/$defs/QuestionCategory"
+  },
+  "expect": {
+   "$ref": "#/$defs/Expectation"
+  },
+  "notes": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Notes"
+  },
+  "question": {
+   "title": "Question",
+   "type": "string"
+  }
+ },
+ "required": [
+  "case_id",
+  "question",
+  "category",
+  "expect"
+ ],
+ "title": "EvaluationCase",
+ "type": "object"
+}

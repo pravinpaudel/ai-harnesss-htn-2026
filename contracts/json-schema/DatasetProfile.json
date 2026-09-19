@@ -1,0 +1,201 @@
+{
+ "$defs": {
+  "DatasetStatus": {
+   "enum": [
+    "pending",
+    "ingesting",
+    "validating",
+    "ready",
+    "failed"
+   ],
+   "title": "DatasetStatus",
+   "type": "string"
+  },
+  "DocumentReport": {
+   "additionalProperties": false,
+   "properties": {
+    "chunks": {
+     "title": "Chunks",
+     "type": "integer"
+    },
+    "document_id": {
+     "format": "uuid",
+     "title": "Document Id",
+     "type": "string"
+    },
+    "facts": {
+     "title": "Facts",
+     "type": "integer"
+    },
+    "lines": {
+     "title": "Lines",
+     "type": "integer"
+    },
+    "name": {
+     "title": "Name",
+     "type": "string"
+    },
+    "sha256": {
+     "pattern": "^[0-9a-f]{64}$",
+     "title": "Sha256",
+     "type": "string"
+    },
+    "table_cells": {
+     "title": "Table Cells",
+     "type": "integer"
+    },
+    "tables": {
+     "title": "Tables",
+     "type": "integer"
+    },
+    "untyped_cells": {
+     "title": "Untyped Cells",
+     "type": "integer"
+    },
+    "warnings": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Warnings",
+     "type": "array"
+    }
+   },
+   "required": [
+    "document_id",
+    "name",
+    "sha256",
+    "lines",
+    "chunks",
+    "tables",
+    "table_cells",
+    "facts",
+    "untyped_cells"
+   ],
+   "title": "DocumentReport",
+   "type": "object"
+  },
+  "ProfileEntry": {
+   "additionalProperties": false,
+   "properties": {
+    "count": {
+     "title": "Count",
+     "type": "integer"
+    },
+    "label": {
+     "title": "Label",
+     "type": "string"
+    }
+   },
+   "required": [
+    "label",
+    "count"
+   ],
+   "title": "ProfileEntry",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "currencies": {
+   "items": {
+    "$ref": "#/$defs/ProfileEntry"
+   },
+   "title": "Currencies",
+   "type": "array"
+  },
+  "dataset_id": {
+   "format": "uuid",
+   "title": "Dataset Id",
+   "type": "string"
+  },
+  "dataset_version_id": {
+   "format": "uuid",
+   "title": "Dataset Version Id",
+   "type": "string"
+  },
+  "documents": {
+   "items": {
+    "$ref": "#/$defs/DocumentReport"
+   },
+   "title": "Documents",
+   "type": "array"
+  },
+  "entities": {
+   "items": {
+    "$ref": "#/$defs/ProfileEntry"
+   },
+   "title": "Entities",
+   "type": "array"
+  },
+  "extraction_warnings": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Extraction Warnings",
+   "type": "array"
+  },
+  "findings_by_rule": {
+   "additionalProperties": {
+    "type": "integer"
+   },
+   "title": "Findings By Rule",
+   "type": "object"
+  },
+  "metrics": {
+   "items": {
+    "$ref": "#/$defs/ProfileEntry"
+   },
+   "title": "Metrics",
+   "type": "array"
+  },
+  "parser_version": {
+   "title": "Parser Version",
+   "type": "string"
+  },
+  "periods": {
+   "items": {
+    "$ref": "#/$defs/ProfileEntry"
+   },
+   "title": "Periods",
+   "type": "array"
+  },
+  "source_hash": {
+   "title": "Source Hash",
+   "type": "string"
+  },
+  "status": {
+   "$ref": "#/$defs/DatasetStatus"
+  },
+  "table_coverage": {
+   "maximum": 1.0,
+   "minimum": 0.0,
+   "title": "Table Coverage",
+   "type": "number"
+  },
+  "units": {
+   "items": {
+    "$ref": "#/$defs/ProfileEntry"
+   },
+   "title": "Units",
+   "type": "array"
+  }
+ },
+ "required": [
+  "dataset_id",
+  "dataset_version_id",
+  "status",
+  "source_hash",
+  "parser_version",
+  "documents",
+  "entities",
+  "metrics",
+  "periods",
+  "currencies",
+  "units",
+  "table_coverage",
+  "extraction_warnings",
+  "findings_by_rule"
+ ],
+ "title": "DatasetProfile",
+ "type": "object"
+}

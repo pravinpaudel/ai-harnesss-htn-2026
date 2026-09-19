@@ -1,0 +1,204 @@
+{
+ "$defs": {
+  "FindingRule": {
+   "enum": [
+    "unit_currency_mix",
+    "arithmetic",
+    "rank_order",
+    "count_claim",
+    "trend_direction",
+    "duplicate_claim",
+    "period_order"
+   ],
+   "title": "FindingRule",
+   "type": "string"
+  },
+  "FindingStatus": {
+   "enum": [
+    "open",
+    "dismissed"
+   ],
+   "title": "FindingStatus",
+   "type": "string"
+  },
+  "Severity": {
+   "enum": [
+    "high",
+    "medium",
+    "low"
+   ],
+   "title": "Severity",
+   "type": "string"
+  },
+  "SourceSpan": {
+   "additionalProperties": false,
+   "properties": {
+    "char_end": {
+     "minimum": 0,
+     "title": "Char End",
+     "type": "integer"
+    },
+    "char_start": {
+     "minimum": 0,
+     "title": "Char Start",
+     "type": "integer"
+    },
+    "document_hash": {
+     "pattern": "^[0-9a-f]{64}$",
+     "title": "Document Hash",
+     "type": "string"
+    },
+    "document_id": {
+     "anyOf": [
+      {
+       "format": "uuid",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Document Id"
+    },
+    "document_name": {
+     "title": "Document Name",
+     "type": "string"
+    },
+    "exact_text": {
+     "minLength": 1,
+     "title": "Exact Text",
+     "type": "string"
+    },
+    "heading_path": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Heading Path",
+     "type": "array"
+    },
+    "line_end": {
+     "minimum": 1,
+     "title": "Line End",
+     "type": "integer"
+    },
+    "line_start": {
+     "minimum": 1,
+     "title": "Line Start",
+     "type": "integer"
+    },
+    "span_id": {
+     "anyOf": [
+      {
+       "format": "uuid",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Span Id"
+    }
+   },
+   "required": [
+    "document_name",
+    "document_hash",
+    "line_start",
+    "line_end",
+    "char_start",
+    "char_end",
+    "exact_text"
+   ],
+   "title": "SourceSpan",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "dataset_version_id": {
+   "format": "uuid",
+   "title": "Dataset Version Id",
+   "type": "string"
+  },
+  "expected": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Expected"
+  },
+  "explanation": {
+   "title": "Explanation",
+   "type": "string"
+  },
+  "fact_ids": {
+   "items": {
+    "format": "uuid",
+    "type": "string"
+   },
+   "title": "Fact Ids",
+   "type": "array"
+  },
+  "finding_id": {
+   "format": "uuid",
+   "title": "Finding Id",
+   "type": "string"
+  },
+  "observed": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Observed"
+  },
+  "rule": {
+   "$ref": "#/$defs/FindingRule"
+  },
+  "rule_version": {
+   "title": "Rule Version",
+   "type": "string"
+  },
+  "severity": {
+   "$ref": "#/$defs/Severity"
+  },
+  "spans": {
+   "items": {
+    "$ref": "#/$defs/SourceSpan"
+   },
+   "minItems": 1,
+   "title": "Spans",
+   "type": "array"
+  },
+  "status": {
+   "allOf": [
+    {
+     "$ref": "#/$defs/FindingStatus"
+    }
+   ],
+   "default": "open"
+  }
+ },
+ "required": [
+  "finding_id",
+  "dataset_version_id",
+  "rule",
+  "rule_version",
+  "severity",
+  "explanation",
+  "fact_ids",
+  "spans"
+ ],
+ "title": "ValidationFinding",
+ "type": "object"
+}

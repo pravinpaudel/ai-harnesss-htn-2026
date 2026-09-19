@@ -1,0 +1,277 @@
+{
+ "$defs": {
+  "CaseResult": {
+   "additionalProperties": false,
+   "properties": {
+    "anchors_hit": {
+     "title": "Anchors Hit",
+     "type": "boolean"
+    },
+    "case_id": {
+     "title": "Case Id",
+     "type": "string"
+    },
+    "category": {
+     "$ref": "#/$defs/QuestionCategory"
+    },
+    "citations_valid": {
+     "title": "Citations Valid",
+     "type": "boolean"
+    },
+    "detail": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Detail"
+    },
+    "failure_class": {
+     "anyOf": [
+      {
+       "enum": [
+        "extraction_gap",
+        "normalization_issue",
+        "retrieval_miss",
+        "calculation_issue",
+        "policy_or_citation_failure",
+        "benchmark_ambiguity"
+       ],
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Failure Class"
+    },
+    "passed": {
+     "title": "Passed",
+     "type": "boolean"
+    },
+    "run_id": {
+     "anyOf": [
+      {
+       "format": "uuid",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Run Id"
+    },
+    "status_ok": {
+     "title": "Status Ok",
+     "type": "boolean"
+    },
+    "usage": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Usage"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "values_ok": {
+     "title": "Values Ok",
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "case_id",
+    "category",
+    "run_id",
+    "passed",
+    "status_ok",
+    "values_ok",
+    "citations_valid",
+    "anchors_hit"
+   ],
+   "title": "CaseResult",
+   "type": "object"
+  },
+  "QuestionCategory": {
+   "enum": [
+    "lookup",
+    "comparison",
+    "calculation",
+    "narrative",
+    "cross_report",
+    "conflict",
+    "currency_ambiguity",
+    "decline",
+    "false_premise"
+   ],
+   "title": "QuestionCategory",
+   "type": "string"
+  },
+  "Usage": {
+   "additionalProperties": false,
+   "properties": {
+    "cost_usd": {
+     "default": 0.0,
+     "title": "Cost Usd",
+     "type": "number"
+    },
+    "embedding_tokens": {
+     "default": 0,
+     "title": "Embedding Tokens",
+     "type": "integer"
+    },
+    "input_tokens": {
+     "default": 0,
+     "title": "Input Tokens",
+     "type": "integer"
+    },
+    "latency_ms": {
+     "default": 0,
+     "title": "Latency Ms",
+     "type": "integer"
+    },
+    "output_tokens": {
+     "default": 0,
+     "title": "Output Tokens",
+     "type": "integer"
+    },
+    "tool_rounds": {
+     "default": 0,
+     "title": "Tool Rounds",
+     "type": "integer"
+    }
+   },
+   "title": "Usage",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "accuracy_by_category": {
+   "additionalProperties": {
+    "type": "number"
+   },
+   "title": "Accuracy By Category",
+   "type": "object"
+  },
+  "baseline": {
+   "anyOf": [
+    {
+     "additionalProperties": {
+      "type": "number"
+     },
+     "type": "object"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Baseline"
+  },
+  "cases": {
+   "items": {
+    "$ref": "#/$defs/CaseResult"
+   },
+   "title": "Cases",
+   "type": "array"
+  },
+  "citation_precision": {
+   "anyOf": [
+    {
+     "maximum": 1.0,
+     "minimum": 0.0,
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Citation Precision"
+  },
+  "citation_validity": {
+   "maximum": 1.0,
+   "minimum": 0.0,
+   "title": "Citation Validity",
+   "type": "number"
+  },
+  "conflict_recall": {
+   "maximum": 1.0,
+   "minimum": 0.0,
+   "title": "Conflict Recall",
+   "type": "number"
+  },
+  "dataset_version_id": {
+   "format": "uuid",
+   "title": "Dataset Version Id",
+   "type": "string"
+  },
+  "finished_at": {
+   "format": "date-time",
+   "title": "Finished At",
+   "type": "string"
+  },
+  "mean_cost_usd": {
+   "title": "Mean Cost Usd",
+   "type": "number"
+  },
+  "mean_latency_ms": {
+   "title": "Mean Latency Ms",
+   "type": "number"
+  },
+  "mean_tool_rounds": {
+   "title": "Mean Tool Rounds",
+   "type": "number"
+  },
+  "p95_latency_ms": {
+   "title": "P95 Latency Ms",
+   "type": "number"
+  },
+  "report_id": {
+   "format": "uuid",
+   "title": "Report Id",
+   "type": "string"
+  },
+  "started_at": {
+   "format": "date-time",
+   "title": "Started At",
+   "type": "string"
+  },
+  "suite": {
+   "title": "Suite",
+   "type": "string"
+  },
+  "unsupported_answer_rate": {
+   "maximum": 1.0,
+   "minimum": 0.0,
+   "title": "Unsupported Answer Rate",
+   "type": "number"
+  }
+ },
+ "required": [
+  "report_id",
+  "dataset_version_id",
+  "suite",
+  "started_at",
+  "finished_at",
+  "cases",
+  "accuracy_by_category",
+  "citation_validity",
+  "conflict_recall",
+  "unsupported_answer_rate",
+  "mean_latency_ms",
+  "p95_latency_ms",
+  "mean_tool_rounds",
+  "mean_cost_usd"
+ ],
+ "title": "EvaluationReport",
+ "type": "object"
+}

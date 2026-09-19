@@ -1,0 +1,188 @@
+{
+ "$defs": {
+  "DatasetStatus": {
+   "enum": [
+    "pending",
+    "ingesting",
+    "validating",
+    "ready",
+    "failed"
+   ],
+   "title": "DatasetStatus",
+   "type": "string"
+  },
+  "DocumentReport": {
+   "additionalProperties": false,
+   "properties": {
+    "chunks": {
+     "title": "Chunks",
+     "type": "integer"
+    },
+    "document_id": {
+     "format": "uuid",
+     "title": "Document Id",
+     "type": "string"
+    },
+    "facts": {
+     "title": "Facts",
+     "type": "integer"
+    },
+    "lines": {
+     "title": "Lines",
+     "type": "integer"
+    },
+    "name": {
+     "title": "Name",
+     "type": "string"
+    },
+    "sha256": {
+     "pattern": "^[0-9a-f]{64}$",
+     "title": "Sha256",
+     "type": "string"
+    },
+    "table_cells": {
+     "title": "Table Cells",
+     "type": "integer"
+    },
+    "tables": {
+     "title": "Tables",
+     "type": "integer"
+    },
+    "untyped_cells": {
+     "title": "Untyped Cells",
+     "type": "integer"
+    },
+    "warnings": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Warnings",
+     "type": "array"
+    }
+   },
+   "required": [
+    "document_id",
+    "name",
+    "sha256",
+    "lines",
+    "chunks",
+    "tables",
+    "table_cells",
+    "facts",
+    "untyped_cells"
+   ],
+   "title": "DocumentReport",
+   "type": "object"
+  },
+  "SourceType": {
+   "enum": [
+    "mcp",
+    "file"
+   ],
+   "title": "SourceType",
+   "type": "string"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "dataset_id": {
+   "format": "uuid",
+   "title": "Dataset Id",
+   "type": "string"
+  },
+  "dataset_version_id": {
+   "anyOf": [
+    {
+     "format": "uuid",
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Dataset Version Id"
+  },
+  "documents": {
+   "items": {
+    "$ref": "#/$defs/DocumentReport"
+   },
+   "title": "Documents",
+   "type": "array"
+  },
+  "errors": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Errors",
+   "type": "array"
+  },
+  "findings": {
+   "default": 0,
+   "title": "Findings",
+   "type": "integer"
+  },
+  "job_id": {
+   "format": "uuid",
+   "title": "Job Id",
+   "type": "string"
+  },
+  "mcp_capabilities": {
+   "anyOf": [
+    {
+     "type": "object"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Mcp Capabilities"
+  },
+  "parser_version": {
+   "title": "Parser Version",
+   "type": "string"
+  },
+  "source": {
+   "$ref": "#/$defs/SourceType"
+  },
+  "source_hash": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Source Hash"
+  },
+  "status": {
+   "$ref": "#/$defs/DatasetStatus"
+  },
+  "timings_ms": {
+   "additionalProperties": {
+    "type": "integer"
+   },
+   "title": "Timings Ms",
+   "type": "object"
+  },
+  "warnings": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Warnings",
+   "type": "array"
+  }
+ },
+ "required": [
+  "job_id",
+  "dataset_id",
+  "dataset_version_id",
+  "status",
+  "source",
+  "parser_version"
+ ],
+ "title": "IngestReport",
+ "type": "object"
+}

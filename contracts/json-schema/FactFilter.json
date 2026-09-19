@@ -1,0 +1,158 @@
+{
+ "$defs": {
+  "Basis": {
+   "enum": [
+    "gaap",
+    "adjusted",
+    "non_gaap"
+   ],
+   "title": "Basis",
+   "type": "string"
+  },
+  "Role": {
+   "enum": [
+    "actual",
+    "estimate",
+    "guidance",
+    "target",
+    "rank",
+    "count",
+    "trend",
+    "attribute",
+    "event"
+   ],
+   "title": "Role",
+   "type": "string"
+  },
+  "Unit": {
+   "enum": [
+    "money",
+    "pct",
+    "bps",
+    "x",
+    "count",
+    "rank",
+    "quantity",
+    "ratio",
+    "score",
+    "text",
+    "unknown"
+   ],
+   "title": "Unit",
+   "type": "string"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "bases": {
+   "items": {
+    "$ref": "#/$defs/Basis"
+   },
+   "title": "Bases",
+   "type": "array"
+  },
+  "currencies": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Currencies",
+   "type": "array"
+  },
+  "dataset_version_id": {
+   "format": "uuid",
+   "title": "Dataset Version Id",
+   "type": "string"
+  },
+  "entity_ids": {
+   "items": {
+    "format": "uuid",
+    "type": "string"
+   },
+   "title": "Entity Ids",
+   "type": "array"
+  },
+  "include_estimates": {
+   "default": true,
+   "title": "Include Estimates",
+   "type": "boolean"
+  },
+  "limit": {
+   "default": 50,
+   "maximum": 500,
+   "minimum": 1,
+   "title": "Limit",
+   "type": "integer"
+  },
+  "metric_text": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Metric Text"
+  },
+  "metrics": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Metrics",
+   "type": "array"
+  },
+  "period_from": {
+   "anyOf": [
+    {
+     "format": "date",
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Period From"
+  },
+  "period_labels": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Period Labels",
+   "type": "array"
+  },
+  "period_to": {
+   "anyOf": [
+    {
+     "format": "date",
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Period To"
+  },
+  "roles": {
+   "items": {
+    "$ref": "#/$defs/Role"
+   },
+   "title": "Roles",
+   "type": "array"
+  },
+  "units": {
+   "items": {
+    "$ref": "#/$defs/Unit"
+   },
+   "title": "Units",
+   "type": "array"
+  }
+ },
+ "required": [
+  "dataset_version_id"
+ ],
+ "title": "FactFilter",
+ "type": "object"
+}

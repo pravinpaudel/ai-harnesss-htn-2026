@@ -1,0 +1,192 @@
+{
+ "contract_version": "1.0",
+ "note": "Every finding here must be produced (matched by rule + claim fact). Extra findings are allowed but are reviewed as possible false positives.",
+ "findings": [
+  {
+   "finding_key": "count:IVN:eps_beat",
+   "rule": "count_claim",
+   "severity": "high",
+   "explanation": "The screening table says IVN beat EPS estimates in 3 of 8 quarters; the eight quarterly summaries show 2 beats, 1 met and 5 misses.",
+   "claim_fact": "m:IVN:eps_beat_count:screen",
+   "evidence_facts": [
+    "m:IVN:beat_miss:Q3 2024",
+    "m:IVN:beat_miss:Q4 2024",
+    "m:IVN:beat_miss:Q1 2025",
+    "m:IVN:beat_miss:Q2 2025",
+    "m:IVN:beat_miss:Q3 2025",
+    "m:IVN:beat_miss:Q4 2025",
+    "m:IVN:beat_miss:Q1 2026",
+    "m:IVN:beat_miss:Q2 2026"
+   ],
+   "expected": "2 of 8 (2 beat, 1 met, 5 miss)",
+   "observed": "3/8",
+   "spans": [
+    [
+     "mining-excerpt.md",
+     60
+    ],
+    [
+     "mining-excerpt.md",
+     65
+    ],
+    [
+     "mining-excerpt.md",
+     70
+    ],
+    [
+     "mining-excerpt.md",
+     75
+    ],
+    [
+     "mining-excerpt.md",
+     80
+    ],
+    [
+     "mining-excerpt.md",
+     85
+    ],
+    [
+     "mining-excerpt.md",
+     90
+    ],
+    [
+     "mining-excerpt.md",
+     95
+    ],
+    [
+     "mining-excerpt.md",
+     132
+    ]
+   ]
+  },
+  {
+   "finding_key": "rank:mining:revenue_yoy",
+   "rule": "rank_order",
+   "severity": "medium",
+   "explanation": "The revenue-growth ranking places AEM (+35%) third, ahead of IVN (+58%) and ABX (+44%); sorted by its own values the order is WPM, TECK.B, IVN, ABX, AEM, FM.",
+   "claim_fact": "m:AEM:revenue_yoy:rank",
+   "evidence_facts": [
+    "m:WPM:revenue_yoy:rank",
+    "m:WPM:revenue_yoy:screen",
+    "m:TECK.B:revenue_yoy:rank",
+    "m:TECK.B:revenue_yoy:screen",
+    "m:AEM:revenue_yoy:rank",
+    "m:AEM:revenue_yoy:screen",
+    "m:IVN:revenue_yoy:rank",
+    "m:IVN:revenue_yoy:screen",
+    "m:ABX:revenue_yoy:rank",
+    "m:ABX:revenue_yoy:screen",
+    "m:FM:revenue_yoy:rank",
+    "m:FM:revenue_yoy:screen"
+   ],
+   "expected": "WPM, TECK.B, IVN, ABX, AEM, FM",
+   "observed": "WPM, TECK.B, AEM, IVN, ABX, FM",
+   "spans": [
+    [
+     "mining-excerpt.md",
+     131
+    ]
+   ]
+  },
+  {
+   "finding_key": "dup:SHOP:payments_penetration",
+   "rule": "duplicate_claim",
+   "severity": "medium",
+   "explanation": "The executive summary and thesis say Shopify Payments penetration went from 58% to 68%; the quarterly trend read says 62% to 68%.",
+   "claim_fact": "t:SHOP:payments_penetration:summary",
+   "evidence_facts": [
+    "t:SHOP:payments_penetration:summary",
+    "t:SHOP:payments_penetration:thesis",
+    "t:SHOP:payments_penetration:trend"
+   ],
+   "expected": "start 62% (trend read)",
+   "observed": "start 58% (summary, thesis)",
+   "spans": [
+    [
+     "technology-excerpt.md",
+     7
+    ],
+    [
+     "technology-excerpt.md",
+     35
+    ],
+    [
+     "technology-excerpt.md",
+     41
+    ]
+   ]
+  },
+  {
+   "finding_key": "currency:mining:market_cap_column",
+   "rule": "unit_currency_mix",
+   "severity": "medium",
+   "explanation": "The comparable-company column is headed 'Mkt Cap (USD)' but FM (~C$30B) and IVN (C$17.1B) are stated in Canadian dollars.",
+   "claim_fact": "m:IVN:market_cap:asof",
+   "evidence_facts": [
+    "m:ABX:market_cap:asof",
+    "m:AEM:market_cap:asof",
+    "m:TECK.B:market_cap:asof",
+    "m:FM:market_cap:asof",
+    "m:WPM:market_cap:asof",
+    "m:IVN:market_cap:asof"
+   ],
+   "expected": "one currency per column",
+   "observed": "USD and CAD mixed",
+   "spans": [
+    [
+     "mining-excerpt.md",
+     18
+    ],
+    [
+     "mining-excerpt.md",
+     19
+    ],
+    [
+     "mining-excerpt.md",
+     20
+    ],
+    [
+     "mining-excerpt.md",
+     21
+    ],
+    [
+     "mining-excerpt.md",
+     22
+    ],
+    [
+     "mining-excerpt.md",
+     23
+    ]
+   ]
+  },
+  {
+   "finding_key": "currency:mining:market_cap_rank",
+   "rule": "unit_currency_mix",
+   "severity": "medium",
+   "explanation": "The market-cap ranking orders USD values (AEM, ABX, WPM, TECK.B) and CAD values (FM, IVN) as if they were comparable.",
+   "claim_fact": "m:FM:market_cap:rank",
+   "evidence_facts": [
+    "m:AEM:market_cap:rank",
+    "m:AEM:market_cap:screen",
+    "m:ABX:market_cap:rank",
+    "m:ABX:market_cap:screen",
+    "m:WPM:market_cap:rank",
+    "m:WPM:market_cap:screen",
+    "m:TECK.B:market_cap:rank",
+    "m:TECK.B:market_cap:screen",
+    "m:FM:market_cap:rank",
+    "m:FM:market_cap:screen",
+    "m:IVN:market_cap:rank",
+    "m:IVN:market_cap:screen"
+   ],
+   "expected": "rank within one currency or convert with a cited rate",
+   "observed": "USD and CAD ranked together",
+   "spans": [
+    [
+     "mining-excerpt.md",
+     130
+    ]
+   ]
+  }
+ ]
+}

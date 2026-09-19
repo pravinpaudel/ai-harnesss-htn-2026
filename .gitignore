@@ -1,6 +1,3 @@
-contract/fixture/store.duckdb
-corpus/*/store.duckdb
-corpus/*/runs.duckdb
-*.duckdb.wal
 __pycache__/
 .venv/
+.env

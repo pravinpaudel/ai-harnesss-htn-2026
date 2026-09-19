@@ -1,0 +1,64 @@
+{
+ "$defs": {
+  "SourceType": {
+   "enum": [
+    "mcp",
+    "file"
+   ],
+   "title": "SourceType",
+   "type": "string"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "dataset_name": {
+   "title": "Dataset Name",
+   "type": "string"
+  },
+  "idempotency_key": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Idempotency Key"
+  },
+  "mcp_tool": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Mcp Tool"
+  },
+  "path": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Path"
+  },
+  "source": {
+   "$ref": "#/$defs/SourceType"
+  }
+ },
+ "required": [
+  "source",
+  "dataset_name"
+ ],
+ "title": "IngestRequest",
+ "type": "object"
+}

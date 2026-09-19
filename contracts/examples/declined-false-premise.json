@@ -1,0 +1,75 @@
+{
+ "run_id": "00000000-0000-4000-8000-0000000a0003",
+ "status": "declined",
+ "answer": "The question's premise is not supported: Shopify reported EPS of $0.42 [1] against an estimate of $0.39 [2], which the report records as a beat [3].",
+ "values": [],
+ "citations": [
+  {
+   "citation_id": 1,
+   "span": {
+    "document_name": "technology-excerpt.md",
+    "document_hash": "9961bac7986de35a20e882bb8c116d6dd2286055097c8db10d175d65f85bd9d1",
+    "line_start": 45,
+    "line_end": 45,
+    "char_start": 3973,
+    "char_end": 3978,
+    "exact_text": "$0.42",
+    "heading_path": []
+   },
+   "evidence_kind": "fact",
+   "verified": true
+  },
+  {
+   "citation_id": 2,
+   "span": {
+    "document_name": "technology-excerpt.md",
+    "document_hash": "9961bac7986de35a20e882bb8c116d6dd2286055097c8db10d175d65f85bd9d1",
+    "line_start": 45,
+    "line_end": 45,
+    "char_start": 3982,
+    "char_end": 3987,
+    "exact_text": "$0.39",
+    "heading_path": []
+   },
+   "evidence_kind": "fact",
+   "verified": true
+  },
+  {
+   "citation_id": 3,
+   "span": {
+    "document_name": "technology-excerpt.md",
+    "document_hash": "9961bac7986de35a20e882bb8c116d6dd2286055097c8db10d175d65f85bd9d1",
+    "line_start": 45,
+    "line_end": 45,
+    "char_start": 3990,
+    "char_end": 4002,
+    "exact_text": "Beat (+7.7%)",
+    "heading_path": []
+   },
+   "evidence_kind": "fact",
+   "verified": true
+  }
+ ],
+ "calculation_trace": [],
+ "conflicts": [],
+ "limitations": [],
+ "decline_reason": "false_premise",
+ "evidence_status": "unsupported",
+ "dataset_version": "00000000-0000-4000-8000-00000000d002",
+ "provenance": {
+  "contract_version": "1.0",
+  "dataset_id": "00000000-0000-4000-8000-00000000d001",
+  "source_hash": "a2af78bb329854bee8625acbb08a02825f2764ab4a1e993f751b7e60fc33c5a0",
+  "parser_version": "example",
+  "prompt_version": "example",
+  "model": "example-model",
+  "usage": {
+   "input_tokens": 3000,
+   "output_tokens": 120,
+   "embedding_tokens": 0,
+   "cost_usd": 0.008,
+   "latency_ms": 2600,
+   "tool_rounds": 1
+  }
+ }
+}

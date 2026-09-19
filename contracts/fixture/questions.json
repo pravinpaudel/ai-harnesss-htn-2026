@@ -1,0 +1,322 @@
+{
+ "contract_version": "1.0",
+ "cases": [
+  {
+   "case_id": "FX01",
+   "question": "What was Ivanhoe Mines' revenue in Q2 2026?",
+   "category": "lookup",
+   "expect": {
+    "acceptable_statuses": [
+     "answered"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "revenue",
+      "value": 152600000.0,
+      "tolerance": 100000.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "mining-excerpt.md",
+      "line_start": 95,
+      "line_end": 95
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   }
+  },
+  {
+   "case_id": "FX02",
+   "question": "Did Shopify beat its EPS estimate in Q2 2026, and by how much?",
+   "category": "lookup",
+   "expect": {
+    "acceptable_statuses": [
+     "answered"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "eps actual",
+      "value": 0.42,
+      "tolerance": 0.0
+     },
+     {
+      "label": "eps estimate",
+      "value": 0.39,
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "technology-excerpt.md",
+      "line_start": 45,
+      "line_end": 45
+     }
+    ],
+    "must_mention": [
+     "beat"
+    ],
+    "finding_rules": [],
+    "requires_calculation": false
+   }
+  },
+  {
+   "case_id": "FX03",
+   "question": "Which grew revenue faster in its latest quarter, Shopify or Kinaxis?",
+   "category": "comparison",
+   "expect": {
+    "acceptable_statuses": [
+     "answered"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "winner",
+      "value_text": "SHOP",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "technology-excerpt.md",
+      "line_start": 14,
+      "line_end": 14
+     },
+     {
+      "document_name": "technology-excerpt.md",
+      "line_start": 19,
+      "line_end": 19
+     }
+    ],
+    "must_mention": [
+     "33.7",
+     "16.4"
+    ],
+    "finding_rules": [],
+    "requires_calculation": false
+   }
+  },
+  {
+   "case_id": "FX04",
+   "question": "By what percentage did Ivanhoe's revenue change from Q1 2026 to Q2 2026?",
+   "category": "calculation",
+   "expect": {
+    "acceptable_statuses": [
+     "answered"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "percent change",
+      "value": -7.79,
+      "tolerance": 0.05
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "mining-excerpt.md",
+      "line_start": 90,
+      "line_end": 90
+     },
+     {
+      "document_name": "mining-excerpt.md",
+      "line_start": 95,
+      "line_end": 95
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": true
+   }
+  },
+  {
+   "case_id": "FX05",
+   "question": "Why did Ivanhoe's Q2 2026 revenue miss consensus?",
+   "category": "narrative",
+   "expect": {
+    "acceptable_statuses": [
+     "answered"
+    ],
+    "decline_reasons": [],
+    "values": [],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "mining-excerpt.md",
+      "line_start": 98,
+      "line_end": 98
+     }
+    ],
+    "must_mention": [
+     "payable",
+     "logistic"
+    ],
+    "finding_rules": [],
+    "requires_calculation": false
+   }
+  },
+  {
+   "case_id": "FX06",
+   "question": "How many of the last eight quarters did Ivanhoe beat EPS estimates?",
+   "category": "conflict",
+   "expect": {
+    "acceptable_statuses": [
+     "conflict"
+    ],
+    "decline_reasons": [],
+    "values": [],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "mining-excerpt.md",
+      "line_start": 132,
+      "line_end": 132
+     },
+     {
+      "document_name": "mining-excerpt.md",
+      "line_start": 70,
+      "line_end": 70
+     },
+     {
+      "document_name": "mining-excerpt.md",
+      "line_start": 80,
+      "line_end": 80
+     }
+    ],
+    "must_mention": [
+     "3",
+     "2"
+    ],
+    "finding_rules": [
+     "count_claim"
+    ],
+    "requires_calculation": false
+   }
+  },
+  {
+   "case_id": "FX07",
+   "question": "What was Shopify's Payments penetration at the start of the period, and where did it end?",
+   "category": "conflict",
+   "expect": {
+    "acceptable_statuses": [
+     "conflict"
+    ],
+    "decline_reasons": [],
+    "values": [],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "technology-excerpt.md",
+      "line_start": 7,
+      "line_end": 7
+     },
+     {
+      "document_name": "technology-excerpt.md",
+      "line_start": 41,
+      "line_end": 41
+     }
+    ],
+    "must_mention": [
+     "58",
+     "62",
+     "68"
+    ],
+    "finding_rules": [
+     "duplicate_claim"
+    ],
+    "requires_calculation": false
+   }
+  },
+  {
+   "case_id": "FX08",
+   "question": "Rank the six mining companies by market capitalization.",
+   "category": "currency_ambiguity",
+   "expect": {
+    "acceptable_statuses": [
+     "declined",
+     "partial",
+     "conflict"
+    ],
+    "decline_reasons": [
+     "incompatible_currency"
+    ],
+    "values": [],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "mining-excerpt.md",
+      "line_start": 21,
+      "line_end": 21
+     },
+     {
+      "document_name": "mining-excerpt.md",
+      "line_start": 23,
+      "line_end": 23
+     }
+    ],
+    "must_mention": [
+     "CAD"
+    ],
+    "finding_rules": [
+     "unit_currency_mix"
+    ],
+    "requires_calculation": false
+   },
+   "notes": "Market caps mix USD and CAD. Only IVN has a source-backed USD figure (line 232); FM does not. An answer that silently ranks the raw numbers fails."
+  },
+  {
+   "case_id": "FX09",
+   "question": "What was Ivanhoe's all-in sustaining cost (AISC) per ounce in Q2 2026?",
+   "category": "decline",
+   "expect": {
+    "acceptable_statuses": [
+     "declined"
+    ],
+    "decline_reasons": [
+     "insufficient_evidence"
+    ],
+    "values": [],
+    "ordered_items": [],
+    "must_cite": [],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "The corpus reports C1 cash costs per pound of copper/zinc for IVN, not AISC per ounce."
+  },
+  {
+   "case_id": "FX10",
+   "question": "Why did Shopify miss its EPS estimate in Q2 2026?",
+   "category": "false_premise",
+   "expect": {
+    "acceptable_statuses": [
+     "declined"
+    ],
+    "decline_reasons": [
+     "false_premise"
+    ],
+    "values": [],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "technology-excerpt.md",
+      "line_start": 45,
+      "line_end": 45
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Shopify beat ($0.42 vs $0.39); a good answer corrects the premise with a citation."
+  }
+ ]
+}

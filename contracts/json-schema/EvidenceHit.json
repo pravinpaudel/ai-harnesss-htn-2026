@@ -1,0 +1,454 @@
+{
+ "$defs": {
+  "Basis": {
+   "enum": [
+    "gaap",
+    "adjusted",
+    "non_gaap"
+   ],
+   "title": "Basis",
+   "type": "string"
+  },
+  "EvidenceKind": {
+   "enum": [
+    "chunk",
+    "table_cell",
+    "fact"
+   ],
+   "title": "EvidenceKind",
+   "type": "string"
+  },
+  "Fact": {
+   "additionalProperties": false,
+   "properties": {
+    "basis": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Basis"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "dataset_version_id": {
+     "format": "uuid",
+     "title": "Dataset Version Id",
+     "type": "string"
+    },
+    "entity_id": {
+     "anyOf": [
+      {
+       "format": "uuid",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Entity Id"
+    },
+    "entity_label": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Entity Label"
+    },
+    "extraction_confidence": {
+     "maximum": 1.0,
+     "minimum": 0.0,
+     "title": "Extraction Confidence",
+     "type": "number"
+    },
+    "fact_id": {
+     "format": "uuid",
+     "title": "Fact Id",
+     "type": "string"
+    },
+    "metric": {
+     "title": "Metric",
+     "type": "string"
+    },
+    "metric_label": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Metric Label"
+    },
+    "period": {
+     "$ref": "#/$defs/Period"
+    },
+    "role": {
+     "$ref": "#/$defs/Role"
+    },
+    "span": {
+     "$ref": "#/$defs/SourceSpan"
+    },
+    "value": {
+     "$ref": "#/$defs/FactValue"
+    }
+   },
+   "required": [
+    "fact_id",
+    "dataset_version_id",
+    "entity_id",
+    "entity_label",
+    "metric",
+    "metric_label",
+    "value",
+    "role",
+    "period",
+    "span",
+    "extraction_confidence"
+   ],
+   "title": "Fact",
+   "type": "object"
+  },
+  "FactValue": {
+   "additionalProperties": false,
+   "properties": {
+    "currency": {
+     "anyOf": [
+      {
+       "pattern": "^[A-Z]{3}$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Currency"
+    },
+    "is_estimate": {
+     "default": false,
+     "title": "Is Estimate",
+     "type": "boolean"
+    },
+    "original_value": {
+     "title": "Original Value",
+     "type": "string"
+    },
+    "qualifier": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Qualifier"
+    },
+    "scale": {
+     "default": 1.0,
+     "title": "Scale",
+     "type": "number"
+    },
+    "unit": {
+     "$ref": "#/$defs/Unit"
+    },
+    "unit_label": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Unit Label"
+    },
+    "value": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Value"
+    },
+    "value_high": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Value High"
+    },
+    "value_low": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Value Low"
+    },
+    "value_text": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Value Text"
+    }
+   },
+   "required": [
+    "original_value",
+    "unit"
+   ],
+   "title": "FactValue",
+   "type": "object"
+  },
+  "Period": {
+   "additionalProperties": false,
+   "properties": {
+    "end": {
+     "anyOf": [
+      {
+       "format": "date",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "End"
+    },
+    "label": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Label"
+    },
+    "type": {
+     "allOf": [
+      {
+       "$ref": "#/$defs/PeriodType"
+      }
+     ],
+     "default": "unspecified"
+    }
+   },
+   "title": "Period",
+   "type": "object"
+  },
+  "PeriodType": {
+   "enum": [
+    "fiscal",
+    "calendar",
+    "trailing",
+    "point",
+    "range",
+    "unspecified"
+   ],
+   "title": "PeriodType",
+   "type": "string"
+  },
+  "Role": {
+   "enum": [
+    "actual",
+    "estimate",
+    "guidance",
+    "target",
+    "rank",
+    "count",
+    "trend",
+    "attribute",
+    "event"
+   ],
+   "title": "Role",
+   "type": "string"
+  },
+  "SourceSpan": {
+   "additionalProperties": false,
+   "properties": {
+    "char_end": {
+     "minimum": 0,
+     "title": "Char End",
+     "type": "integer"
+    },
+    "char_start": {
+     "minimum": 0,
+     "title": "Char Start",
+     "type": "integer"
+    },
+    "document_hash": {
+     "pattern": "^[0-9a-f]{64}$",
+     "title": "Document Hash",
+     "type": "string"
+    },
+    "document_id": {
+     "anyOf": [
+      {
+       "format": "uuid",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Document Id"
+    },
+    "document_name": {
+     "title": "Document Name",
+     "type": "string"
+    },
+    "exact_text": {
+     "minLength": 1,
+     "title": "Exact Text",
+     "type": "string"
+    },
+    "heading_path": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Heading Path",
+     "type": "array"
+    },
+    "line_end": {
+     "minimum": 1,
+     "title": "Line End",
+     "type": "integer"
+    },
+    "line_start": {
+     "minimum": 1,
+     "title": "Line Start",
+     "type": "integer"
+    },
+    "span_id": {
+     "anyOf": [
+      {
+       "format": "uuid",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Span Id"
+    }
+   },
+   "required": [
+    "document_name",
+    "document_hash",
+    "line_start",
+    "line_end",
+    "char_start",
+    "char_end",
+    "exact_text"
+   ],
+   "title": "SourceSpan",
+   "type": "object"
+  },
+  "Unit": {
+   "enum": [
+    "money",
+    "pct",
+    "bps",
+    "x",
+    "count",
+    "rank",
+    "quantity",
+    "ratio",
+    "score",
+    "text",
+    "unknown"
+   ],
+   "title": "Unit",
+   "type": "string"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "dataset_version_id": {
+   "format": "uuid",
+   "title": "Dataset Version Id",
+   "type": "string"
+  },
+  "evidence_id": {
+   "format": "uuid",
+   "title": "Evidence Id",
+   "type": "string"
+  },
+  "fact": {
+   "anyOf": [
+    {
+     "$ref": "#/$defs/Fact"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null
+  },
+  "kind": {
+   "$ref": "#/$defs/EvidenceKind"
+  },
+  "score": {
+   "title": "Score",
+   "type": "number"
+  },
+  "score_components": {
+   "additionalProperties": {
+    "type": "number"
+   },
+   "title": "Score Components",
+   "type": "object"
+  },
+  "span": {
+   "$ref": "#/$defs/SourceSpan"
+  },
+  "text": {
+   "title": "Text",
+   "type": "string"
+  }
+ },
+ "required": [
+  "kind",
+  "evidence_id",
+  "dataset_version_id",
+  "text",
+  "score",
+  "span"
+ ],
+ "title": "EvidenceHit",
+ "type": "object"
+}

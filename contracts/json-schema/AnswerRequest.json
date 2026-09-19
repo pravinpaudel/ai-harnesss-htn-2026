@@ -1,0 +1,88 @@
+{
+ "$defs": {
+  "Budget": {
+   "additionalProperties": false,
+   "properties": {
+    "max_cost_usd": {
+     "default": 0.5,
+     "title": "Max Cost Usd",
+     "type": "number"
+    },
+    "max_latency_ms": {
+     "default": 60000,
+     "title": "Max Latency Ms",
+     "type": "integer"
+    },
+    "max_tokens": {
+     "default": 60000,
+     "title": "Max Tokens",
+     "type": "integer"
+    },
+    "max_tool_rounds": {
+     "default": 6,
+     "maximum": 6,
+     "minimum": 1,
+     "title": "Max Tool Rounds",
+     "type": "integer"
+    }
+   },
+   "title": "Budget",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "budget": {
+   "allOf": [
+    {
+     "$ref": "#/$defs/Budget"
+    }
+   ],
+   "default": {
+    "max_cost_usd": 0.5,
+    "max_latency_ms": 60000,
+    "max_tokens": 60000,
+    "max_tool_rounds": 6
+   }
+  },
+  "dataset_version": {
+   "anyOf": [
+    {
+     "format": "uuid",
+     "type": "string"
+    },
+    {
+     "const": "latest",
+     "enum": [
+      "latest"
+     ],
+     "type": "string"
+    }
+   ],
+   "default": "latest",
+   "title": "Dataset Version"
+  },
+  "question": {
+   "minLength": 1,
+   "title": "Question",
+   "type": "string"
+  },
+  "session_id": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Session Id"
+  }
+ },
+ "required": [
+  "question"
+ ],
+ "title": "AnswerRequest",
+ "type": "object"
+}

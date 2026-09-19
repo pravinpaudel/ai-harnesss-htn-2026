@@ -1,0 +1,327 @@
+{
+ "$defs": {
+  "Basis": {
+   "enum": [
+    "gaap",
+    "adjusted",
+    "non_gaap"
+   ],
+   "title": "Basis",
+   "type": "string"
+  },
+  "Operand": {
+   "additionalProperties": false,
+   "properties": {
+    "basis": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Basis"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "currency": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Currency"
+    },
+    "fact_id": {
+     "anyOf": [
+      {
+       "format": "uuid",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Fact Id"
+    },
+    "name": {
+     "title": "Name",
+     "type": "string"
+    },
+    "period": {
+     "$ref": "#/$defs/Period"
+    },
+    "span": {
+     "$ref": "#/$defs/SourceSpan"
+    },
+    "unit": {
+     "$ref": "#/$defs/Unit"
+    },
+    "value": {
+     "title": "Value",
+     "type": "number"
+    }
+   },
+   "required": [
+    "name",
+    "value",
+    "unit",
+    "period",
+    "span"
+   ],
+   "title": "Operand",
+   "type": "object"
+  },
+  "Operation": {
+   "enum": [
+    "difference",
+    "percent_change",
+    "ratio",
+    "sum",
+    "average",
+    "median",
+    "rank",
+    "compare"
+   ],
+   "title": "Operation",
+   "type": "string"
+  },
+  "Period": {
+   "additionalProperties": false,
+   "properties": {
+    "end": {
+     "anyOf": [
+      {
+       "format": "date",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "End"
+    },
+    "label": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Label"
+    },
+    "type": {
+     "allOf": [
+      {
+       "$ref": "#/$defs/PeriodType"
+      }
+     ],
+     "default": "unspecified"
+    }
+   },
+   "title": "Period",
+   "type": "object"
+  },
+  "PeriodType": {
+   "enum": [
+    "fiscal",
+    "calendar",
+    "trailing",
+    "point",
+    "range",
+    "unspecified"
+   ],
+   "title": "PeriodType",
+   "type": "string"
+  },
+  "SourceSpan": {
+   "additionalProperties": false,
+   "properties": {
+    "char_end": {
+     "minimum": 0,
+     "title": "Char End",
+     "type": "integer"
+    },
+    "char_start": {
+     "minimum": 0,
+     "title": "Char Start",
+     "type": "integer"
+    },
+    "document_hash": {
+     "pattern": "^[0-9a-f]{64}$",
+     "title": "Document Hash",
+     "type": "string"
+    },
+    "document_id": {
+     "anyOf": [
+      {
+       "format": "uuid",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Document Id"
+    },
+    "document_name": {
+     "title": "Document Name",
+     "type": "string"
+    },
+    "exact_text": {
+     "minLength": 1,
+     "title": "Exact Text",
+     "type": "string"
+    },
+    "heading_path": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Heading Path",
+     "type": "array"
+    },
+    "line_end": {
+     "minimum": 1,
+     "title": "Line End",
+     "type": "integer"
+    },
+    "line_start": {
+     "minimum": 1,
+     "title": "Line Start",
+     "type": "integer"
+    },
+    "span_id": {
+     "anyOf": [
+      {
+       "format": "uuid",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Span Id"
+    }
+   },
+   "required": [
+    "document_name",
+    "document_hash",
+    "line_start",
+    "line_end",
+    "char_start",
+    "char_end",
+    "exact_text"
+   ],
+   "title": "SourceSpan",
+   "type": "object"
+  },
+  "Unit": {
+   "enum": [
+    "money",
+    "pct",
+    "bps",
+    "x",
+    "count",
+    "rank",
+    "quantity",
+    "ratio",
+    "score",
+    "text",
+    "unknown"
+   ],
+   "title": "Unit",
+   "type": "string"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "currency": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Currency"
+  },
+  "formula": {
+   "title": "Formula",
+   "type": "string"
+  },
+  "operands": {
+   "items": {
+    "$ref": "#/$defs/Operand"
+   },
+   "title": "Operands",
+   "type": "array"
+  },
+  "operation": {
+   "$ref": "#/$defs/Operation"
+  },
+  "rejected": {
+   "default": false,
+   "title": "Rejected",
+   "type": "boolean"
+  },
+  "rejection_reason": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Rejection Reason"
+  },
+  "result": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Result"
+  },
+  "result_items": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Result Items",
+   "type": "array"
+  },
+  "rounding": {
+   "title": "Rounding",
+   "type": "integer"
+  },
+  "unit": {
+   "$ref": "#/$defs/Unit"
+  }
+ },
+ "required": [
+  "operation",
+  "formula",
+  "operands",
+  "result",
+  "unit",
+  "rounding"
+ ],
+ "title": "CalculationResult",
+ "type": "object"
+}

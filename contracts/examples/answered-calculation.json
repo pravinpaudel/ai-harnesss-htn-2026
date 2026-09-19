@@ -1,0 +1,121 @@
+{
+ "run_id": "00000000-0000-4000-8000-0000000a0001",
+ "status": "answered",
+ "answer": "Ivanhoe's revenue fell 7.79% from Q1 2026 to Q2 2026, from $165.5M [1] to $152.6M [2].",
+ "values": [
+  {
+   "label": "IVN revenue change, Q1 2026 to Q2 2026",
+   "value": -7.79,
+   "unit": "pct",
+   "citation_ids": [
+    1,
+    2
+   ]
+  }
+ ],
+ "citations": [
+  {
+   "citation_id": 1,
+   "span": {
+    "document_name": "mining-excerpt.md",
+    "document_hash": "d99ff713a76cef859b1d6a76070d3c822b9d89ba7d94ee38a79a497ebe7ea172",
+    "line_start": 90,
+    "line_end": 90,
+    "char_start": 6145,
+    "char_end": 6152,
+    "exact_text": "$165.5M",
+    "heading_path": []
+   },
+   "evidence_kind": "fact",
+   "verified": true
+  },
+  {
+   "citation_id": 2,
+   "span": {
+    "document_name": "mining-excerpt.md",
+    "document_hash": "d99ff713a76cef859b1d6a76070d3c822b9d89ba7d94ee38a79a497ebe7ea172",
+    "line_start": 95,
+    "line_end": 95,
+    "char_start": 6324,
+    "char_end": 6331,
+    "exact_text": "$152.6M",
+    "heading_path": []
+   },
+   "evidence_kind": "fact",
+   "verified": true
+  }
+ ],
+ "calculation_trace": [
+  {
+   "operation": "percent_change",
+   "formula": "(152.6M - 165.5M) / 165.5M x 100",
+   "operands": [
+    {
+     "name": "IVN revenue Q1 2026",
+     "value": 165500000.0,
+     "unit": "money",
+     "period": {
+      "label": "Q1 2026",
+      "type": "calendar"
+     },
+     "span": {
+      "document_name": "mining-excerpt.md",
+      "document_hash": "d99ff713a76cef859b1d6a76070d3c822b9d89ba7d94ee38a79a497ebe7ea172",
+      "line_start": 90,
+      "line_end": 90,
+      "char_start": 6145,
+      "char_end": 6152,
+      "exact_text": "$165.5M",
+      "heading_path": []
+     }
+    },
+    {
+     "name": "IVN revenue Q2 2026",
+     "value": 152600000.0,
+     "unit": "money",
+     "period": {
+      "label": "Q2 2026",
+      "type": "calendar"
+     },
+     "span": {
+      "document_name": "mining-excerpt.md",
+      "document_hash": "d99ff713a76cef859b1d6a76070d3c822b9d89ba7d94ee38a79a497ebe7ea172",
+      "line_start": 95,
+      "line_end": 95,
+      "char_start": 6324,
+      "char_end": 6331,
+      "exact_text": "$152.6M",
+      "heading_path": []
+     }
+    }
+   ],
+   "result": -7.79,
+   "result_items": [],
+   "unit": "pct",
+   "rounding": 2,
+   "rejected": false
+  }
+ ],
+ "conflicts": [],
+ "limitations": [
+  "Revenue is IVN's consolidated revenue; Kamoa-Kakula is equity-accounted and excluded."
+ ],
+ "evidence_status": "fully_supported",
+ "dataset_version": "00000000-0000-4000-8000-00000000d002",
+ "provenance": {
+  "contract_version": "1.0",
+  "dataset_id": "00000000-0000-4000-8000-00000000d001",
+  "source_hash": "a2af78bb329854bee8625acbb08a02825f2764ab4a1e993f751b7e60fc33c5a0",
+  "parser_version": "example",
+  "prompt_version": "example",
+  "model": "example-model",
+  "usage": {
+   "input_tokens": 4200,
+   "output_tokens": 180,
+   "embedding_tokens": 0,
+   "cost_usd": 0.012,
+   "latency_ms": 3400,
+   "tool_rounds": 2
+  }
+ }
+}
