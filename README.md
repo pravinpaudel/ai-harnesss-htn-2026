@@ -125,6 +125,25 @@ uv run htn ask "Which company has the highest revenue growth?"
 | Run the RBC evaluation suite | `uv run htn eval --questions evals/rbc_sample.json` |
 | Inspect an audited answer | `uv run htn trace <run-id>` |
 
+## Web research chat
+
+The React frontend lives in [`web/`](web/). Start the API first, then run the
+frontend in a second terminal:
+
+```bash
+uv run uvicorn app.api.main:app --host 0.0.0.0 --port 8000
+cd web
+npm install
+npm run dev
+```
+
+Open the Vite URL (normally `http://localhost:5173`) to ask questions against
+the latest dataset. Set `VITE_API_BASE_URL` when the API is not at
+`http://localhost:8000`. The API permits the two local Vite origins by default;
+deployments can set `HARNESS_CORS_ORIGINS` to a comma-separated list of allowed
+browser origins. Build and test the frontend with `npm run build` and
+`npm test` from `web/`.
+
 For the complete RBC evaluation setup, see [evals/README.md](evals/README.md).
 
 ## Configuration

@@ -27,6 +27,12 @@ class Settings(BaseSettings):
     mcp_url: str | None = None
     mcp_financial_data_tool: str = "financialDataRetrieval"
     mcp_dataset_name: str = "mcp-financial-data"
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+
+    @property
+    def allowed_cors_origins(self) -> tuple[str, ...]:
+        """Return the comma-separated browser origins configured for the API."""
+        return tuple(origin.strip() for origin in self.cors_origins.split(",") if origin.strip())
 
 
 class ModelPrice(BaseModel):
