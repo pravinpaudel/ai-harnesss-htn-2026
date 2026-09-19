@@ -1,4 +1,4 @@
-"""`htn` command line (Developer B). `--json` prints contract objects exactly."""
+"""`htn` command line: ingest (Developer A) and research engine (Developer B)."""
 
 from __future__ import annotations
 
@@ -12,9 +12,11 @@ import typer
 from rich.console import Console
 
 from app.cli import render
-from app.settings import engine_settings
+from app.ingest.service import FileIngestService, get_ingest_service
+from app.settings import engine_settings, settings
+from contracts.models import IngestRequest, SourceType
 
-app = typer.Typer(no_args_is_help=True, add_completion=False, help="Evidence-first research harness.")
+app = typer.Typer(no_args_is_help=True, add_completion=False, help="Evidence-first finance research harness.")
 dataset_app = typer.Typer(no_args_is_help=True, help="Inspect datasets.")
 app.add_typer(dataset_app, name="dataset")
 console = Console()
@@ -23,6 +25,7 @@ err = Console(stderr=True)
 
 def _repo():
     from app.retrieval.repository import PgEvidenceRepository
+
     return PgEvidenceRepository(engine_settings().database_url_engine)
 
 
@@ -33,7 +36,7 @@ def _engine(audit: bool = True):
 
     s = engine_settings()
     if not s.htn_model:
-        err.print("[red]HTN_MODEL is not set.[/] Set it in the environment or .env.")
+        err.print("[red]HARNESS_OPENAI_MODEL is not set.[/] Set it in the environment or .env.")
         raise typer.Exit(2)
     if not s.openai_api_key:
         err.print("[red]OPENAI_API_KEY is not set.[/]")
@@ -52,13 +55,57 @@ def _version(dataset: str, version: str):
         raise typer.Exit(1)
 
 
+@app.command(name="version")
+def version_cmd() -> None:
+    """Print the current platform version."""
+    typer.echo("htn 0.1.0")
+
+
 @app.command()
-def ask(question: str = typer.Argument(..., help="The research question"),
-        dataset: str = typer.Option("latest", help="Dataset name, or 'latest'"),
-        version: str = typer.Option("latest", help="Dataset version id, or 'latest'"),
-        session: Optional[str] = typer.Option(None, help="Session id for audit grouping"),
-        as_json: bool = typer.Option(False, "--json", help="Print the AnswerResponse JSON only"),
-        audit: bool = typer.Option(True, help="Write answer_run/tool_event rows")) -> None:
+def ingest(path: str, dataset_name: str = typer.Option(..., "--dataset-name")) -> None:
+    """Ingest a local file or directory into a new immutable dataset version."""
+    report = get_ingest_service().run_sync(
+        IngestRequest(source=SourceType.file, path=path, dataset_name=dataset_name)
+    )
+    typer.echo(report.model_dump_json(indent=2))
+
+
+@app.command()
+def ingest_mcp(dataset_name: str = typer.Option(..., "--dataset-name")) -> None:
+    """Ingest the configured financial-data MCP corpus as an immutable version."""
+    if not settings.mcp_url:
+        raise typer.BadParameter("HARNESS_MCP_URL must be configured")
+    from app.ingest.adapters import McpSourceAdapter
+    from app.ingest.http_mcp import HttpMcpClient
+    from app.db import create_engine
+    from app.ingest.storage import ImmutableRawStorage
+
+    adapter = McpSourceAdapter(HttpMcpClient(settings.mcp_url))
+    service = FileIngestService(
+        create_engine(settings.database_url),
+        ImmutableRawStorage(settings.raw_storage_path),
+        settings.parser_version,
+        mcp_adapter=adapter,
+    )
+    report = service.run_sync(
+        IngestRequest(
+            source=SourceType.mcp,
+            mcp_tool=settings.mcp_financial_data_tool,
+            dataset_name=dataset_name,
+        )
+    )
+    typer.echo(report.model_dump_json(indent=2))
+
+
+@app.command()
+def ask(
+    question: str = typer.Argument(..., help="The research question"),
+    dataset: str = typer.Option("latest", help="Dataset name, or 'latest'"),
+    version: str = typer.Option("latest", help="Dataset version id, or 'latest'"),
+    session: Optional[str] = typer.Option(None, help="Session id for audit grouping"),
+    as_json: bool = typer.Option(False, "--json", help="Print the AnswerResponse JSON only"),
+    audit: bool = typer.Option(True, help="Write answer_run/tool_event rows"),
+) -> None:
     """Answer a question from one dataset version, with verified citations."""
     eng = _engine(audit)
     try:
@@ -89,8 +136,11 @@ def trace(run_id: UUID, as_json: bool = typer.Option(False, "--json")) -> None:
 
 
 @app.command()
-def conflicts(dataset: str = typer.Option("latest"), version: str = typer.Option("latest"),
-              fmt: str = typer.Option("markdown", "--format", help="markdown | json")) -> None:
+def conflicts(
+    dataset: str = typer.Option("latest"),
+    version: str = typer.Option("latest"),
+    fmt: str = typer.Option("markdown", "--format", help="markdown | json"),
+) -> None:
     """List the dataset's open contradictions and data-quality findings."""
     info = _version(dataset, version)
     found = _repo().list_findings(info.dataset_version_id)
@@ -101,29 +151,40 @@ def conflicts(dataset: str = typer.Option("latest"), version: str = typer.Option
 
 
 @dataset_app.command("show")
-def dataset_show(dataset: str = typer.Option("latest"), version: str = typer.Option("latest"),
-                 as_json: bool = typer.Option(False, "--json")) -> None:
+def dataset_show(
+    dataset: str = typer.Option("latest"),
+    version: str = typer.Option("latest"),
+    as_json: bool = typer.Option(False, "--json"),
+) -> None:
     """Dataset profile: documents, entities, metrics, periods, currencies, findings."""
     info = _version(dataset, version)
     p = _repo().profile(info.dataset_version_id)
     if as_json:
         sys.stdout.write(p.model_dump_json(indent=1) + "\n")
         return
-    console.print(f"[bold]{info.dataset_name}[/] version {p.dataset_version_id} ({p.status.value}) · "
-                  f"source {p.source_hash[:12]} · parser {p.parser_version}")
+    console.print(
+        f"[bold]{info.dataset_name}[/] version {p.dataset_version_id} ({p.status.value}) · "
+        f"source {p.source_hash[:12]} · parser {p.parser_version}"
+    )
     for d in p.documents:
-        console.print(f"  {d.name}: {d.lines} lines, {d.facts} facts, {d.chunks} chunks, "
-                      f"{d.table_cells} cells ({d.untyped_cells} untyped)")
+        console.print(
+            f"  {d.name}: {d.lines} lines, {d.facts} facts, {d.chunks} chunks, "
+            f"{d.table_cells} cells ({d.untyped_cells} untyped)"
+        )
     console.print(f"entities ({len(p.entities)}): " + ", ".join(e.label for e in p.entities[:30]))
     console.print(f"metrics ({len(p.metrics)}): " + ", ".join(m.label for m in p.metrics[:30]))
-    console.print(f"currencies: " + ", ".join(f"{c.label} ({c.count})" for c in p.currencies))
+    console.print("currencies: " + ", ".join(f"{c.label} ({c.count})" for c in p.currencies))
     console.print("findings: " + (", ".join(f"{k.value} {v}" for k, v in p.findings_by_rule.items()) or "none"))
 
 
 @app.command(name="eval")
-def eval_cmd(questions: Path = typer.Option(Path("contracts/fixture/questions.json"), exists=True),
-             dataset: str = typer.Option("latest"), version: str = typer.Option("latest"),
-             as_json: bool = typer.Option(False, "--json"), audit: bool = typer.Option(True)) -> None:
+def eval_cmd(
+    questions: Path = typer.Option(Path("contracts/fixture/questions.json"), exists=True),
+    dataset: str = typer.Option("latest"),
+    version: str = typer.Option("latest"),
+    as_json: bool = typer.Option(False, "--json"),
+    audit: bool = typer.Option(True),
+) -> None:
     """Run an evaluation suite and print the scorecard."""
     from app.eval import runner
 
@@ -135,29 +196,16 @@ def eval_cmd(questions: Path = typer.Option(Path("contracts/fixture/questions.js
             mark = "[green]PASS[/]" if res.passed else "[red]FAIL[/]"
             console.print(f"{mark} {res.case_id} {ans.status.value} {res.detail or ''}")
 
-    rep = runner.run(cases, lambda q: eng.ask(q, dataset=dataset, version=version), suite=str(questions),
-                     on_result=progress)
+    rep = runner.run(
+        cases,
+        lambda q: eng.ask(q, dataset=dataset, version=version),
+        suite=str(questions),
+        on_result=progress,
+    )
     if as_json:
         sys.stdout.write(rep.model_dump_json(indent=1) + "\n")
     else:
         render.report(console, rep)
-
-
-@app.command()
-def ingest(source: str = typer.Option("mcp", help="mcp | file"), path: Optional[Path] = typer.Option(None),
-           name: str = typer.Option("default", help="Dataset name")) -> None:
-    """Ingest a corpus through Developer A's IngestService."""
-    try:
-        from app.ingest.service import get_ingest_service  # published by Developer A at Checkpoint 1
-    except ImportError:
-        err.print("[yellow]Ingest service not available yet.[/] Developer A publishes "
-                  "app.ingest.service.get_ingest_service at Checkpoint 1.")
-        raise typer.Exit(3)
-    from contracts.models import IngestRequest, SourceType
-
-    report = get_ingest_service().run_sync(IngestRequest(source=SourceType(source), path=str(path) if path else None,
-                                                         dataset_name=name))
-    sys.stdout.write(report.model_dump_json(indent=1) + "\n")
 
 
 if __name__ == "__main__":

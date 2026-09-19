@@ -1,12 +1,32 @@
-"""Typed settings. Developer B's section is EngineSettings; Developer A adds its own section here."""
+"""Typed settings for ingest/API (Developer A) and the research engine (Developer B)."""
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
-from typing import Optional
+from pathlib import Path
+from typing import Literal, Optional
 
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """Ingest, API, and worker settings. Environment values use the HARNESS_ prefix."""
+
+    model_config = SettingsConfigDict(env_file=".env", env_prefix="HARNESS_", extra="ignore")
+
+    database_url: str = "postgresql+psycopg://harness:harness@localhost:5432/harness"
+    raw_storage_path: Path = Path(".data/raw")
+    parser_version: str = "0.1.0"
+    job_max_attempts: int = Field(default=3, ge=1, le=10)
+    openai_api_key: SecretStr | None = Field(default=None, validation_alias="OPENAI_API_KEY")
+    openai_model: str = "gpt-5.6-luna"
+    openai_embedding_model: str = "text-embedding-3-small"
+    openai_max_output_tokens: int = Field(default=1200, ge=1, le=16_000)
+    openai_reasoning_effort: Literal["none", "low", "medium", "high", "xhigh", "max"] = "medium"
+    mcp_url: str | None = None
+    mcp_financial_data_tool: str = "financialDataRetrieval"
 
 
 class ModelPrice(BaseModel):
@@ -19,12 +39,12 @@ class EngineSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    # Read-only engine role: SELECT on evidence, INSERT/UPDATE on answer_run/tool_event/research_memory.
-    database_url_engine: str = "postgresql+psycopg://htn_engine:htn_engine@localhost:5432/htn"
+    # Defaults to the same database as ingest; use htn_engine role when grants are applied.
+    database_url_engine: str = "postgresql+psycopg://harness:harness@localhost:5432/harness"
 
     openai_api_key: Optional[SecretStr] = None
-    htn_model: Optional[str] = None                # chat/tool model; decided by the team
-    htn_embedding_model: Optional[str] = None      # used after Checkpoint 1
+    htn_model: Optional[str] = None
+    htn_embedding_model: Optional[str] = None
 
     htn_max_tool_rounds: int = 6
     htn_max_tokens: int = 60_000
@@ -42,6 +62,19 @@ class EngineSettings(BaseSettings):
         return (input_tokens * price.input_per_mtok + output_tokens * price.output_per_mtok) / 1_000_000
 
 
+settings = Settings()
+
+
 @lru_cache
 def engine_settings() -> EngineSettings:
-    return EngineSettings()
+    eng = EngineSettings()
+    updates: dict[str, object] = {}
+    if os.getenv("DATABASE_URL_ENGINE") is None:
+        updates["database_url_engine"] = settings.database_url
+    if eng.htn_model is None and settings.openai_model:
+        updates["htn_model"] = settings.openai_model
+    if eng.openai_api_key is None and settings.openai_api_key is not None:
+        updates["openai_api_key"] = settings.openai_api_key
+    if eng.htn_embedding_model is None and settings.openai_embedding_model:
+        updates["htn_embedding_model"] = settings.openai_embedding_model
+    return eng.model_copy(update=updates) if updates else eng

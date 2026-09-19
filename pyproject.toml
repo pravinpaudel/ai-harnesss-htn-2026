@@ -1,39 +1,45 @@
 [project]
-name = "htn-research-harness"
+name = "finance-research-harness"
 version = "0.1.0"
-description = "Evidence-first finance research harness (RBC Signal in the Noise, Hack the North 2026)"
+description = "Versioned evidence-first finance research harness"
 requires-python = ">=3.12"
 dependencies = [
-    "pydantic>=2.7",
-    "pydantic-settings>=2.3",
-    # Research engine (Developer B)
-    "typer>=0.12",
-    "rich>=13.7",
-    "sqlalchemy>=2.0",
-    "psycopg[binary]>=3.2",
-    "pgvector>=0.3",
-    "openai>=1.60",
+  "fastapi>=0.115,<1",
+  "alembic>=1.14,<2",
+  "openai>=2.0,<3",
+  "httpx>=0.28,<1",
+  "pydantic>=2.7",
+  "pydantic-settings>=2.6,<3",
+  "sqlalchemy>=2.0,<3",
+  "psycopg[binary]>=3.2,<4",
+  "pgvector>=0.3",
+  "typer>=0.15,<1",
+  "rich>=13.7",
+  "uvicorn[standard]>=0.32,<1",
 ]
 
-[dependency-groups]
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*", "contracts*"]
+
+[project.optional-dependencies]
 dev = [
-    "pytest>=8.2",
-    "jsonschema>=4.22",
+  "pytest>=8,<9",
+  "httpx>=0.28,<1",
+  "jsonschema>=4.22",
 ]
 
 [project.scripts]
 htn = "app.cli.main:app"
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.wheel]
-packages = ["app", "contracts"]
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["."]
 markers = [
-    "db: needs the PostgreSQL test database (tests/engine/compose.test.yml)",
-    "live: calls the real OpenAI API (needs OPENAI_API_KEY)",
+  "db: needs the PostgreSQL test database (tests/engine/compose.test.yml)",
+  "live: calls the real OpenAI API (needs OPENAI_API_KEY)",
 ]

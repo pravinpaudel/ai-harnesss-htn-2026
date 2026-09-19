@@ -12,7 +12,7 @@ import pytest
 from app.eval.runner import load_cases, run
 from app.llm.client import OpenAIResponsesClient
 from app.reasoning.engine import ResearchEngine
-from app.settings import EngineSettings
+from app.settings import engine_settings
 
 pytestmark = pytest.mark.live
 ROOT = Path(__file__).resolve().parents[2]
@@ -21,9 +21,9 @@ CP1 = {"FX01", "FX04", "FX06", "FX09"}
 
 @pytest.fixture(scope="module")
 def live_engine(memory_repo):
-    s = EngineSettings()
+    s = engine_settings()
     if not (s.openai_api_key and s.htn_model):
-        pytest.skip("set OPENAI_API_KEY and HTN_MODEL to run live tests")
+        pytest.skip("set OPENAI_API_KEY and HARNESS_OPENAI_MODEL (or HTN_MODEL) to run live tests")
     llm = OpenAIResponsesClient(s.htn_model, api_key=s.openai_api_key.get_secret_value())
     return ResearchEngine(memory_repo, llm, s)
 
