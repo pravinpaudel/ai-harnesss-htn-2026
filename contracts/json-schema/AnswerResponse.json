@@ -483,7 +483,7 @@
    "additionalProperties": false,
    "properties": {
     "contract_version": {
-     "default": "1.0",
+     "default": "1.1",
      "title": "Contract Version",
      "type": "string"
     },

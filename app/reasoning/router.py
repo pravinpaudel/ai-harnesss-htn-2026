@@ -13,6 +13,7 @@ _QUANT = re.compile(r"\b(how (much|many)|what (was|is|were) the|percent|percenta
                     r"compare|higher|lower|larger|bigger|smaller|faster|total|sum|average|median|ratio|"
                     r"difference|beat|miss|estimate|revenue|eps|margin|market cap|q[1-4]|fy\d{2,4}|\d)",
                     re.IGNORECASE)
+_WHICH = re.compile(r"^\s*which\b", re.IGNORECASE)
 _NARR = re.compile(r"\b(why|how did|what drove|explain|reason|because|commentary|outlook|risk)", re.IGNORECASE)
 _CANDIDATE = re.compile(r"\b([A-Z][A-Za-z&.\-]*(?:\s+[A-Z][A-Za-z&.\-]*){0,3}|[A-Z]{2,6}(?:\.[A-Z])?)\b")
 _STOP = {"What", "Which", "Why", "How", "Did", "Does", "Do", "Is", "Was", "Were", "Rank", "Compare", "The", "In",
@@ -29,7 +30,10 @@ class RoutePlan:
     def as_prompt(self) -> str:
         hint = {"quantitative": "Start with find_facts; use calculate for any arithmetic.",
                 "narrative": "Start with search_evidence; cite the passages that explain the answer.",
-                "mixed": "Use find_facts for numbers and search_evidence for explanations."}[self.kind]
+                "mixed": "Use find_facts for numbers and search_evidence for explanations.",
+                "identification": "This asks WHICH entity matches several clues. Split the question into 3-6 "
+                                  "distinctive clues and call find_candidates first, then verify the leader "
+                                  "(and any close runner-up) with search_evidence before answering."}[self.kind]
         return ("Question type: " + self.kind + ". " + hint + "\n"
                 + "Dataset profile: " + json.dumps(self.profile, default=str) + "\n"
                 + "Entity matches: " + json.dumps(self.entity_matches))
@@ -49,9 +53,12 @@ def route(ctx: RunContext) -> RoutePlan:
     q = ctx.question
     quant, narr = bool(_QUANT.search(q)), bool(_NARR.search(q))
     kind = "mixed" if quant and narr else "narrative" if narr else "quantitative"
+    identification = bool(_WHICH.match(q)) and len(q) > 80
+    if identification:
+        kind = "identification"
     profile = inspect_dataset(ctx, InspectDatasetArgs())
     matches = {}
-    for name in candidate_names(q):
+    for name in ([] if identification else candidate_names(q)):
         res = resolve_entity(ctx, ResolveEntityArgs(name=name))
         matches[name] = [c["label"] for c in res["candidates"]]
     return RoutePlan(kind=kind, entity_matches=matches, profile=profile)

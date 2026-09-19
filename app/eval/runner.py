@@ -34,6 +34,18 @@ def _numbers_in(text: str) -> list[float]:
     return out
 
 
+def _mentions(text: str, expected: str) -> bool:
+    """Whole-word match. Short all-caps tokens (tickers like RY, NA, CM) must match case-sensitively,
+    otherwise 'RY' would match 'quarterly' and 'NA' would match 'national'."""
+    exact = expected.isupper() and len(expected) <= 6
+    pattern = rf"(?<![A-Za-z0-9]){re.escape(expected)}(?![A-Za-z0-9])"
+    if re.search(pattern, text, 0 if exact else re.IGNORECASE):
+        return True
+    # tickers of 4+ letters may appear as the start of the company name ("SHOP" -> "Shopify")
+    return exact and len(expected) >= 4 and re.search(rf"(?<![A-Za-z0-9]){re.escape(expected)}",
+                                                    text, re.IGNORECASE) is not None
+
+
 def score(case: EvaluationCase, ans: AnswerResponse) -> CaseResult:
     e = case.expect
     status_ok = ans.status in e.acceptable_statuses
@@ -43,14 +55,14 @@ def score(case: EvaluationCase, ans: AnswerResponse) -> CaseResult:
     candidates = [v.value for v in ans.values if v.value is not None]
     candidates += [c.result for c in ans.calculation_trace if c.result is not None]
     candidates += _numbers_in(ans.answer)
-    texts = [str(v.value_text or "").lower() for v in ans.values] + [ans.answer.lower()]
+    texts = [str(v.value_text or "") for v in ans.values] + [ans.answer]
     values_ok = True
     for ev in e.values:
         if ev.value is not None:
             tol = max(ev.tolerance, 1e-9)
             if not any(abs(c - ev.value) <= tol or abs(abs(c) - abs(ev.value)) <= tol for c in candidates):
                 values_ok = False
-        if ev.value_text and not any(ev.value_text.lower() in t for t in texts):
+        if ev.value_text and not any(_mentions(t, ev.value_text) for t in texts):
             values_ok = False
     if e.ordered_items:
         order = next((c.result_items for c in ans.calculation_trace if c.result_items), [])

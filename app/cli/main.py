@@ -42,7 +42,8 @@ def _engine(audit: bool = True):
         err.print("[red]OPENAI_API_KEY is not set.[/]")
         raise typer.Exit(2)
     repo = _repo()
-    llm = OpenAIResponsesClient(s.htn_model, api_key=s.openai_api_key.get_secret_value())
+    llm = OpenAIResponsesClient(s.htn_model, api_key=s.openai_api_key.get_secret_value(),
+                                timeout=s.htn_llm_timeout_s)
     recorder = PgRecorder(repo.engine) if audit else MemoryRecorder()
     return ResearchEngine(repo, llm, s, recorder)
 

@@ -20,9 +20,12 @@ from contracts.models import (
 )
 from app.reasoning.context import RunContext
 from app.reasoning.verifier import verify_span
+from app.retrieval.context import entities_mentioned
 from app.tools.registry import SubmitAnswerArgs
 
 _MARKER = re.compile(r"\[(\d+)\]")
+_ORDERING = re.compile(r"\b(rank\w*|order\w*|largest|smallest|biggest|bigger|larger|smaller|higher|lower|highest|"
+                       r"lowest|compare\w*|versus|vs\.?)\b", re.IGNORECASE)
 _NUMBER = re.compile(r"(?<![\w.])[-−]?\$?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s?(?:%|bps|[KMB]\b|x\b)?")
 
 
@@ -108,6 +111,12 @@ def _claims_from_finding(f: ValidationFinding, cites: _Citations) -> list[Confli
         return []
     return [ConflictClaim(text=f"Stated: {f.observed or f.spans[0].exact_text}", citation_ids=[ns[0]]),
             ConflictClaim(text=f"Other evidence: {f.expected or 'see cited sources'}", citation_ids=ns[1:])]
+
+
+def _entity_label(named: str, labels: set[str]) -> Optional[str]:
+    """'TD (TD Bank)' / 'RY — Royal Bank of Canada' -> the dataset label it starts with."""
+    head = re.split(r"[\s(—–,]", named.strip(), maxsplit=1)[0].strip("*")
+    return head if head in labels else None
 
 
 def finalize(ctx: RunContext, sub: SubmitAnswerArgs, *, model: str, prompt_version: str,
@@ -213,6 +222,43 @@ def finalize(ctx: RunContext, sub: SubmitAnswerArgs, *, model: str, prompt_versi
         notes.status_changes.append(f"conflict -> {status.value} (no verifiable contradiction)")
         limitations.append("The model reported a conflict that is not backed by a recorded finding.")
 
+    # 5b. an ordering across different currencies is not comparable without a cited conversion
+    currencies = {v.currency for v in sub.values if v.currency}
+    for ev in ctx.evidence.values():
+        if ev.fact and ev.fact.value.currency and cites.by_span.get(
+                (ev.span.document_name, ev.span.char_start, ev.span.char_end)):
+            currencies.add(ev.fact.value.currency)
+    converted = any(c.operation.value in ("rank", "compare") and not c.rejected and len(
+        {o.currency for o in c.operands if o.currency}) > 1 for c in calcs)
+    if (len(currencies) > 1 and _ORDERING.search(ctx.question) and not converted
+            and status == AnswerStatus.answered):
+        status = AnswerStatus.partial
+        limitations.append("The values are in different currencies (" + ", ".join(sorted(currencies))
+                           + ") and the dataset states no conversion, so they cannot be ranked or compared "
+                             "directly.")
+        notes.status_changes.append("answered -> partial (ordering across currencies)")
+
+    # 5c. identification answers: citations must be about the entity the answer names
+    named = next((v.value_text for v in sub.values if v.label.strip().lower() in ("company", "entity") and v.value_text),
+                 None)
+    if named and cites.items:
+        label = _entity_label(named, ctx.entity_labels())
+        if label:
+            off = []
+            for n, c in cites.items.items():
+                sc = ctx.span_context(c.span)
+                if sc.entity == label:
+                    continue
+                if sc.entity is None and label in entities_mentioned(c.span.exact_text, {label}):
+                    continue
+                off.append((n, sc.entity))
+            for n, other in off:
+                limitations.append(f"Citation [{n}] is about {other or 'another section'}, not {label}.")
+            if off and len(off) * 2 >= len(cites.items) and status == AnswerStatus.answered:
+                status = AnswerStatus.partial
+                notes.status_changes.append(f"answered -> partial ({len(off)} of {len(cites.items)} citations "
+                                            f"are not about {label})")
+
     # 6. no verified evidence -> decline
     if status in (AnswerStatus.answered, AnswerStatus.partial) and not cites.items:
         notes.status_changes.append(f"{status.value} -> declined (no verified citations)")
@@ -271,7 +317,7 @@ def finalize(ctx: RunContext, sub: SubmitAnswerArgs, *, model: str, prompt_versi
 
 def budget_exhausted(ctx: RunContext, reason: str, *, model: str, prompt_version: str,
                      embedding_model: Optional[str]) -> tuple[AnswerResponse, PolicyNotes]:
-    sub = SubmitAnswerArgs(status=AnswerStatus.declined, answer=f"No answer: the run stopped ({reason}).",
+    sub = SubmitAnswerArgs(status=AnswerStatus.declined, answer="No answer: the run stopped before a verified answer was submitted.",
                            citations=[], values=[], calculation_handles=[], conflict_finding_handles=[],
                            limitations=[f"Run stopped: {reason}"], decline_reason=DeclineReason.budget_exhausted)
     return finalize(ctx, sub, model=model, prompt_version=prompt_version, embedding_model=embedding_model)

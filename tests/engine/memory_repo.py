@@ -164,6 +164,11 @@ class MemoryEvidenceRepository:
                 return _span(f.span)
         raise LookupError(span_id)
 
+    def document_text(self, dataset_version_id: UUID, document_name: str) -> tuple[str, str]:
+        self._check(dataset_version_id)
+        doc = self.data.docs[document_name]
+        return self.tamper.get(document_name, doc.text), doc.sha256
+
     def read_lines(self, dataset_version_id: UUID, document_name: str, line_start: int, line_end: int) -> SourceSpan:
         self._check(dataset_version_id)
         doc = self.data.docs[document_name]

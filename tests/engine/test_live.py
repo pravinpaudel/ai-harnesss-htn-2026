@@ -24,7 +24,8 @@ def live_engine(memory_repo):
     s = engine_settings()
     if not (s.openai_api_key and s.htn_model):
         pytest.skip("set OPENAI_API_KEY and HARNESS_OPENAI_MODEL (or HTN_MODEL) to run live tests")
-    llm = OpenAIResponsesClient(s.htn_model, api_key=s.openai_api_key.get_secret_value())
+    llm = OpenAIResponsesClient(s.htn_model, api_key=s.openai_api_key.get_secret_value(),
+                                timeout=s.htn_llm_timeout_s)
     return ResearchEngine(memory_repo, llm, s)
 
 

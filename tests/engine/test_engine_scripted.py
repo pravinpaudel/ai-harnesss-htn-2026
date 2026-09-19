@@ -209,3 +209,26 @@ def test_calculation_handle_cited_as_source_is_folded(run_script):
     assert ans.status == AnswerStatus.answered, ans.limitations
     assert not ans.limitations
     assert ans.calculation_trace and {90, 95} <= {c.span.line_start for c in ans.citations}
+
+
+def test_budget_reached_forces_a_final_answer_instead_of_discarding_work(run_script):
+    ans, llm, rec = run_script(CASES["FX01"].question, [
+        [("find_facts", {"entity": "IVN", "metric": "revenue", "period": "Q2 2026", "role": "actual"})],
+        [submit("answered", "Revenue was $152.6M [1].", [(1, pick("find_facts", source="mining-excerpt.md:95"))])],
+    ], htn_max_tokens=1000)
+    assert llm.forced == ["submit_answer"]
+    assert ans.status == AnswerStatus.answered and ans.citations
+    assert any(e["name"] == "budget" for e in rec.events[ans.run_id])
+
+
+def test_invalid_submit_gets_one_retry(run_script):
+    good = submit("answered", "Revenue was $152.6M [1].", [(1, pick("find_facts", source="mining-excerpt.md:95"))])
+    broken = ("submit_answer", {k: v for k, v in good[1].items() if k != "values"})
+    ans, llm, rec = run_script(CASES["FX01"].question, [
+        [("find_facts", {"entity": "IVN", "metric": "revenue", "period": "Q2 2026", "role": "actual"})],
+        [broken],
+        [good],
+    ])
+    assert ans.status == AnswerStatus.answered
+    assert llm.forced[-1] == "submit_answer"
+    assert any(e["name"] == "invalid_submit" for e in rec.events[ans.run_id])

@@ -1,0 +1,893 @@
+{
+ "suite": "rbc-sample",
+ "contract_version": "1.1",
+ "corpus": [
+  "canadian-financials-research.md",
+  "canadian-mining-research.md",
+  "canadian-technology-research.md"
+ ],
+ "cases": [
+  {
+   "case_id": "FIN01",
+   "question": "Which Big 6 Canadian bank crushed consensus estimates by 13% with record adjusted earnings and achieved its fifth consecutive quarter of positive operating leverage, while simultaneously navigating a multi-year AML remediation program with a binding asset cap on U.S. growth?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "TD",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 514,
+      "line_end": 544
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer TD, Q3 FY2026 (confidence high)."
+  },
+  {
+   "case_id": "FIN02",
+   "question": "Which Canadian bank delivered record net income with the highest ROE among the Big 6, while simultaneously achieving the tightest efficiency ratio in Canadian Banking, yet saw its stock decline in pre-market trading due to profit-taking after a significant run-up?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "RY",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer RY, Q2 FY2026 (confidence medium)."
+  },
+  {
+   "case_id": "FIN03",
+   "question": "Which Big 6 bank reported cumulative acquisition synergies far exceeding year-1 targets, achieved the best efficiency ratio among peers, yet saw its stock decline sharply on the earnings release despite beating consensus?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "NA",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 1606,
+      "line_end": 1636
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer NA, Q3 FY2026 (confidence high)."
+  },
+  {
+   "case_id": "FIN04",
+   "question": "Which Canadian bank achieved record pre-provision pretax earnings across all four operating segments, took a large goodwill impairment charge related to strategic divestitures, and beat consensus by over 20% on adjusted EPS while targeting a 15% ROE by fiscal 2027?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "BMO",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 787,
+      "line_end": 817
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer BMO, Q3 FY2026 (confidence high)."
+  },
+  {
+   "case_id": "FIN05",
+   "question": "Which Big 6 bank executed a landmark Schwab divestiture generating a massive after-tax gain and surging CET1, yet reported adjusted net income declining year-over-year despite the capital windfall?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "TD",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 674,
+      "line_end": 704
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer TD, Q2 FY2025 (confidence high)."
+  },
+  {
+   "case_id": "FIN06",
+   "question": "Which Canadian bank achieved nine consecutive quarters of double-digit EPS growth, beat consensus in all eight quarters of the trailing period, yet saw its stock decline on the day of its most recent earnings release despite a strong EPS beat?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "CM",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 1333,
+      "line_end": 1363
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer CM, Q3 FY2026 (confidence high)."
+  },
+  {
+   "case_id": "FIN07",
+   "question": "Which Big 6 bank reported a rare EPS miss due to a sharp surge in provisions for credit losses driven by tariff-related precautionary builds, yet still achieved record net income and beat revenue expectations?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "RY",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer RY, Q2 FY2025 (confidence medium)."
+  },
+  {
+   "case_id": "FIN08",
+   "question": "Which Canadian bank marked the trough quarter of a major acquisition integration cycle with adjusted EPS plunging sharply year-over-year, provisions for credit losses surging to their highest level, yet management guided that credit losses had peaked and the stock subsequently rallied as investors focused on forward guidance?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "BMO",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 1011,
+      "line_end": 1041
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer BMO, Q4 FY2024 (confidence high)."
+  },
+  {
+   "case_id": "FIN09",
+   "question": "Which Big 6 bank achieved the best efficiency ratio among peers, raised its dividend, and increased acquisition synergy targets, yet reported sequential NIM compression due to deposit mix shifts and competitive pricing pressure?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "NA",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 1638,
+      "line_end": 1668
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer NA, Q2 FY2026 (confidence high)."
+  },
+  {
+   "case_id": "FIN10",
+   "question": "Which Canadian bank delivered record quarterly net income with a remarkable 43% year-over-year increase, ROE surging dramatically and efficiency ratio improving substantially, yet the stock declined in pre-market trading due to investor concerns about rising impaired loans and the broader Canadian economic outlook?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "RY",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 433,
+      "line_end": 463
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer RY, Q1 FY2025 (confidence high)."
+  },
+  {
+   "case_id": "MIN01",
+   "question": "Which major gold producer announced a transformative North American asset separation evaluation, targeting completion by year-end and estimated to unlock tens of billions in shareholder value?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "ABX",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 426,
+      "line_end": 456
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer ABX, Q4 2025 (confidence high)."
+  },
+  {
+   "case_id": "MIN02",
+   "question": "Which precious metals streaming company closed the largest streaming transaction in history, doubling its silver entitlement at a major Peruvian mine and adding significant annual GEO production?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "WPM",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 1498,
+      "line_end": 1528
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer WPM, Q1 2026 (closed Apr 1) (confidence high)."
+  },
+  {
+   "case_id": "MIN03",
+   "question": "Which African copper producer saw copper production decline sharply from peak levels during a smelter transition, yet the smelter's first anodes transformed the cost structure by dramatically reducing logistics costs?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "IVN",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer IVN, Q4 2025 / Q1–Q2 2026 (confidence high)."
+  },
+  {
+   "case_id": "MIN04",
+   "question": "Which gold producer beat EPS estimates in nearly all quarters and transformed its balance sheet from net debt to substantial net cash in just two years, while maintaining AISC discipline?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "AEM",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer AEM, Trailing 8Q (confidence high)."
+  },
+  {
+   "case_id": "MIN05",
+   "question": "Which copper miner's all copper hedges expired at period-end, removing a significant drag on realized prices, yet the company still carried over $5 billion in net debt?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "FM",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 1270,
+      "line_end": 1300
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer FM, Q2 2026 (confidence high)."
+  },
+  {
+   "case_id": "MIN06",
+   "question": "Which copper producer announced a transformative merger of equals with a global diversified miner, expected to create a top-five global copper producer, yet its flagship copper mine remained constrained by tailings management issues?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "TECK.B",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 914,
+      "line_end": 944
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer TECK.B, Q3 2025 (confidence high)."
+  },
+  {
+   "case_id": "MIN07",
+   "question": "Which African copper producer's DRC operations faced a substantial tax settlement for multi-year audits, impacting headline EPS despite strong underlying performance, while simultaneously achieving record zinc production at a sister asset?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "IVN",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 1758,
+      "line_end": 1788
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer IVN, Q1 2026 (confidence high)."
+  },
+  {
+   "case_id": "MIN08",
+   "question": "Which gold producer saw its CEO depart unexpectedly after leading since the 2019 Randgold merger, creating leadership uncertainty, while simultaneously an activist investor disclosed a major stake advocating for restructuring?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "ABX",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 394,
+      "line_end": 424
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer ABX, Q3 2025 (confidence high)."
+  },
+  {
+   "case_id": "MIN09",
+   "question": "Which streaming company achieved commercial production at two new silver-gold mines within the same calendar year, expanding its portfolio to over 20 operating mines, while simultaneously announcing the largest streaming transaction in history?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "WPM",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer WPM, 2025 (Blackwater Q1, Goose Q3; Antamina announced Q4) (confidence high)."
+  },
+  {
+   "case_id": "MIN10",
+   "question": "Which copper producer's gross margin expanded by nearly 30 percentage points in two years, driven by a transformative coal divestiture and copper price appreciation, yet beat EPS estimates in all eight quarters despite persistent tailings management constraints at its flagship mine?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "TECK.B",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer TECK.B, Trailing 8Q (confidence high)."
+  },
+  {
+   "case_id": "TEC01",
+   "question": "Which Canadian e-commerce platform announced a multi-billion-dollar share repurchase program while achieving record quarterly revenue and crossing a major GMV milestone for the first time?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "SHOP",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 318,
+      "line_end": 348
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer SHOP, Q4 2025 (confidence high)."
+  },
+  {
+   "case_id": "TEC02",
+   "question": "Which serial acquirer of vertical market software saw net income double year-over-year despite organic growth near zero—the weakest in the trailing period—raising concerns about structural headwinds?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "CSU",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer CSU, Q1 2025 (organic 0.3%) (confidence medium)."
+  },
+  {
+   "case_id": "TEC03",
+   "question": "Which Canadian IT services firm achieved an exceptionally high book-to-bill ratio in its U.S. Federal segment while announcing a double-digit dividend increase and reporting an AI pipeline that expanded by billions year-over-year?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "GIB.A",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 896,
+      "line_end": 926
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer GIB.A, Q4 FY2025 (confidence high)."
+  },
+  {
+   "case_id": "TEC04",
+   "question": "Which enterprise content management company saw cloud revenue cross a major quarterly milestone for the first time while license revenue surged 24% and the company announced a margin reset for the upcoming fiscal year?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "OTEX",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 1073,
+      "line_end": 1103
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer OTEX, Q4 FY2026 (confidence high)."
+  },
+  {
+   "case_id": "TEC05",
+   "question": "Which supply chain planning SaaS company reported its weakest quarter in the trailing period with an operating loss and negative GAAP net income, marking the investment cycle trough before a dramatic turnaround?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "KXS",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 1811,
+      "line_end": 1841
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer KXS, Q4 2024 (confidence high)."
+  },
+  {
+   "case_id": "TEC06",
+   "question": "Which Canadian logistics and supply chain SaaS company met or beat earnings estimates in all eight trailing quarters while gross margin expanded substantially and the company operated with zero debt?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "DSG",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer DSG, Trailing 8Q (confidence high)."
+  },
+  {
+   "case_id": "TEC07",
+   "question": "Which commerce infrastructure company's stock fell sharply despite an operational beat when GMV crossed a major round-number threshold for the second consecutive quarter, due to GAAP loss optics?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "SHOP",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 286,
+      "line_end": 316
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer SHOP, Q1 2026 (confidence high)."
+  },
+  {
+   "case_id": "TEC08",
+   "question": "Which IT services company saw organic constant-currency growth decelerate to just over 1% while the stock declined over 20% year-to-date, significantly underperforming despite a new CEO appointment?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "GIB.A",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 800,
+      "line_end": 830
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer GIB.A, Q3 FY2026 (confidence high)."
+  },
+  {
+   "case_id": "TEC09",
+   "question": "Which supply chain SaaS company marked a pivotal shift by achieving its first EPS beat after three consecutive quarters of misses, while revenue growth decelerated to the weakest rate in the trailing period?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "KXS",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 1715,
+      "line_end": 1745
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer KXS, Q3 2025 (confidence high)."
+  },
+  {
+   "case_id": "TEC10",
+   "question": "Which data management company reported its weakest quarter in the trailing period with minimal cloud growth while enterprise cloud bookings declined—the only quarter of negative bookings growth in the period?",
+   "category": "identification",
+   "expect": {
+    "acceptable_statuses": [
+     "answered",
+     "partial"
+    ],
+    "decline_reasons": [],
+    "values": [
+     {
+      "label": "company",
+      "value_text": "OTEX",
+      "tolerance": 0.0
+     }
+    ],
+    "ordered_items": [],
+    "must_cite": [
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 1233,
+      "line_end": 1263
+     }
+    ],
+    "must_mention": [],
+    "finding_rules": [],
+    "requires_calculation": false
+   },
+   "notes": "Answer OTEX, Q3 FY2025 (confidence high)."
+  }
+ ]
+}
