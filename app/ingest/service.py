@@ -15,7 +15,8 @@ from .adapters import FileSourceAdapter, McpSourceAdapter, SnapshotDocument
 from .embeddings import EmbeddingProvider, NoopEmbeddingProvider, default_embedding_provider
 from .canonical import CanonicalDocument, canonicalize_text
 from .normalize import normalize_number
-from .parse import ParsedTable, parse_csv_table, parse_markdown_tables
+from .parse import _DIVIDER as _TABLE_DIVIDER, ParsedTable, parse_csv_table, parse_markdown_tables
+from app.markdown import Outline, block_label, period_of
 from .storage import ImmutableRawStorage
 
 
@@ -174,15 +175,25 @@ class FileIngestService:
                             {"dataset": dataset_id, "number": version_no, "hash": source_hash, "parser": self.parser_version}).scalar_one()
 
     def _span(self, conn, version: UUID, document: UUID, canonical: CanonicalDocument, line_start: int, line_end: int,
-              char_start: int | None = None, char_end: int | None = None) -> UUID:
+              char_start: int | None = None, char_end: int | None = None, label: str | None = None) -> UUID:
         if char_start is None or char_end is None:
             char_start, char_end, exact = canonical.span_for_lines(line_start, line_end)
         else:
             exact = canonical.text[char_start:char_end]
-        return conn.execute(text("""INSERT INTO source_span (dataset_version_id, document_id, line_start, line_end, char_start, char_end, exact_text)
-            VALUES (:version, :document, :start_line, :end_line, :start, :end, :exact) RETURNING span_id"""),
+        path = self._heading_path(line_start) + ([label] if label else [])
+        return conn.execute(text("""INSERT INTO source_span (dataset_version_id, document_id, line_start, line_end, char_start, char_end, exact_text, heading_path)
+            VALUES (:version, :document, :start_line, :end_line, :start, :end, :exact, :path) RETURNING span_id"""),
                             {"version": version, "document": document, "start_line": line_start, "end_line": line_end,
-                             "start": char_start, "end": char_end, "exact": exact}).scalar_one()
+                             "start": char_start, "end": char_end, "exact": exact, "path": path}).scalar_one()
+
+    def _heading_path(self, line: int) -> list[str]:
+        """Section headings in effect at a line, plus the period of an enclosing <details> block."""
+        outline = getattr(self, "_outline", None)
+        if outline is None:
+            return []
+        path = outline.path(line)
+        period = period_of(outline.block(line))
+        return path + [period] if period else path
 
     def _ingest_document(self, conn, version: UUID, raw: SnapshotDocument) -> DocumentReport:
         key, digest = self.storage.put(raw.content)
@@ -195,6 +206,7 @@ class FileIngestService:
             VALUES (:version, :name, :media, :hash, :key, :body, :lines, CAST(:metadata AS jsonb)) RETURNING document_id"""),
             {"version": version, "name": raw.name, "media": raw.media_type, "hash": digest, "key": key,
              "body": canonical.text, "lines": len(canonical.lines), "metadata": "{}"}).scalar_one()
+        self._outline = Outline.parse(canonical.text)
         chunks = self._chunks(conn, version, document_id, canonical)
         tables = parse_markdown_tables(canonical) if raw.name.lower().endswith((".md", ".markdown", ".txt")) else []
         if raw.name.lower().endswith(".csv"):
@@ -210,17 +222,39 @@ class FileIngestService:
                               untyped_cells=cells - facts)
 
     def _chunks(self, conn, version: UUID, document: UUID, canonical: CanonicalDocument) -> int:
-        count, start = 0, None
-        for index, line in enumerate(canonical.lines, start=1):
-            if line.text.strip() and start is None:
-                start = index
-            if start is not None and (not line.text.strip() or index == len(canonical.lines)):
-                end = index - 1 if not line.text.strip() else index
-                span = self._span(conn, version, document, canonical, start, end)
-                body = canonical.span_for_lines(start, end)[2]
-                conn.execute(text("INSERT INTO chunk (dataset_version_id, span_id, text, token_count) VALUES (:version, :span, :body, :tokens)"),
-                             {"version": version, "span": span, "body": body, "tokens": len(body.split())})
-                count, start = count + 1, None
+        """Citable text chunks. Prose: one chunk per blank-line block (sub-sections such as
+        '**1. Headline Results**' are their own blocks). Tables: one chunk per data row, whose
+        searchable text carries the header row but whose span is the row itself, so a hit on one
+        row of a multi-entity table is attributed to that row only."""
+        lines = [line.text for line in canonical.lines]
+        count, i, n = 0, 0, len(lines)
+
+        def emit(start: int, end: int, body: str | None = None) -> None:
+            nonlocal count
+            label = block_label(lines[start - 1])
+            span = self._span(conn, version, document, canonical, start, end, label=label)
+            body = body if body is not None else canonical.span_for_lines(start, end)[2]
+            conn.execute(text("INSERT INTO chunk (dataset_version_id, span_id, text, token_count) VALUES (:version, :span, :body, :tokens)"),
+                         {"version": version, "span": span, "body": body, "tokens": len(body.split())})
+            count += 1
+
+        while i < n:
+            if not lines[i].strip():
+                i += 1
+                continue
+            is_table = "|" in lines[i] and i + 1 < n and _TABLE_DIVIDER.match(lines[i + 1])
+            if is_table:
+                header, j = lines[i].strip(), i + 2
+                while j < n and lines[j].strip() and "|" in lines[j]:
+                    emit(j + 1, j + 1, f"{header}\n{lines[j].strip()}")
+                    j += 1
+                i = j
+                continue
+            j = i
+            while j < n and lines[j].strip() and not ("|" in lines[j] and j + 1 < n and _TABLE_DIVIDER.match(lines[j + 1])):
+                j += 1
+            emit(i + 1, j)
+            i = j
         return count
 
     def _table(self, conn, version: UUID, document: UUID, canonical: CanonicalDocument, table: ParsedTable) -> tuple[int, int]:

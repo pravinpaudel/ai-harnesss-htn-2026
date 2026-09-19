@@ -71,3 +71,20 @@ def test_provider_failure_keeps_evidence_and_warns(admin, tmp_path):
 def test_noop_provider_says_semantic_search_is_off(admin, tmp_path):
     rep = _ingest(admin, tmp_path, "emb-none", NoopEmbeddingProvider())
     assert "semantic search disabled" in rep.warnings[0]
+
+
+def test_spans_carry_heading_path_and_tables_chunk_per_row(admin, tmp_path):
+    rep = _ingest(admin, tmp_path, "structure", NoopEmbeddingProvider())
+    v = str(rep.dataset_version_id)
+    with admin.connect() as c:
+        rows = c.execute(text("""SELECT s.line_start, s.heading_path, k.text, s.exact_text FROM chunk k
+            JOIN source_span s ON s.span_id = k.span_id JOIN document d ON d.document_id = s.document_id
+            WHERE k.dataset_version_id = :v AND d.name = 'mining-excerpt.md'"""), {"v": v}).all()
+        empty_paths = c.execute(text("SELECT count(*) FROM source_span WHERE dataset_version_id = :v "
+                                     "AND cardinality(heading_path) = 0 AND line_start > 3"), {"v": v}).scalar()
+    by_line = {r.line_start: r for r in rows}
+    headline = by_line[97]
+    assert headline.heading_path[-3:] == ["IVN — Ivanhoe Mines Ltd", "Q2 2026", "1. Headline Results"]
+    row = by_line[132]                                   # screening row: its own chunk, header kept in the text
+    assert row.exact_text.startswith("| **EPS Beat Rate (8Q)** |") and row.text.startswith("| Metric |")
+    assert empty_paths == 0                              # every span below the title has a heading path

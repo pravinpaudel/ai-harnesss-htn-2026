@@ -21,7 +21,6 @@ from contracts.models import (
 )
 from app.reasoning.consistency import agree, comparable_groups, most_precise
 from app.reasoning.context import RunContext
-from app.retrieval.context import period_of
 from app.tools.calculator import calculate
 
 
@@ -230,7 +229,7 @@ def search_evidence(ctx: RunContext, a: SearchEvidenceArgs) -> dict:
         sc = ctx.span_context(h.span)
         if want_entity and sc.entity != want_entity:
             continue
-        if a.period and not (period_of(sc.block) or "").lower().startswith(a.period.lower()):
+        if a.period and not (sc.period or "").lower().startswith(a.period.lower()):
             continue
         fact = h.fact
         if fact is None and h.kind == EvidenceKind.fact:
@@ -310,7 +309,7 @@ def find_candidates(ctx: RunContext, a: FindCandidatesArgs) -> dict:
             sc = ctx.span_context(h.span)
             owners = [sc.entity] if sc.entity else ctx.entities_in(_best_part(h.text, clue))[:1]
             weight = ov * ov * (1.0 if sc.entity else 0.5) / (1 + 0.15 * rank)
-            period = period_of(sc.block) if sc.entity else None
+            period = sc.period if sc.entity else None
             for ent in owners:
                 if period:
                     cell = by_period.setdefault((ent, period), {})
@@ -388,7 +387,7 @@ def _scoped_hit(ctx: RunContext, clue: str, entity: str, period: Optional[str] =
         sc = ctx.span_context(h.span)
         if sc.entity != entity:
             continue
-        if period and period_of(sc.block) != period:
+        if period and sc.period != period:
             continue
         ov = _overlap(ct, h.text)
         if ov > best_ov:
@@ -399,7 +398,7 @@ def _scoped_hit(ctx: RunContext, clue: str, entity: str, period: Optional[str] =
     fact = ctx.repo.get_fact(ctx.dataset_version_id, h.evidence_id) if h.kind == EvidenceKind.fact else None
     handle = ctx.add_evidence(h.kind, h.evidence_id, h.span, fact=fact, text=h.text)
     hit = {"w": best_ov * best_ov, "handle": handle, "where": sc.label[:140], "snippet": _snippet(h.text, clue),
-           "overlap": round(best_ov, 2), "period": period_of(sc.block)}
+           "overlap": round(best_ov, 2), "period": sc.period}
     if period:
         hit["in_period"] = True
     return hit
