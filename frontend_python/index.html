@@ -17,7 +17,7 @@
             --rbc-border: #D1D5DB;
             --rbc-text-dark: #1F2937;
             --rbc-text-muted: #4B5563;
-            
+
             /* Theming Variables */
             --panel-bg: #FFFFFF;
             --input-bg: #FFFFFF;
@@ -47,7 +47,7 @@
             flex-direction: column;
             height: 100vh;
             -webkit-font-smoothing: antialiased;
-            overflow: hidden; 
+            overflow: hidden;
         }
 
         /* RBC Header */
@@ -231,7 +231,7 @@
             width: 100%;
             text-align: center;
         }
-        
+
         .new-chat-btn:hover {
             opacity: 0.9;
         }
@@ -258,14 +258,14 @@
         }
 
         .chat-item {
-            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px 8px 14px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
             color: var(--rbc-text-dark);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
             border: 1px solid transparent;
             transition: background-color 0.2s, border-color 0.2s;
         }
@@ -279,6 +279,36 @@
             border-color: var(--rbc-border);
             font-weight: 600;
             color: var(--rbc-text-dark);
+        }
+
+        .chat-item-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        .delete-chat-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            opacity: 0.4;
+            padding: 4px 6px;
+            border-radius: 4px;
+            transition: opacity 0.2s, background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-item:hover .delete-chat-btn {
+            opacity: 0.8;
+        }
+
+        .delete-chat-btn:hover {
+            opacity: 1 !important;
+            background-color: rgba(239, 68, 68, 0.1);
         }
 
         /* Main Content Area */
@@ -359,7 +389,7 @@
             margin: 0 auto;
             padding: 0 28px;
             display: flex;
-            align-items: center; /* This centers the items vertically */
+            align-items: center;
             gap: 12px;
             box-sizing: border-box;
         }
@@ -432,7 +462,7 @@
     <div id="settings-modal" class="modal-overlay hidden" onclick="if(event.target === this) cancelSettings()">
         <div class="modal-content">
             <h2>Settings</h2>
-            
+
             <div class="setting-group">
                 <label for="mcp-url">MCP Server Endpoint:</label>
                 <input type="text" id="mcp-url" value="http://3.143.20.160/mcp">
@@ -487,7 +517,7 @@
         <!-- Main Content -->
         <main class="main-content">
             <div id="chat-container"></div>
-            
+
             <div class="input-area-wrapper">
                 <div class="input-area">
                     <input type="text" id="user-input" class="prompt-input" placeholder="Type your query..." onkeydown="if(event.key === 'Enter') sendMessage()">
@@ -499,7 +529,7 @@
 
     <script>
         let appState = {
-            chats: [],       
+            chats: [],
             currentChatId: null,
             settings: {
                 mcpUrl: "http://3.143.20.160/mcp",
@@ -510,11 +540,12 @@
         window.onload = () => {
             loadData();
             applySettingsState();
-            
+            cleanEmptyChats();
+
             if (appState.chats.length === 0) {
                 createNewChat();
             } else {
-                if (!appState.currentChatId) {
+                if (!appState.currentChatId || !appState.chats.some(c => c.id === appState.currentChatId)) {
                     appState.currentChatId = appState.chats[0].id;
                 }
                 renderSidebar();
@@ -550,23 +581,26 @@
             localStorage.setItem('rbc_multi_chat_data', JSON.stringify(appState));
         }
 
+        function cleanEmptyChats() {
+            // Filter out chats that have no messages
+            appState.chats = appState.chats.filter(chat => chat.messages && chat.messages.length > 0);
+        }
+
         function openSettings() {
             document.getElementById("mcp-url").value = appState.settings.mcpUrl;
             document.getElementById("dark-theme-toggle").checked = appState.settings.darkTheme;
             document.getElementById("settings-modal").classList.remove("hidden");
         }
 
-        // Called when clicking "Save" (Applies changes and saves)
         function saveSettings() {
             appState.settings.mcpUrl = document.getElementById("mcp-url").value.trim();
             appState.settings.darkTheme = document.getElementById("dark-theme-toggle").checked;
-            
+
             applySettingsState();
             saveData();
             document.getElementById("settings-modal").classList.add("hidden");
         }
 
-        // Called when clicking "Cancel", pressing Escape, or clicking outside (Discards changes)
         function cancelSettings() {
             document.getElementById("settings-modal").classList.add("hidden");
         }
@@ -585,39 +619,63 @@
 
         function generateFancyTitle(query) {
             const stopWords = new Set(['a', 'an', 'and', 'are', 'as', 'at', 'be', 'but', 'by', 'for', 'if', 'in', 'into', 'is', 'it', 'no', 'not', 'of', 'on', 'or', 'such', 'that', 'the', 'their', 'then', 'there', 'these', 'they', 'this', 'to', 'was', 'will', 'with', 'how', 'what', 'why', 'who', 'where', 'can', 'you', 'me', 'i', 'do', 'give', 'show', 'tell', 'my', 'about', 'some']);
-            
+
             let words = query.replace(/[^\w\s]/gi, '').split(/\s+/);
             let significantWords = words.filter(word => !stopWords.has(word.toLowerCase()) && word.length > 0);
-            
+
             if (significantWords.length === 0) {
                 significantWords = words.slice(0, 3);
             }
-            
+
             let titleWords = significantWords.slice(0, 4);
             let title = titleWords.map(word => word.charAt(0).toUpperCase() + word.toLowerCase().slice(1)).join(' ');
-            
+
             return title ? `✨ ${title}` : "✨ New Conversation";
         }
 
         function createNewChat() {
+            // Clean up any other empty chats before making a brand new one
+            cleanEmptyChats();
+
             const newId = 'chat_' + Date.now();
             const newChat = {
                 id: newId,
                 title: "New Conversation",
                 messages: []
             };
-            appState.chats.unshift(newChat); 
+            appState.chats.unshift(newChat);
             appState.currentChatId = newId;
-            
+
             saveData();
             renderSidebar();
             renderCurrentChat();
-            
+
             document.getElementById("user-input").focus();
         }
 
         function switchChat(chatId) {
+            cleanEmptyChats();
             appState.currentChatId = chatId;
+            saveData();
+            renderSidebar();
+            renderCurrentChat();
+        }
+
+        function deleteChat(chatId, event) {
+            event.stopPropagation(); // Prevent triggering switchChat when clicking delete
+
+            appState.chats = appState.chats.filter(c => c.id !== chatId);
+
+            // If we deleted the active chat, switch to another valid one or create a new one
+            if (appState.currentChatId === chatId) {
+                if (appState.chats.length > 0) {
+                    appState.currentChatId = appState.chats[0].id;
+                } else {
+                    createNewChat();
+                    return;
+                }
+            }
+
             saveData();
             renderSidebar();
             renderCurrentChat();
@@ -628,6 +686,7 @@
         }
 
         function renderSidebar() {
+            cleanEmptyChats();
             const searchQuery = document.getElementById("search-chat").value.toLowerCase();
             const listContainer = document.getElementById("chat-list");
             listContainer.innerHTML = "";
@@ -639,8 +698,20 @@
 
                 const itemDiv = document.createElement("div");
                 itemDiv.className = `chat-item ${chat.id === appState.currentChatId ? 'active' : ''}`;
-                itemDiv.innerText = chat.title;
                 itemDiv.onclick = () => switchChat(chat.id);
+
+                const titleSpan = document.createElement("span");
+                titleSpan.className = "chat-item-title";
+                titleSpan.innerText = chat.title;
+
+                const deleteBtn = document.createElement("button");
+                deleteBtn.className = "delete-chat-btn";
+                deleteBtn.innerHTML = "🗑️";
+                deleteBtn.title = "Delete Chat";
+                deleteBtn.onclick = (e) => deleteChat(chat.id, e);
+
+                itemDiv.appendChild(titleSpan);
+                itemDiv.appendChild(deleteBtn);
                 listContainer.appendChild(itemDiv);
             });
         }
@@ -648,7 +719,7 @@
         function renderCurrentChat() {
             const container = document.getElementById("chat-container");
             container.innerHTML = "";
-            
+
             const currentChat = getCurrentChat();
             if (currentChat && currentChat.messages) {
                 currentChat.messages.forEach(msg => {
@@ -695,7 +766,7 @@
                     body: JSON.stringify({
                         user_query: query,
                         mcp_url: mcpUrl,
-                        history: currentChat.messages 
+                        history: currentChat.messages
                     })
                 });
 
@@ -718,12 +789,12 @@
                                 responseDiv.innerHTML = "";
                                 statusDiv.innerText = `⚙️ Executing tool: ${data.tool}...`;
                                 responseDiv.appendChild(statusDiv);
-                                
+
                                 const loadingDots = document.createElement("p");
                                 loadingDots.className = "loading-dots";
                                 loadingDots.innerText = "...";
                                 responseDiv.appendChild(loadingDots);
-                                
+
                             } else if (data.content) {
                                 statusDiv.remove();
                                 accumulatedText = data.content;
@@ -740,6 +811,7 @@
                 currentChat.messages.push({ role: "user", content: query });
                 currentChat.messages.push({ role: "assistant", content: accumulatedText });
                 saveData();
+                renderSidebar(); // Refresh sidebar to remove empty state conditions if any happened
 
             } catch (err) {
                 responseDiv.innerHTML = "";
