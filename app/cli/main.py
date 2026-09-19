@@ -19,6 +19,19 @@ from contracts.models import IngestRequest, SourceType
 app = typer.Typer(no_args_is_help=True, add_completion=False, help="Evidence-first finance research harness.")
 dataset_app = typer.Typer(no_args_is_help=True, help="Inspect datasets.")
 app.add_typer(dataset_app, name="dataset")
+db_app = typer.Typer(no_args_is_help=True, help="Database setup.")
+app.add_typer(db_app, name="db")
+
+
+@db_app.command("init")
+def db_init(engine_password: Optional[str] = typer.Option(None, envvar="HARNESS_ENGINE_DB_PASSWORD",
+                                                          help="Password for the read-only htn_engine role")) -> None:
+    """Create the contract schema (if the database is empty) and the read-only htn_engine role."""
+    from app.db import create_engine
+    from app.db.bootstrap import init_database
+
+    result = init_database(create_engine(settings.database_url), engine_password)
+    typer.echo(json.dumps(result))
 console = Console()
 err = Console(stderr=True)
 

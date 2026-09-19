@@ -2,7 +2,7 @@
 
     uv run python -m tests.engine.seed_fixture postgresql+psycopg://postgres:postgres@localhost:55432/htn_test
 
-Resets the public schema, applies contracts/schema.sql and tests/engine/grants.sql, then loads
+Resets the public schema, applies contracts/schema.sql and app/db/grants.sql, then loads
 contracts/fixture via fixture_data.load(). Pass --versions 2 to add a second version (isolation tests).
 """
 
@@ -23,7 +23,7 @@ def reset_schema(admin_url: str) -> None:
     with eng.begin() as c:
         c.execute(text("DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;"))
         c.exec_driver_sql((ROOT / "contracts" / "schema.sql").read_text())
-        c.exec_driver_sql((Path(__file__).parent / "grants.sql").read_text())
+        c.exec_driver_sql((ROOT / "app" / "db" / "grants.sql").read_text())
     eng.dispose()
 
 

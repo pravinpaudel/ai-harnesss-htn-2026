@@ -120,10 +120,12 @@ class FileIngestService:
 
     def run_sync(self, request: IngestRequest) -> IngestReport:
         started = time.monotonic()
+        capabilities = None
         if request.source == SourceType.file:
             documents = self.adapter.snapshot(request)
         elif self.mcp_adapter:
             documents = self.mcp_adapter.snapshot(request)
+            capabilities = getattr(self.mcp_adapter, "last_capabilities", None)
         else:
             raise RuntimeError("MCP ingestion requires a configured McpSourceAdapter")
         source_hash = hashlib.sha256("".join(sorted(hashlib.sha256(d.content).hexdigest() for d in documents)).encode()).hexdigest()
@@ -132,8 +134,9 @@ class FileIngestService:
             version_id = self._version(conn, dataset_id, source_hash)
             reports = [self._ingest_document(conn, version_id, raw) for raw in documents]
             findings = self._validate_duplicates(conn, version_id) + run_validators(conn, version_id)
-            conn.execute(text("UPDATE dataset_version SET status = 'validating' WHERE dataset_version_id = :id"),
-                         {"id": version_id})
+            conn.execute(text("UPDATE dataset_version SET status = 'validating', mcp_capabilities = CAST(:caps AS jsonb) "
+                              "WHERE dataset_version_id = :id"),
+                         {"id": version_id, "caps": json.dumps(capabilities) if capabilities else None})
         parsed_ms = round((time.monotonic() - started) * 1000)
         # Raw evidence is committed; embeddings come second and can never undo it.
         embedded, warnings = self._embed_chunks(version_id)
@@ -142,7 +145,8 @@ class FileIngestService:
         elapsed = round((time.monotonic() - started) * 1000)
         return IngestReport(job_id=uuid4(), dataset_id=dataset_id, dataset_version_id=version_id,
                             status=DatasetStatus.ready, source=request.source, source_hash=source_hash,
-                            parser_version=self.parser_version, documents=reports, findings=findings,
+                            parser_version=self.parser_version, mcp_capabilities=capabilities,
+                            documents=reports, findings=findings,
                             warnings=warnings,
                             timings_ms={"parse": parsed_ms, "embed": elapsed - parsed_ms, "total": elapsed})
 

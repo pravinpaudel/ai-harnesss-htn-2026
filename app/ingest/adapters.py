@@ -68,7 +68,8 @@ class McpSourceAdapter:
             raise ValueError("McpSourceAdapter requires an MCP IngestRequest")
         if not request.mcp_tool:
             raise ValueError("mcp_tool is required after MCP capability discovery")
-        payload = self.client.call_tool(request.mcp_tool, self._arguments(request))
+        arguments = self._arguments(request)
+        payload = self.client.call_tool(request.mcp_tool, arguments)
         if isinstance(payload, dict) and payload.get("isError"):
             # A tool error must fail the ingest; never snapshot the error text as if it were a document.
             detail = " ".join(item.get("text", "") for item in payload.get("content", []) if isinstance(item, dict))
@@ -82,11 +83,19 @@ class McpSourceAdapter:
                                               item.get("media_type", "text/markdown"), item.get("metadata", {})))
         if not documents:
             raise ValueError("MCP tool returned no text documents")
+        # what the server offered and exactly what was called, for the dataset's audit record
+        self.last_capabilities = {
+            "tools": [{k: t.get(k) for k in ("name", "description", "inputSchema")} for t in self._tools],
+            "tool_called": request.mcp_tool, "arguments": arguments,
+            "documents_returned": len(documents),
+            "payload_shape": sorted(payload.keys()) if isinstance(payload, dict) else type(payload).__name__,
+        }
         return documents
 
     def _arguments(self, request: IngestRequest) -> dict[str, Any]:
         """Only send arguments the tool's discovered input schema declares (e.g. none for financialDataRetrieval)."""
-        schema = next((t.get("inputSchema") or {} for t in self.client.list_tools()
+        self._tools = self.client.list_tools()
+        schema = next((t.get("inputSchema") or {} for t in self._tools
                        if t.get("name") == request.mcp_tool), None)
         if schema is None:
             raise ValueError(f"MCP tool {request.mcp_tool!r} not offered by the server")
