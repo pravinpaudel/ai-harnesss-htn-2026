@@ -5,7 +5,7 @@ This folder is the "Shared contract — complete before parallel work" from `dev
 Check everything with one command from the repo root:
 
 ```bash
-uv run --python 3.12 --with "pydantic>=2" python -m contracts.check
+uv run python -m contracts.check
 ```
 
 ## Contents
@@ -41,7 +41,7 @@ It covers everything the work plan asks for:
 | Expected validation findings | `fixture/expected_findings.json`: 5 findings (count_claim, rank_order, duplicate_claim, 2 × unit_currency_mix) |
 | Ten evaluation questions | `fixture/questions.json`: lookup, comparison, calculation, narrative, 2 × conflict, currency ambiguity, decline, false premise |
 
-Regenerate with `python -m contracts.fixture.build` and then `python -m contracts.examples.generate` (same `uv run` prefix). Fact values are typed by hand in `fixture/build.py`; the script only computes positions and fails if any value's text isn't exactly where it claims to be. **Application code must never import `contracts/fixture` or read `expected_*` files.** They exist only for testing.
+Regenerate with `python -m contracts.fixture.build` and then `python -m contracts.examples.generate` (same `uv run python -m` prefix). Fact values are typed by hand in `fixture/build.py`; the script only computes positions and fails if any value's text isn't exactly where it claims to be. **Application code must never import `contracts/fixture` or read `expected_*` files.** They exist only for testing.
 
 ## Conventions
 

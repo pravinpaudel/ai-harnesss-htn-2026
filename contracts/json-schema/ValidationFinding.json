@@ -181,11 +181,7 @@
    "type": "array"
   },
   "status": {
-   "allOf": [
-    {
-     "$ref": "#/$defs/FindingStatus"
-    }
-   ],
+   "$ref": "#/$defs/FindingStatus",
    "default": "open"
   }
  },

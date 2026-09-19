@@ -129,6 +129,7 @@
   "mcp_capabilities": {
    "anyOf": [
     {
+     "additionalProperties": true,
      "type": "object"
     },
     {

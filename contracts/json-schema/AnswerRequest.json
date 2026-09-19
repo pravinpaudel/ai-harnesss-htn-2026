@@ -33,11 +33,7 @@
  "additionalProperties": false,
  "properties": {
   "budget": {
-   "allOf": [
-    {
-     "$ref": "#/$defs/Budget"
-    }
-   ],
+   "$ref": "#/$defs/Budget",
    "default": {
     "max_cost_usd": 0.5,
     "max_latency_ms": 60000,
@@ -53,9 +49,6 @@
     },
     {
      "const": "latest",
-     "enum": [
-      "latest"
-     ],
      "type": "string"
     }
    ],

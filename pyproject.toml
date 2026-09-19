@@ -1,0 +1,39 @@
+[project]
+name = "htn-research-harness"
+version = "0.1.0"
+description = "Evidence-first finance research harness (RBC Signal in the Noise, Hack the North 2026)"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    # Research engine (Developer B)
+    "typer>=0.12",
+    "rich>=13.7",
+    "sqlalchemy>=2.0",
+    "psycopg[binary]>=3.2",
+    "pgvector>=0.3",
+    "openai>=1.60",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.2",
+    "jsonschema>=4.22",
+]
+
+[project.scripts]
+htn = "app.cli.main:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app", "contracts"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "db: needs the PostgreSQL test database (tests/engine/compose.test.yml)",
+    "live: calls the real OpenAI API (needs OPENAI_API_KEY)",
+]

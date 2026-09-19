@@ -250,18 +250,7 @@
     ],
     "values": [],
     "ordered_items": [],
-    "must_cite": [
-     {
-      "document_name": "mining-excerpt.md",
-      "line_start": 21,
-      "line_end": 21
-     },
-     {
-      "document_name": "mining-excerpt.md",
-      "line_start": 23,
-      "line_end": 23
-     }
-    ],
+    "must_cite": [],
     "must_mention": [
      "CAD"
     ],
@@ -270,7 +259,7 @@
     ],
     "requires_calculation": false
    },
-   "notes": "Market caps mix USD and CAD. Only IVN has a source-backed USD figure (line 232); FM does not. An answer that silently ranks the raw numbers fails."
+   "notes": "Market caps mix USD and CAD in both the comparable-company table and the screening row, so no single citation location is required; the unit_currency_mix finding and a CAD mention are. Only IVN has a source-backed USD figure (line 232); FM does not. An answer that silently ranks the raw numbers fails."
   },
   {
    "case_id": "FX09",

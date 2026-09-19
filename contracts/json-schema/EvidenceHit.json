@@ -61,8 +61,8 @@
      "title": "Entity Label"
     },
     "extraction_confidence": {
-     "maximum": 1.0,
-     "minimum": 0.0,
+     "maximum": 1,
+     "minimum": 0,
      "title": "Extraction Confidence",
      "type": "number"
     },
@@ -257,11 +257,7 @@
      "title": "Label"
     },
     "type": {
-     "allOf": [
-      {
-       "$ref": "#/$defs/PeriodType"
-      }
-     ],
+     "$ref": "#/$defs/PeriodType",
      "default": "unspecified"
     }
    },
