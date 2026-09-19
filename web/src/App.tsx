@@ -21,9 +21,11 @@ function newSessionId() {
 function AnswerCard({ response }: { response: AnswerResponse }) {
   return (
     <article className="answer-card" aria-label="Research answer">
-      <div className={`status status-${response.status}`}>
-        <ShieldCheck size={15} aria-hidden="true" /> {statusLabels[response.status]}
-      </div>
+      {response.status !== "answered" && (
+        <div className={`status status-${response.status}`}>
+          <ShieldCheck size={15} aria-hidden="true" /> {statusLabels[response.status]}
+        </div>
+      )}
       <div className="answer-copy"><ReactMarkdown>{response.answer}</ReactMarkdown></div>
 
       {response.limitations.length > 0 && (
@@ -34,8 +36,8 @@ function AnswerCard({ response }: { response: AnswerResponse }) {
       )}
 
       {response.citations.length > 0 && (
-        <section className="citations" aria-label="Sources">
-          <h3><FileText size={16} aria-hidden="true" /> Sources</h3>
+        <details className="citations" aria-label="Sources">
+          <summary><FileText size={16} aria-hidden="true" /> Sources ({response.citations.length})</summary>
           <ol>
             {response.citations.map((citation) => (
               <li key={citation.citation_id}>
@@ -44,7 +46,7 @@ function AnswerCard({ response }: { response: AnswerResponse }) {
               </li>
             ))}
           </ol>
-        </section>
+        </details>
       )}
     </article>
   );
@@ -68,7 +70,18 @@ export default function App() {
     setQuestion("");
     setError(null);
     setSessionId(newSessionId());
+    if (inputRef.current) inputRef.current.style.height = "auto";
     inputRef.current?.focus();
+  }
+
+  function resizeComposer(textarea: HTMLTextAreaElement) {
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
+  }
+
+  function changeQuestion(value: string) {
+    setQuestion(value);
+    if (inputRef.current) resizeComposer(inputRef.current);
   }
 
   async function submit(event: FormEvent) {
@@ -79,6 +92,7 @@ export default function App() {
     setError(null);
     setMessages((current) => [...current, { id: crypto.randomUUID(), role: "user", content: trimmedQuestion }]);
     setQuestion("");
+    if (inputRef.current) inputRef.current.style.height = "auto";
     setIsLoading(true);
     try {
       const response = await askQuestion(trimmedQuestion, sessionId);
@@ -109,7 +123,7 @@ export default function App() {
         {error && <p className="error" role="alert">{error}</p>}
         <form className="composer" onSubmit={submit}>
           <label className="sr-only" htmlFor="question">Research question</label>
-          <textarea ref={inputRef} id="question" value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Ask a question about the latest research dataset…" rows={2} disabled={isLoading} />
+          <textarea ref={inputRef} id="question" value={question} onChange={(event) => changeQuestion(event.target.value)} placeholder="Ask a question about the latest research dataset…" rows={2} disabled={isLoading} />
           <button type="submit" disabled={isLoading || !question.trim()} aria-label="Send question"><Send size={19} /></button>
         </form>
         <p className="composer-note">Responses cite source documents and line ranges. Latest dataset is selected automatically.</p>

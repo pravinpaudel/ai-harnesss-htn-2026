@@ -28,9 +28,12 @@ it("submits a question and renders the cited answer", async () => {
 
   expect(screen.getByRole("button", { name: "Send question" })).toBeDisabled();
   await waitFor(() => expect(api.askQuestion).toHaveBeenCalledWith("What was revenue?", expect.any(String)));
-  expect(await screen.findByText("Sources")).toBeInTheDocument();
-  expect(screen.getByText(/mining.md, lines 95/)).toBeInTheDocument();
-  expect(screen.getByText("Revenue $152.6M")).toBeInTheDocument();
+  const sources = await screen.findByText("Sources (1)");
+  expect(sources).toBeInTheDocument();
+  expect(screen.queryByText(/mining.md, lines 95/)).not.toBeVisible();
+  fireEvent.click(sources);
+  expect(screen.getByText(/mining.md, lines 95/)).toBeVisible();
+  expect(screen.queryByText("Answered")).not.toBeInTheDocument();
 });
 
 it("creates a blank conversation", async () => {
