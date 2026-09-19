@@ -86,3 +86,33 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+def findings(url: str | None = None, corpus: str = "fixture") -> tuple[list[dict], list[dict], list[str]]:
+    """Expected findings (contracts/fixture/expected_findings.json) matched by rule + claim fact.
+    Returns (found, missed, extra explanations). Run after run(corpus=...) has ingested."""
+    import json
+    url = url or db_url()
+    engine = create_engine(url)
+    with engine.connect() as c:
+        v = c.execute(text("SELECT dataset_version_id FROM dataset_version ORDER BY created_at DESC LIMIT 1")).scalar()
+        produced = c.execute(text("""SELECT vf.rule::text AS rule, vf.explanation, array_agg(
+                   d.name || ':' || s.line_start || ':' || coalesce(e.label, '') || ':' || f.role::text) AS facts
+            FROM validation_finding vf CROSS JOIN LATERAL unnest(vf.fact_ids) AS fid
+            JOIN fact f ON f.fact_id = fid JOIN source_span s ON s.span_id = f.span_id
+            JOIN document d ON d.document_id = s.document_id LEFT JOIN entity e ON e.entity_id = f.entity_id
+            WHERE vf.dataset_version_id = :v GROUP BY vf.finding_id, vf.rule, vf.explanation"""), {"v": v}).all()
+    if corpus != "fixture":
+        return [], [], [p.explanation for p in produced]
+    facts = {r["fact_key"]: r for r in csv.DictReader(open(ROOT / "contracts/fixture/expected_facts.csv", encoding="utf-8"))}
+    expected = json.loads((ROOT / "contracts/fixture/expected_findings.json").read_text())["findings"]
+    found, missed, matched = [], [], set()
+    for e in expected:
+        cf = facts[e["claim_fact"]]
+        key = f'{cf["document_name"]}:{cf["line_start"]}:{cf["entity_label"]}:{cf["role"]}'
+        hit = next((i for i, p in enumerate(produced) if p.rule == e["rule"] and key in p.facts), None)
+        (found if hit is not None else missed).append(e)
+        if hit is not None:
+            matched.add(hit)
+    extra = [p.explanation for i, p in enumerate(produced) if i not in matched]
+    return found, missed, extra

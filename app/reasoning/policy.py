@@ -202,7 +202,12 @@ def finalize(ctx: RunContext, sub: SubmitAnswerArgs, *, model: str, prompt_versi
     seen_findings = set()
     findings = [ctx.findings[h] for h in dict.fromkeys(finding_handles) if h in ctx.findings]
     if cited_fact_ids:
-        findings += ctx.repo.list_findings(ctx.dataset_version_id, fact_ids=list(dict.fromkeys(cited_fact_ids)))
+        cited = set(cited_fact_ids)
+        for f in ctx.repo.list_findings(ctx.dataset_version_id, fact_ids=list(dict.fromkeys(cited_fact_ids))):
+            # relevant only if the answer relies on the finding's own claim, or compares 2+ of its facts
+            # (citing ABX's revenue is not affected by TECK.B's revenue being in CAD in the same column)
+            if (f.fact_ids and f.fact_ids[0] in cited) or len(cited & set(f.fact_ids)) >= 2:
+                findings.append(f)
     for f in findings:
         if f.finding_id in seen_findings:
             continue

@@ -21,6 +21,7 @@ from .parse import _DIVIDER as _TABLE_DIVIDER, ParsedTable, parse_csv_table, par
 from app.markdown import Outline, block_label, period_of
 from app.retrieval.context import entity_from_path
 from .entities import build_catalog
+from .validators import run_all as run_validators
 from .extract import Value, cell_values, find_period, labelled_values, trend_values
 from contracts.models import Unit
 from .storage import ImmutableRawStorage
@@ -130,7 +131,7 @@ class FileIngestService:
             dataset_id = self._dataset(conn, request)
             version_id = self._version(conn, dataset_id, source_hash)
             reports = [self._ingest_document(conn, version_id, raw) for raw in documents]
-            findings = self._validate_duplicates(conn, version_id)
+            findings = self._validate_duplicates(conn, version_id) + run_validators(conn, version_id)
             conn.execute(text("UPDATE dataset_version SET status = 'validating' WHERE dataset_version_id = :id"),
                          {"id": version_id})
         parsed_ms = round((time.monotonic() - started) * 1000)
@@ -298,10 +299,10 @@ class FileIngestService:
                 cursor = column + len(cell)
                 start, end, _ = canonical.span_for_text(line_number, column, column + len(cell))
                 cell_span = self._span(conn, version, document, canonical, line_number, line_number, start, end)
-                conn.execute(text("""INSERT INTO table_cell (dataset_version_id, table_id, span_id, row_idx, col_idx, row_label, header_path, raw_text)
-                   VALUES (:version, :table, :span, :row, :col, :label, :headers, :raw)"""),
+                cell_id = conn.execute(text("""INSERT INTO table_cell (dataset_version_id, table_id, span_id, row_idx, col_idx, row_label, header_path, raw_text)
+                   VALUES (:version, :table, :span, :row, :col, :label, :headers, :raw) RETURNING cell_id"""),
                     {"version": version, "table": table_id, "span": cell_span, "row": row_index, "col": col_index,
-                     "label": row_label, "headers": list(table.headers[:col_index + 1]), "raw": cell})
+                     "label": row_label, "headers": list(table.headers[:col_index + 1]), "raw": cell}).scalar_one()
                 if not cell or (col_index == 0 and lowered[0] not in ("rank", "#", "position")):
                     continue
                 if is_calendar and col_index == event_col:
@@ -310,7 +311,7 @@ class FileIngestService:
                     when = (row[0].strip(), find_period(row[0]) and find_period(row[0])[1] or _parse_date(row[0]), "point")
                     written = self._write_values(conn, version, document, canonical, line_number, column,
                                                  [Value(0, len(cell), cell, text=cell, unit=Unit.text, role="event")],
-                                                 ent, headers[col_index], when)
+                                                 ent, headers[col_index], when, cell_id)
                 elif is_calendar:
                     continue
                 elif col_index in rank_cols:
@@ -328,7 +329,7 @@ class FileIngestService:
                             v.end += inner.start(1)
                             vals.append(v)
                     written = self._write_values(conn, version, document, canonical, line_number, column, vals,
-                                                 ent, metric_label, None)
+                                                 ent, metric_label, None, cell_id)
                 else:
                     owner = owners[col_index] if len(set(named)) > 1 else None   # multi-entity row: the cell's own
                     label_for_fact = owner or row_entity or section_entity
@@ -338,7 +339,7 @@ class FileIngestService:
                     if owner and vals and all(v.role == "attribute" for v in vals):
                         continue    # an entity's own name/label cell is not a fact about it
                     written = self._write_values(conn, version, document, canonical, line_number, column, vals,
-                                                 ent, metric_label, period)
+                                                 ent, metric_label, period, cell_id)
                 if written:
                     facts += written
                     conn.execute(text("UPDATE table_cell SET typed = true WHERE span_id = :span"), {"span": cell_span})
@@ -353,7 +354,7 @@ class FileIngestService:
         return None
 
     def _write_values(self, conn, version: UUID, document: UUID, canonical: CanonicalDocument, line_number: int,
-                      column: int, values: list, entity_id, metric_label: str, period) -> int:
+                      column: int, values: list, entity_id, metric_label: str, period, cell_id=None) -> int:
         """Insert facts for values found at `column` of a line; each fact's span is the value itself."""
         n = 0
         for v in values:
@@ -369,13 +370,13 @@ class FileIngestService:
             p_label, p_end, p_type = period if period else (None, None, "unspecified")
             if v.role in ("trend", "count") and not period:
                 p_type = "trailing" if v.role == "trend" else "unspecified"
-            conn.execute(text("""INSERT INTO fact (dataset_version_id, entity_id, span_id, metric, metric_label, value,
+            conn.execute(text("""INSERT INTO fact (dataset_version_id, entity_id, cell_id, span_id, metric, metric_label, value,
                     value_low, value_high, value_text, original_value, unit, unit_label, currency, scale, is_estimate,
                     basis, role, period_label, period_end, period_type, extraction_confidence)
-                VALUES (:version, :entity, :span, :metric, :label, :value, :low, :high, :vtext, :original,
+                VALUES (:version, :entity, :cell, :span, :metric, :label, :value, :low, :high, :vtext, :original,
                         CAST(:unit AS value_unit), :ulabel, :currency, :scale, :est, CAST(:basis AS fact_basis),
                         CAST(:role AS fact_role), :plabel, :pend, CAST(:ptype AS period_type), :conf)"""),
-                {"version": version, "entity": entity_id, "span": span,
+                {"version": version, "entity": entity_id, "span": span, "cell": cell_id,
                  "metric": _metric_key(label), "label": label, "value": v.value, "low": v.low, "high": v.high,
                  "vtext": v.text, "original": original.strip(), "unit": v.unit.value,
                  "ulabel": v.extra.get("unit_label"), "currency": v.currency,
