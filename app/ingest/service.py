@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import hashlib
+import json
+import re
 import time
 from uuid import UUID, uuid4
 
@@ -19,6 +21,8 @@ from .parse import _DIVIDER as _TABLE_DIVIDER, ParsedTable, parse_csv_table, par
 from app.markdown import Outline, block_label, period_of
 from app.retrieval.context import entity_from_path
 from .entities import build_catalog
+from .extract import Value, cell_values, find_period, labelled_values, trend_values
+from contracts.models import Unit
 from .storage import ImmutableRawStorage
 
 
@@ -222,6 +226,7 @@ class FileIngestService:
             table_cells, table_facts = self._table(conn, version, document_id, canonical, table)
             cells += table_cells
             facts += table_facts
+        facts += self._line_facts(conn, version, document_id, canonical)
         return DocumentReport(document_id=document_id, name=raw.name, sha256=digest, lines=len(canonical.lines),
                               chunks=chunks, tables=len(tables), table_cells=cells, facts=facts,
                               untyped_cells=cells - facts)
@@ -266,21 +271,28 @@ class FileIngestService:
         span = self._span(conn, version, document, canonical, table.start_line, table.end_line)
         table_id = conn.execute(text("""INSERT INTO source_table (dataset_version_id, span_id, header_rows, n_rows, n_cols)
             VALUES (:version, :span, CAST(:headers AS jsonb), :rows, :cols) RETURNING table_id"""),
-            {"version": version, "span": span, "headers": __import__("json").dumps([table.headers]), "rows": len(table.rows), "cols": len(table.headers)}).scalar_one()
+            {"version": version, "span": span, "headers": json.dumps([table.headers]), "rows": len(table.rows), "cols": len(table.headers)}).scalar_one()
+        headers = [h.strip() for h in table.headers]
+        rank_cols = {i: int(re.sub(r"\D", "", h)) for i, h in enumerate(headers) if re.fullmatch(r"#?\s*\d{1,3}", h)}
+        is_kv = len(headers) == 2 and not rank_cols
+        lowered = [h.lower().strip("* ") for h in headers]
+        event_col = next((i for i, h in enumerate(lowered) if h in ("event", "catalyst", "milestone", "description")), None)
+        is_calendar = event_col is not None and lowered[0] in ("date", "expected date", "when", "timing")
+        caption = self._caption_period(canonical, table.start_line)
         facts = 0
         for row_index, (row, line_number) in enumerate(zip(table.rows, table.row_lines)):
-            entity_label = row[0] or None
+            row_label = row[0] or None
             owners = [self._catalog.owner_of(c) for c in row]
             named = [o for o in owners if o]
             # a row about one entity (comparison / screening tables), else the enclosing entity section
             row_entity = named[0] if len(set(named)) == 1 else None
             section_entity = entity_from_path(self._outline.path(line_number), self._catalog.labels())
+            period = find_period(row[0]) if row[0] and re.match(r"\s*(Q[1-4]|H[12]|FY)", row[0]) else None
+            if period is None:
+                period = next((p for p in (find_period(c) for c in row[1:]) if p), None) or caption
+            line = canonical.lines[line_number - 1]
             cursor = 0
             for col_index, cell in enumerate(row):
-                owner = owners[col_index] if len(set(named)) > 1 else None   # multi-entity row: the cell's own
-                label_for_fact = owner or row_entity or section_entity
-                entity_id = self._entity_ids.get(label_for_fact) if label_for_fact else None
-                line = canonical.lines[line_number - 1]
                 column = line.text.find(cell, cursor)
                 column = column if column >= 0 else cursor
                 cursor = column + len(cell)
@@ -289,22 +301,134 @@ class FileIngestService:
                 conn.execute(text("""INSERT INTO table_cell (dataset_version_id, table_id, span_id, row_idx, col_idx, row_label, header_path, raw_text)
                    VALUES (:version, :table, :span, :row, :col, :label, :headers, :raw)"""),
                     {"version": version, "table": table_id, "span": cell_span, "row": row_index, "col": col_index,
-                     "label": entity_label, "headers": list(table.headers[:col_index + 1]), "raw": cell})
-                if col_index == 0 or not cell:
+                     "label": row_label, "headers": list(table.headers[:col_index + 1]), "raw": cell})
+                if not cell or (col_index == 0 and lowered[0] not in ("rank", "#", "position")):
                     continue
-                normalized = normalize_number(cell, table.headers[col_index])
-                if normalized is None:
+                if is_calendar and col_index == event_col:
+                    owner = owners[col_index] or row_entity
+                    ent = self._entity_ids.get(owner) if owner else None
+                    when = (row[0].strip(), find_period(row[0]) and find_period(row[0])[1] or _parse_date(row[0]), "point")
+                    written = self._write_values(conn, version, document, canonical, line_number, column,
+                                                 [Value(0, len(cell), cell, text=cell, unit=Unit.text, role="event")],
+                                                 ent, headers[col_index], when)
+                elif is_calendar:
                     continue
-                conn.execute(text("""INSERT INTO fact (dataset_version_id, entity_id, span_id, metric, metric_label, value, original_value,
-                    unit, currency, scale, role, period_type, extraction_confidence)
-                    VALUES (:version, :entity, :span, :metric, :label, :value, :original, :unit, :currency, :scale, 'actual', 'unspecified', 0.85)"""),
-                    {"version": version, "entity": entity_id, "span": cell_span,
-                     "metric": "_".join(table.headers[col_index].lower().split()), "label": table.headers[col_index],
-                     "value": normalized.value, "original": cell, "unit": normalized.unit.value,
-                     "currency": normalized.currency, "scale": normalized.scale})
-                facts += 1
-                conn.execute(text("UPDATE table_cell SET typed = true WHERE span_id = :span"), {"span": cell_span})
+                elif col_index in rank_cols:
+                    # "| **Market Cap** | AEM ($102B) | ..." : rank + the value in parentheses, owned by the cell's entity
+                    owner = owners[col_index]
+                    metric_label = row[0].strip("* ")
+                    ent = self._entity_ids.get(owner) if owner else None
+                    rank_v = Value(0, len(cell), cell, value=float(rank_cols[col_index]), text=cell, unit=Unit.rank,
+                                   role="rank")
+                    inner = re.search(r"\(([^)]*)\)", cell)
+                    vals = [rank_v]
+                    if inner:
+                        for v in cell_values(inner.group(1)):
+                            v.start += inner.start(1)
+                            v.end += inner.start(1)
+                            vals.append(v)
+                    written = self._write_values(conn, version, document, canonical, line_number, column, vals,
+                                                 ent, metric_label, None)
+                else:
+                    owner = owners[col_index] if len(set(named)) > 1 else None   # multi-entity row: the cell's own
+                    label_for_fact = owner or row_entity or section_entity
+                    ent = self._entity_ids.get(label_for_fact) if label_for_fact else None
+                    metric_label = row[0].strip("* ") if is_kv else headers[col_index]
+                    vals = cell_values(cell, headers[col_index])
+                    if owner and vals and all(v.role == "attribute" for v in vals):
+                        continue    # an entity's own name/label cell is not a fact about it
+                    written = self._write_values(conn, version, document, canonical, line_number, column, vals,
+                                                 ent, metric_label, period)
+                if written:
+                    facts += written
+                    conn.execute(text("UPDATE table_cell SET typed = true WHERE span_id = :span"), {"span": cell_span})
         return len(table.rows) * len(table.headers), facts
+
+    def _caption_period(self, canonical: CanonicalDocument, header_line: int):
+        """Period stated in a short caption right above a table, e.g. '*(Q2 2026 data — most recent quarter)*'."""
+        for n in range(header_line - 1, max(0, header_line - 3), -1):
+            t = canonical.lines[n - 1].text.strip()
+            if t:
+                return find_period(t) if len(t) < 120 and not t.startswith("|") else None
+        return None
+
+    def _write_values(self, conn, version: UUID, document: UUID, canonical: CanonicalDocument, line_number: int,
+                      column: int, values: list, entity_id, metric_label: str, period) -> int:
+        """Insert facts for values found at `column` of a line; each fact's span is the value itself."""
+        n = 0
+        for v in values:
+            start, end, _ = canonical.span_for_text(line_number, column + v.start, column + v.end)
+            original = canonical.text[start:end]
+            if not original.strip():
+                continue
+            span = self._span(conn, version, document, canonical, line_number, line_number, start, end)
+            label = v.label or metric_label
+            if v.role in ("actual", "estimate"):
+                # "EPS (Act vs Est)" -> "EPS": actual and estimate share the metric; the role tells them apart
+                label = re.sub(r"\s*\([^)]*\bvs\.?\b[^)]*\)", "", label or "").strip() or label
+            p_label, p_end, p_type = period if period else (None, None, "unspecified")
+            if v.role in ("trend", "count") and not period:
+                p_type = "trailing" if v.role == "trend" else "unspecified"
+            conn.execute(text("""INSERT INTO fact (dataset_version_id, entity_id, span_id, metric, metric_label, value,
+                    value_low, value_high, value_text, original_value, unit, unit_label, currency, scale, is_estimate,
+                    basis, role, period_label, period_end, period_type, extraction_confidence)
+                VALUES (:version, :entity, :span, :metric, :label, :value, :low, :high, :vtext, :original,
+                        CAST(:unit AS value_unit), :ulabel, :currency, :scale, :est, CAST(:basis AS fact_basis),
+                        CAST(:role AS fact_role), :plabel, :pend, CAST(:ptype AS period_type), :conf)"""),
+                {"version": version, "entity": entity_id, "span": span,
+                 "metric": _metric_key(label), "label": label, "value": v.value, "low": v.low, "high": v.high,
+                 "vtext": v.text, "original": original.strip(), "unit": v.unit.value,
+                 "ulabel": v.extra.get("unit_label"), "currency": v.currency,
+                 "scale": v.scale, "est": v.is_estimate, "basis": v.basis, "role": v.role, "plabel": p_label,
+                 "pend": p_end, "ptype": p_type, "conf": 0.9 if v.role in ("actual", "estimate", "rank") else 0.8})
+            n += 1
+        return n
+
+    def _line_facts(self, conn, version: UUID, document: UUID, canonical: CanonicalDocument) -> int:
+        """Facts from structured non-table lines: <summary> lines ('Revenue $152.6M; EPS $0.03 vs $0.06 est (Miss)')
+        and trend statements ('Payments penetration ↑ (62% → 68%)', 'from 58% to 68%', 'Beat/Met 6/8')."""
+        facts = 0
+        for line in canonical.lines:
+            raw = line.text
+            if raw.lstrip().startswith("|") or not raw.strip():
+                continue
+            section_entity = entity_from_path(self._outline.path(line.number), self._catalog.labels())
+            if "<summary>" in raw:
+                inner = re.sub(r"<[^>]+>", lambda m: " " * len(m.group(0)), raw)   # keep offsets
+                period = find_period(inner)
+                dash = re.search(r"\s[—–]\s", inner)
+                if period and dash:
+                    body_off = dash.end()
+                    vals = labelled_values(inner[body_off:])
+                    for v in vals:
+                        v.start += body_off
+                        v.end += body_off
+                    ent = self._entity_ids.get(section_entity) if section_entity else None
+                    facts += self._write_values(conn, version, document, canonical, line.number, 0, vals, ent,
+                                                "", period)
+                continue
+            if not re.search(r"→|->|\bfrom\b.+\bto\b", raw):
+                continue
+            vals = trend_values(raw)
+            if not re.search(r"↑|↓|→", raw):
+                vals = [v for v in vals if v.role != "count"]
+            for v in vals:
+                owner = section_entity or self._entity_before(raw, v.start)
+                ent = self._entity_ids.get(owner) if owner else None
+                facts += self._write_values(conn, version, document, canonical, line.number, 0, [v], ent, "", None)
+        return facts
+
+    def _entity_before(self, text_: str, pos: int):
+        """The last entity named before `pos` in a line that discusses several ('SHOP — ... | DSG — ...')."""
+        best, best_at = None, -1
+        for label, aliases in self._catalog.aliases.items():
+            for term in {label, *aliases}:
+                exact = term.isupper() or term == label
+                for m in re.finditer(rf"(?<![A-Za-z0-9]){re.escape(term)}(?![A-Za-z0-9])", text_[:pos],
+                                     0 if exact else re.IGNORECASE):
+                    if m.start() > best_at and (len(term) >= 4 or term == label):
+                        best, best_at = label, m.start()
+        return best
 
     def _entity(self, conn, version: UUID, label: str, aliases: set[str] = frozenset()) -> UUID:
         entity_id = conn.execute(text("""INSERT INTO entity (dataset_version_id, label) VALUES (:version, :label)
@@ -320,12 +444,15 @@ class FileIngestService:
         """duplicate_claim: the same entity, metric, stated period and basis with values that disagree
         beyond rounding. Facts without a stated period are never compared (eight quarters of revenue
         are not conflicting claims)."""
-        groups = conn.execute(text("""SELECT entity_id, metric, period_label, basis,
-                   array_agg(fact_id ORDER BY fact_id) ids, array_agg(span_id ORDER BY fact_id) spans,
-                   array_agg(value ORDER BY fact_id) vals, array_agg(original_value ORDER BY fact_id) raws,
-                   array_agg(scale ORDER BY fact_id) scales
-            FROM fact WHERE dataset_version_id = :version AND period_label IS NOT NULL AND value IS NOT NULL
-            GROUP BY entity_id, metric, period_label, basis HAVING COUNT(DISTINCT value) > 1"""),
+        groups = conn.execute(text("""SELECT f.entity_id, f.metric, f.period_label, f.basis,
+                   array_agg(f.fact_id ORDER BY f.fact_id) ids, array_agg(f.span_id ORDER BY f.fact_id) spans,
+                   array_agg(f.value ORDER BY f.fact_id) vals, array_agg(f.original_value ORDER BY f.fact_id) raws,
+                   array_agg(f.scale ORDER BY f.fact_id) scales
+            FROM fact f JOIN source_span s ON s.span_id = f.span_id
+            WHERE f.dataset_version_id = :version AND f.period_label IS NOT NULL AND f.value IS NOT NULL
+              AND f.role = 'actual' AND f.entity_id IS NOT NULL
+            GROUP BY f.entity_id, f.metric, f.period_label, f.basis
+            HAVING COUNT(DISTINCT f.value) > 1 AND COUNT(DISTINCT (s.document_id, s.line_start)) > 1"""),
                               {"version": version}).mappings()
         count = 0
         for g in groups:
@@ -350,3 +477,21 @@ def _precision_step(original: str, scale: float) -> float:
     m = _re.search(r"\d[\d,]*(?:\.(\d+))?", original or "")
     decimals = len(m.group(1) or "") if m else 0
     return (10 ** -decimals) * (scale or 1.0)
+
+
+def _metric_key(label: str) -> str:
+    """Dataset-scoped metric key from a label as written: 'Rev YoY%' -> 'rev_yoy_pct'."""
+    key = (label or "value").strip("* ").lower().replace("%", " pct").replace("&", " and ")
+    key = re.sub(r"[^a-z0-9]+", "_", key).strip("_")
+    return key or "value"
+
+
+def _parse_date(text_: str):
+    """'Nov 5, 2026' -> date(2026, 11, 5); None for vague dates ('Late Nov 2026', 'Q4 2026')."""
+    from datetime import datetime as _dt
+    for fmt in ("%b %d, %Y", "%B %d, %Y", "%Y-%m-%d"):
+        try:
+            return _dt.strptime(text_.strip(), fmt).date()
+        except ValueError:
+            continue
+    return None

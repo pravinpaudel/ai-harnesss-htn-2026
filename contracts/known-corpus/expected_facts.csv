@@ -51,7 +51,7 @@ G49,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509
 G50,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,IVN,revenue_yoy_pct,actual,,58,,,,IVN (+58%),pct,,false,Q2 2026,calendar,,1898,1898,126747,126757
 G51,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,IVN,eps_beat_count,count,,3,,,3/8,IVN (3/8),count,,false,trailing 8Q,trailing,,1899,1899,126874,126883
 G52,canadian-mining-research.md,8924f4998b5895ae76251ff383f1cd3508bfc261f7ee7509b15968effac91a01,TECK.B,eps_beat_count,count,,8,,,8/8,TECK.B (8/8),count,,false,trailing 8Q,trailing,,1899,1899,126812,126824
-G53,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,SHOP,payments_penetration,trend,,,58,68,↑,Payments penetration expanding (58% → 68%),pct,,false,,unspecified,,9,9,1029,1071
+G53,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,SHOP,payments_penetration,trend,,,58,68,expanding,Payments penetration expanding (58% → 68%),pct,,false,,unspecified,,9,9,1029,1071
 G54,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,SHOP,market_cap,actual,,185000000000,,,,~$185B CAD,money,CAD,true,,point,2026-09-17,38,38,3847,3857
 G55,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,CSU,eps,actual,gaap,12.93,,,,$12.93 (GAAP),money,,false,Q2 2026,calendar,,39,39,3990,4003
 G56,canadian-technology-research.md,3277c1dd7de98df88beb04f2739f66bd300dd1d2b7691b61f15cfd2bb68c4058,CSU,eps,actual,adjusted,31.62,,,,~$31.62 (adj),money,,true,Q2 2026,calendar,,39,39,4006,4019
