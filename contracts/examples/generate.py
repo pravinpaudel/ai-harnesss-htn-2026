@@ -1,7 +1,7 @@
 """Generate example AnswerResponse JSON files from the fixture (answered+calculation, conflict, declined).
 
 Run from the repo root after building the fixture:
-    uv run --python 3.12 --with "pydantic>=2" python -m contracts.examples.generate
+    uv run python -m contracts.examples.generate
 
 The examples show Developer B's exact output shape and give eval/CLI tests a known-good
 object. Spans come from contracts/fixture/expected_facts.csv, so quotes are verbatim.

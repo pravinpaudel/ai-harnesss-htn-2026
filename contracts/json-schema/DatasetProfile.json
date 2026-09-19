@@ -74,6 +74,19 @@
    "title": "DocumentReport",
    "type": "object"
   },
+  "FindingRule": {
+   "enum": [
+    "unit_currency_mix",
+    "arithmetic",
+    "rank_order",
+    "count_claim",
+    "trend_direction",
+    "duplicate_claim",
+    "period_order"
+   ],
+   "title": "FindingRule",
+   "type": "string"
+  },
   "ProfileEntry": {
    "additionalProperties": false,
    "properties": {
@@ -138,6 +151,9 @@
    "additionalProperties": {
     "type": "integer"
    },
+   "propertyNames": {
+    "$ref": "#/$defs/FindingRule"
+   },
    "title": "Findings By Rule",
    "type": "object"
   },
@@ -167,8 +183,8 @@
    "$ref": "#/$defs/DatasetStatus"
   },
   "table_coverage": {
-   "maximum": 1.0,
-   "minimum": 0.0,
+   "maximum": 1,
+   "minimum": 0,
    "title": "Table Coverage",
    "type": "number"
   },

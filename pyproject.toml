@@ -8,10 +8,13 @@ dependencies = [
   "alembic>=1.14,<2",
   "openai>=2.0,<3",
   "httpx>=0.28,<1",
+  "pydantic>=2.7",
   "pydantic-settings>=2.6,<3",
   "sqlalchemy>=2.0,<3",
   "psycopg[binary]>=3.2,<4",
+  "pgvector>=0.3",
   "typer>=0.15,<1",
+  "rich>=13.7",
   "uvicorn[standard]>=0.32,<1",
 ]
 
@@ -23,7 +26,11 @@ build-backend = "setuptools.build_meta"
 include = ["app*", "contracts*"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8,<9", "httpx>=0.28,<1"]
+dev = [
+  "pytest>=8,<9",
+  "httpx>=0.28,<1",
+  "jsonschema>=4.22",
+]
 
 [project.scripts]
 htn = "app.cli.main:app"
@@ -32,3 +39,7 @@ htn = "app.cli.main:app"
 testpaths = ["tests"]
 addopts = "-q"
 pythonpath = ["."]
+markers = [
+  "db: needs the PostgreSQL test database (tests/engine/compose.test.yml)",
+  "live: calls the real OpenAI API (needs OPENAI_API_KEY)",
+]

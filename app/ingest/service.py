@@ -7,6 +7,8 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import Engine, text
 
+from app.db import create_engine
+from app.settings import settings
 from contracts.models import DatasetProfile, DatasetStatus, DocumentReport, IngestReport, IngestRequest, ProfileEntry, SourceType
 
 from .adapters import FileSourceAdapter, McpSourceAdapter, SnapshotDocument
@@ -14,6 +16,15 @@ from .canonical import CanonicalDocument, canonicalize_text
 from .normalize import normalize_number
 from .parse import ParsedTable, parse_csv_table, parse_markdown_tables
 from .storage import ImmutableRawStorage
+
+
+def get_ingest_service() -> "FileIngestService":
+    """Factory used by the CLI and any future HTTP/worker entrypoints."""
+    return FileIngestService(
+        create_engine(settings.database_url),
+        ImmutableRawStorage(settings.raw_storage_path),
+        settings.parser_version,
+    )
 
 
 class FileIngestService:

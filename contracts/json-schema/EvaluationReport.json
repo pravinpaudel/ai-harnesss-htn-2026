@@ -158,6 +158,9 @@
    "additionalProperties": {
     "type": "number"
    },
+   "propertyNames": {
+    "$ref": "#/$defs/QuestionCategory"
+   },
    "title": "Accuracy By Category",
    "type": "object"
   },
@@ -186,8 +189,8 @@
   "citation_precision": {
    "anyOf": [
     {
-     "maximum": 1.0,
-     "minimum": 0.0,
+     "maximum": 1,
+     "minimum": 0,
      "type": "number"
     },
     {
@@ -198,14 +201,14 @@
    "title": "Citation Precision"
   },
   "citation_validity": {
-   "maximum": 1.0,
-   "minimum": 0.0,
+   "maximum": 1,
+   "minimum": 0,
    "title": "Citation Validity",
    "type": "number"
   },
   "conflict_recall": {
-   "maximum": 1.0,
-   "minimum": 0.0,
+   "maximum": 1,
+   "minimum": 0,
    "title": "Conflict Recall",
    "type": "number"
   },
@@ -250,8 +253,8 @@
    "type": "string"
   },
   "unsupported_answer_rate": {
-   "maximum": 1.0,
-   "minimum": 0.0,
+   "maximum": 1,
+   "minimum": 0,
    "title": "Unsupported Answer Rate",
    "type": "number"
   }

@@ -119,11 +119,7 @@
      "title": "Label"
     },
     "type": {
-     "allOf": [
-      {
-       "$ref": "#/$defs/PeriodType"
-      }
-     ],
+     "$ref": "#/$defs/PeriodType",
      "default": "unspecified"
     }
    },

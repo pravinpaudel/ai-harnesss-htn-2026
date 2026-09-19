@@ -1,14 +1,18 @@
+"""Typed settings for ingest/API (Developer A) and the research engine (Developer B)."""
+
 from __future__ import annotations
 
+import os
+from functools import lru_cache
 from pathlib import Path
+from typing import Literal, Optional
 
-from pydantic import Field, SecretStr
-from typing import Literal
+from pydantic import BaseModel, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Runtime settings. Environment values use the HARNESS_ prefix."""
+    """Ingest, API, and worker settings. Environment values use the HARNESS_ prefix."""
 
     model_config = SettingsConfigDict(env_file=".env", env_prefix="HARNESS_", extra="ignore")
 
@@ -25,4 +29,52 @@ class Settings(BaseSettings):
     mcp_financial_data_tool: str = "financialDataRetrieval"
 
 
+class ModelPrice(BaseModel):
+    input_per_mtok: float
+    output_per_mtok: float
+
+
+class EngineSettings(BaseSettings):
+    """Research engine settings, read from the environment or .env."""
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    # Defaults to the same database as ingest; use htn_engine role when grants are applied.
+    database_url_engine: str = "postgresql+psycopg://harness:harness@localhost:5432/harness"
+
+    openai_api_key: Optional[SecretStr] = None
+    htn_model: Optional[str] = None
+    htn_embedding_model: Optional[str] = None
+
+    htn_max_tool_rounds: int = 6
+    htn_max_tokens: int = 60_000
+    htn_max_cost_usd: float = 0.50
+    htn_max_latency_ms: int = 60_000
+    htn_prompt_version: str = "answer_v1"
+
+    # JSON in the environment, e.g. HTN_PRICES='{"my-model": {"input_per_mtok": 1.0, "output_per_mtok": 4.0}}'
+    htn_prices: dict[str, ModelPrice] = {}
+
+    def cost_usd(self, model: str, input_tokens: int, output_tokens: int) -> float:
+        price = self.htn_prices.get(model)
+        if price is None:
+            return 0.0
+        return (input_tokens * price.input_per_mtok + output_tokens * price.output_per_mtok) / 1_000_000
+
+
 settings = Settings()
+
+
+@lru_cache
+def engine_settings() -> EngineSettings:
+    eng = EngineSettings()
+    updates: dict[str, object] = {}
+    if os.getenv("DATABASE_URL_ENGINE") is None:
+        updates["database_url_engine"] = settings.database_url
+    if eng.htn_model is None and settings.openai_model:
+        updates["htn_model"] = settings.openai_model
+    if eng.openai_api_key is None and settings.openai_api_key is not None:
+        updates["openai_api_key"] = settings.openai_api_key
+    if eng.htn_embedding_model is None and settings.openai_embedding_model:
+        updates["htn_embedding_model"] = settings.openai_embedding_model
+    return eng.model_copy(update=updates) if updates else eng

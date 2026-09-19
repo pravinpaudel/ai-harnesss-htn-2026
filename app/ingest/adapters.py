@@ -68,7 +68,7 @@ class McpSourceAdapter:
             raise ValueError("McpSourceAdapter requires an MCP IngestRequest")
         if not request.mcp_tool:
             raise ValueError("mcp_tool is required after MCP capability discovery")
-        payload = self.client.call_tool(request.mcp_tool, {})
+        payload = self.client.call_tool(request.mcp_tool, {"dataset_name": request.dataset_name})
         items = self._documents(payload)
         documents: list[SnapshotDocument] = []
         for index, item in enumerate(items):

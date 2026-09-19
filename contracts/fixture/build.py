@@ -1,7 +1,7 @@
 """Build the shared fixture corpus and its expectations.
 
 Run from the repo root:
-    uv run --python 3.12 --with "pydantic>=2" python -m contracts.fixture.build
+    uv run python -m contracts.fixture.build
 
 Outputs (all committed):
     contracts/fixture/raw/mining-excerpt.md, technology-excerpt.md
@@ -419,10 +419,11 @@ QUESTIONS = [
          question="Rank the six mining companies by market capitalization.",
          expect=dict(acceptable_statuses=[AnswerStatus.declined, AnswerStatus.partial, AnswerStatus.conflict],
                      decline_reasons=[DeclineReason.incompatible_currency],
-                     finding_rules=[FindingRule.unit_currency_mix], must_mention=["CAD"],
-                     must_cite=[A(M, 42), A(M, 44)]),
-         notes="Market caps mix USD and CAD. Only IVN has a source-backed USD figure (line 232); FM does not. "
-               "An answer that silently ranks the raw numbers fails."),
+                     finding_rules=[FindingRule.unit_currency_mix], must_mention=["CAD"]),
+         notes="Market caps mix USD and CAD in both the comparable-company table and the screening row, so no "
+               "single citation location is required; the unit_currency_mix finding and a CAD mention are. Only "
+               "IVN has a source-backed USD figure (line 232); FM does not. An answer that silently ranks the raw "
+               "numbers fails."),
     dict(case_id="FX09", category=QuestionCategory.decline,
          question="What was Ivanhoe's all-in sustaining cost (AISC) per ounce in Q2 2026?",
          expect=dict(acceptable_statuses=[AnswerStatus.declined],

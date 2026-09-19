@@ -229,9 +229,6 @@
     },
     "verified": {
      "const": true,
-     "enum": [
-      true
-     ],
      "title": "Verified",
      "type": "boolean"
     }
@@ -463,11 +460,7 @@
      "title": "Label"
     },
     "type": {
-     "allOf": [
-      {
-       "$ref": "#/$defs/PeriodType"
-      }
-     ],
+     "$ref": "#/$defs/PeriodType",
      "default": "unspecified"
     }
    },

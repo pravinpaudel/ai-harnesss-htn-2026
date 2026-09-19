@@ -1,6 +1,6 @@
 """Contract check — run in CI and before every checkpoint.
 
-    uv run --python 3.12 --with "pydantic>=2" python -m contracts.check
+    uv run python -m contracts.check
 
 Verifies, without touching any application code:
   1. fixture raw files match the hashes in fixture/sources.json and still equal the
