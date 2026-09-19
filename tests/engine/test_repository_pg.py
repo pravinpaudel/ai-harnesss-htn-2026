@@ -105,3 +105,10 @@ def test_engine_run_is_audited_in_postgres(pg, settings):
         status = c.execute(text("SELECT status::text FROM answer_run WHERE run_id = :r"), {"r": str(ans.run_id)}).scalar()
         n = c.execute(text("SELECT count(*) FROM tool_event WHERE run_id = :r"), {"r": str(ans.run_id)}).scalar()
     assert status == "answered" and n >= 4
+
+
+def test_lexical_search_ranks_partial_matches(pg):
+    repo, _, v2 = pg
+    # "IVN" never appears in the narrative; AND semantics returned nothing here.
+    hits = repo.search_lexical(v2.dataset_version_id, "IVN revenue miss consensus")
+    assert hits and "consensus $202.1M" in hits[0].text

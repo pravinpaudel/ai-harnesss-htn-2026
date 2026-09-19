@@ -50,13 +50,26 @@ class ResearchEngine:
         user = f"{plan.as_prompt()}\n\nQuestion: {question}"
         turn = self._llm_call(ctx, "start", lambda: self.llm.start(self.instructions, user, tools))
 
+        forced: Optional[str] = None   # set once a budget is reached: one last turn may only submit
+        retried_submit = False
         while True:
-            stop = self._over_budget(ctx)
             submit = next((c for c in turn.calls if c.name == SUBMIT), None)
             if submit is not None:
-                return self._finish(ctx, submit.arguments)
-            if stop:
-                return self._exhausted(ctx, stop)
+                error = self._submit_error(submit.arguments)
+                if error is None:
+                    return self._finish(ctx, submit.arguments)
+                if retried_submit:
+                    return self._exhausted(ctx, f"invalid submit_answer: {error}")
+                retried_submit = True   # give the model one chance to fix its final answer
+                rec.event(ctx.run_id, "policy", "invalid_submit", input=submit.arguments, output={"error": error})
+                outputs = [(c.call_id, {"error": f"submit_answer rejected: {error}. Call submit_answer again with "
+                                                 "every field present."} if c is submit else {"skipped": True})
+                           for c in turn.calls]
+                turn = self._llm_call(ctx, "retry_submit", lambda: self.llm.next(
+                    turn, outputs, submit_only, force_tool=SUBMIT))
+                continue
+            if forced:
+                return self._exhausted(ctx, forced)
             if not turn.calls:
                 return self._exhausted(ctx, "model returned no tool call")
             ctx.usage.tool_rounds += 1
@@ -67,9 +80,11 @@ class ResearchEngine:
                 outputs.append((call.call_id, out))
                 rec.event(ctx.run_id, "tool_call", call.name, input=call.arguments, output=out,
                           latency_ms=int((time.monotonic() - t) * 1000))
-            last_round = ctx.usage.tool_rounds >= s.htn_max_tool_rounds
+            forced = self._over_budget(ctx)
+            if forced:
+                rec.event(ctx.run_id, "policy", "budget", output={"reached": forced, "action": "force submit_answer"})
             turn = self._llm_call(ctx, "next", lambda: self.llm.next(
-                turn, outputs, submit_only if last_round else tools, force_tool=SUBMIT if last_round else None))
+                turn, outputs, submit_only if forced else tools, force_tool=SUBMIT if forced else None))
 
     # ------------------------------------------------------------------------
     def _llm_call(self, ctx: RunContext, name: str, fn) -> LLMTurn:
@@ -99,6 +114,15 @@ class ResearchEngine:
     def _kw(self) -> dict:
         return dict(model=self.llm.model, prompt_version=self.settings.htn_prompt_version,
                     embedding_model=self.settings.htn_embedding_model)
+
+    @staticmethod
+    def _submit_error(arguments: dict) -> Optional[str]:
+        try:
+            SubmitAnswerArgs.model_validate(arguments)
+            return None
+        except ValidationError as e:
+            first = e.errors()[0]
+            return f"{'.'.join(str(x) for x in first['loc'])}: {first['msg']}"
 
     def _finish(self, ctx: RunContext, arguments: dict) -> AnswerResponse:
         try:

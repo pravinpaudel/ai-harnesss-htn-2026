@@ -8,6 +8,8 @@ refer to evidence by handle; they never ask the model to copy quote text.
 from __future__ import annotations
 
 import copy
+import re
+from collections import Counter
 from dataclasses import dataclass
 from typing import Any, Callable, Optional
 
@@ -19,6 +21,7 @@ from contracts.models import (
 )
 from app.reasoning.consistency import agree, comparable_groups, most_precise
 from app.reasoning.context import RunContext
+from app.retrieval.context import entities_mentioned, period_of
 from app.tools.calculator import calculate
 
 
@@ -48,7 +51,16 @@ class FindFactsArgs(_Args):
 
 class SearchEvidenceArgs(_Args):
     query: str = Field(description="Keywords or a phrase to search narrative text, table cells and facts")
-    k: int = Field(8, ge=1, le=30)
+    entity: Optional[str] = Field(None, description="Only return evidence from this entity's own sections")
+    period: Optional[str] = Field(None, description="Only return evidence from this period's block, e.g. 'Q3 FY2026'")
+    k: int = Field(6, ge=1, le=15)
+
+
+class FindCandidatesArgs(_Args):
+    clues: list[str] = Field(description="3-6 short, distinctive clues copied or paraphrased from the question, e.g. "
+                                         "'fifth consecutive quarter of positive operating leverage', 'goodwill "
+                                         "impairment divestitures', 'stock fell on the release date'")
+    k_per_clue: int = Field(12, ge=3, le=30)
 
 
 class GetSourceSpanArgs(_Args):
@@ -156,12 +168,36 @@ def find_facts(ctx: RunContext, a: FindFactsArgs) -> dict:
                      period_labels=[a.period] if a.period else [],
                      currencies=[a.currency] if a.currency else [], limit=a.limit)
     facts = ctx.repo.find_facts(flt)
+    matched_by_row = False
+    if not facts and a.period:
+        # Datasets without period labels on facts: match the period text in the fact's source row instead.
+        broad = ctx.repo.find_facts(flt.model_copy(update={"period_labels": [], "limit": 500}))
+        facts = [f for f in broad if _row_mentions(ctx, f, a.period)][: a.limit]
+        matched_by_row = bool(facts)
     rows = [_fact_row(ctx, f) for f in facts]
+    for f, row in zip(facts, rows):
+        if not f.period.label:  # give the model the row it came from so it can see the period/context
+            row["row"] = _source_row(ctx, f)[:220]
     out = {"entity_resolved_to": labels[:1] or None, "count": len(facts), "facts": rows}
+    if matched_by_row:
+        out["note"] = (f"No fact carries the period label {a.period!r}; these facts were matched because their "
+                       "source row mentions it. Check each row before relying on it.")
     notes = _precision_notes(ctx, facts)
     if notes:
         out["same_quantity_notes"] = notes
     return out
+
+
+def _source_row(ctx: RunContext, f: Fact) -> str:
+    key = (f.span.document_name, f.span.line_start, f.span.line_end)
+    if key not in ctx.row_cache:
+        ctx.row_cache[key] = ctx.repo.read_lines(ctx.dataset_version_id, *key).exact_text
+    return ctx.row_cache[key]
+
+
+def _row_mentions(ctx: RunContext, f: Fact, period: str) -> bool:
+    norm = lambda t: " ".join(t.lower().split())  # noqa: E731
+    return norm(period) in norm(_source_row(ctx, f))
 
 
 def _precision_notes(ctx: RunContext, facts: list[Fact]) -> list[dict]:
@@ -183,17 +219,138 @@ def _precision_notes(ctx: RunContext, facts: list[Fact]) -> list[dict]:
 
 
 def search_evidence(ctx: RunContext, a: SearchEvidenceArgs) -> dict:
-    hits = ctx.repo.search_lexical(ctx.dataset_version_id, a.query, k=a.k)
+    scoped = bool(a.entity or a.period)
+    want_entity = None
+    if a.entity:
+        cands = ctx.repo.resolve_entity(ctx.dataset_version_id, a.entity)
+        want_entity = cands[0].label if cands else a.entity
+    hits = ctx.repo.search_lexical(ctx.dataset_version_id, a.query, k=150 if scoped else a.k)
     rows = []
     for h in hits:
+        sc = ctx.span_context(h.span)
+        if want_entity and sc.entity != want_entity:
+            continue
+        if a.period and not (period_of(sc.block) or "").lower().startswith(a.period.lower()):
+            continue
         fact = h.fact
         if fact is None and h.kind == EvidenceKind.fact:
             fact = ctx.repo.get_fact(ctx.dataset_version_id, h.evidence_id)
         handle = ctx.add_evidence(h.kind, h.evidence_id, h.span, fact=fact, text=h.text)
-        rows.append({"handle": handle, "kind": h.kind.value, "text": h.text[:700],
-                     "source": f"{h.span.document_name}:{h.span.line_start}-{h.span.line_end}",
-                     "heading": " > ".join(h.span.heading_path)})
-    return {"hits": rows}
+        part = _best_part(h.text, a.query)
+        row = {"handle": handle, "kind": h.kind.value, "text": part[:480],
+               "source": f"{h.span.document_name}:{h.span.line_start}-{h.span.line_end}", "where": sc.label[:140]}
+        if sc.entity:
+            row["entity"] = sc.entity
+        else:
+            named = entities_mentioned(part, ctx.entity_labels())
+            if named:
+                row["mentions"] = named[:3]   # a multi-entity table or list: this row is about these
+        rows.append(row)
+        if len(rows) >= a.k:
+            break
+    out = {"hits": rows}
+    if scoped and not rows:
+        out["note"] = "No match inside that entity/period; try other words or drop the period filter."
+    return out
+
+
+def _best_part(text: str, clue: str) -> str:
+    """The most relevant piece of a hit. Table rows are kept whole so the row's entity label stays
+    attached to its numbers; prose is cut to the best sentence."""
+    terms = {t for t in re.findall(r"[a-z0-9$%.]+", clue.lower()) if len(t) > 2}
+    score = lambda p: sum(t in p.lower() for t in terms)  # noqa: E731
+    lines = [ln for ln in text.split("\n") if ln.strip() and not re.fullmatch(r"[|\-: ]+", ln.strip())]
+    best_line = max(lines, key=score) if lines else text
+    if best_line.lstrip().startswith("|"):
+        return best_line.strip()
+    parts = re.split(r"(?<=[.!?;])\s+", best_line)
+    if not parts:
+        return best_line
+    # start at the best sentence and keep the sentences after it: explanations ("driven by ...")
+    # usually follow the sentence that matches the question.
+    i = max(range(len(parts)), key=lambda k: score(parts[k]))
+    return " ".join(parts[i:]).strip()
+
+
+def _snippet(text: str, clue: str, limit: int = 260) -> str:
+    return _best_part(text, clue)[:limit]
+
+
+_STOP = {"the", "and", "with", "for", "its", "was", "were", "that", "this", "from", "into", "while", "despite", "yet",
+         "which", "their", "has", "had", "have", "but", "not", "all", "over", "after", "during", "than", "company",
+         "companies", "quarter", "quarters", "record", "significant", "major", "strong", "saw", "reported", "achieved"}
+
+
+def _terms(text: str) -> set[str]:
+    """Distinctive terms, stemmed to 5 characters so 'crushed/crushing' and 'synergies/synergy' meet."""
+    words = re.findall(r"[a-z]+|\d+(?:\.\d+)?", text.lower())
+    return {w if w[0].isdigit() else w[:5] for w in words if w not in _STOP and (len(w) > 2 or w[0].isdigit())}
+
+
+def _overlap(clue_terms: set[str], text: str) -> float:
+    return len(clue_terms & _terms(text)) / len(clue_terms) if clue_terms else 0.0
+
+
+def find_candidates(ctx: RunContext, a: FindCandidatesArgs) -> dict:
+    """Search each clue separately and rank entities by how well their own sections match all clues.
+
+    A hit counts for a clue in proportion to the share of the clue's distinctive terms it contains.
+    Entities whose matches concentrate in one period (one quarter's narrative) get a bonus, because
+    these questions describe a single reporting period.
+    """
+    labels = ctx.entity_labels()
+    best: dict[str, dict[str, dict]] = {}                       # entity -> clue -> best match
+    by_period: dict[tuple[str, str], dict[str, float]] = {}     # (entity, period) -> clue -> weight
+    for clue in a.clues:
+        ct = _terms(clue)
+        hits = ctx.repo.search_lexical(ctx.dataset_version_id, clue, k=a.k_per_clue)
+        for rank, h in enumerate(hits):
+            ov = _overlap(ct, h.text)
+            if ov < 0.34:
+                continue
+            sc = ctx.span_context(h.span)
+            owners = [sc.entity] if sc.entity else entities_mentioned(_best_part(h.text, clue), labels)[:1]
+            weight = ov * ov * (1.0 if sc.entity else 0.5) / (1 + 0.15 * rank)
+            period = period_of(sc.block) if sc.entity else None
+            for ent in owners:
+                if period:
+                    cell = by_period.setdefault((ent, period), {})
+                    cell[clue] = max(cell.get(clue, 0.0), weight)
+                cur = best.setdefault(ent, {}).get(clue)
+                if cur and cur["w"] >= weight:
+                    continue
+                fact = ctx.repo.get_fact(ctx.dataset_version_id, h.evidence_id) if h.kind == EvidenceKind.fact else None
+                handle = ctx.add_evidence(h.kind, h.evidence_id, h.span, fact=fact, text=h.text)
+                best[ent][clue] = {"w": weight, "handle": handle, "where": sc.label[:140],
+                                   "snippet": _snippet(h.text, clue), "overlap": round(ov, 2)}
+
+    # A clue that strongly matches many entities ("record net income") says little about which one is
+    # meant; weight each clue by how few entities it matches strongly.
+    spread = Counter(clue for clues in best.values() for clue, m in clues.items() if m["overlap"] >= 0.6)
+    idf = {clue: 1.0 / (max(1, spread.get(clue, 0)) ** 0.5) for clue in a.clues}
+    for (e, p), w in by_period.items():
+        for clue in w:
+            w[clue] *= idf[clue]
+    scored = []
+    for ent, clues in best.items():
+        overall = sum(c["w"] * idf[clue] for clue, c in clues.items())
+        periods = [(p, sum(w.values()), len(w)) for (e, p), w in by_period.items() if e == ent]
+        top_period = max(periods, key=lambda x: x[1], default=(None, 0.0, 0))
+        strong = sum(c["overlap"] >= 0.6 for c in clues.values())
+        scored.append((ent, overall + 0.5 * top_period[1], strong, top_period, clues))
+    scored.sort(key=lambda x: (-x[1], -x[2], x[0]))
+    out = []
+    for ent, score, strong, (period, _, n_in_period), clues in scored[:5]:
+        out.append({
+            "entity": ent, "score": round(score, 3), "clues_strongly_matched": strong, "of": len(a.clues),
+            "likely_period": period, "clues_in_that_period": n_in_period,
+            "evidence": [{"clue": c, "handle": v["handle"], "where": v["where"], "snippet": v["snippet"]}
+                         for c, v in clues.items()],
+            "missing_clues": [c for c in a.clues if c not in clues],
+        })
+    return {"candidates": out,
+            "note": "Ranked by clue match strength, with a bonus for clues that fall in one period. Verify the "
+                    "leader and any close runner-up before answering; cite one handle per clue."}
 
 
 def get_source_span(ctx: RunContext, a: GetSourceSpanArgs) -> dict:
@@ -290,6 +447,9 @@ TOOLS: list[Tool] = [
          FindFactsArgs, find_facts),
     Tool("search_evidence", "Keyword search over narrative text, table cells and facts. Use for 'why'/'how' "
          "questions or when find_facts returns nothing.", SearchEvidenceArgs, search_evidence),
+    Tool("find_candidates", "For 'which company...' questions: searches each clue separately and ranks entities by "
+         "how many clues their own sections match, with the best evidence handle per clue.",
+         FindCandidatesArgs, find_candidates),
     Tool("get_source_span", "Expand a handle (or document + lines) to exact source text.",
          GetSourceSpanArgs, get_source_span),
     Tool("calculate", "Deterministic arithmetic over fact handles (difference, percent_change, ratio, sum, "

@@ -47,10 +47,11 @@ class EngineSettings(BaseSettings):
     htn_embedding_model: Optional[str] = None
 
     htn_max_tool_rounds: int = 6
-    htn_max_tokens: int = 60_000
+    htn_max_tokens: int = 150_000   # cumulative across turns (each turn resends the context)
     htn_max_cost_usd: float = 0.50
     htn_max_latency_ms: int = 60_000
     htn_prompt_version: str = "answer_v1"
+    htn_llm_timeout_s: float = 60.0
 
     # JSON in the environment, e.g. HTN_PRICES='{"my-model": {"input_per_mtok": 1.0, "output_per_mtok": 4.0}}'
     htn_prices: dict[str, ModelPrice] = {}

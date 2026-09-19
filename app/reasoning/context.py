@@ -28,6 +28,7 @@ class EvidenceSource(Protocol):
     def get_fact(self, dataset_version_id: UUID, fact_id: UUID) -> Fact: ...
     def search_lexical(self, dataset_version_id: UUID, query: str, k: int = 20) -> list: ...
     def read_lines(self, dataset_version_id: UUID, document_name: str, line_start: int, line_end: int) -> SourceSpan: ...
+    def document_text(self, dataset_version_id: UUID, document_name: str) -> tuple[str, str]: ...
     def list_findings(self, dataset_version_id: UUID, *, entity_id: Optional[UUID] = None,
                       fact_ids: Optional[list[UUID]] = None, rules: Optional[list] = None) -> list[ValidationFinding]: ...
 
@@ -65,6 +66,9 @@ class RunContext:
     usage: Usage = field(default_factory=Usage)
     started: float = field(default_factory=time.monotonic)
     _by_key: dict[tuple, str] = field(default_factory=dict)
+    row_cache: dict[tuple, str] = field(default_factory=dict)
+    outlines: dict[str, Any] = field(default_factory=dict)
+    _labels: Optional[set[str]] = None
 
     def elapsed_ms(self) -> int:
         return int((time.monotonic() - self.started) * 1000)
@@ -91,6 +95,22 @@ class RunContext:
         handle = f"F{len(self.findings) + 1}"
         self.findings[handle] = finding
         return handle
+
+    def entity_labels(self) -> set[str]:
+        if self._labels is None:
+            self._labels = {e.label for e in self.repo.list_entities(self.dataset_version_id)}
+        return self._labels
+
+    def span_context(self, span: SourceSpan):
+        """Heading path, enclosing <details> summary and entity for a span (derived when not stored)."""
+        from app.retrieval.context import Outline, SpanContext, entity_from_path
+
+        if span.document_name not in self.outlines:
+            body, _ = self.repo.document_text(self.dataset_version_id, span.document_name)
+            self.outlines[span.document_name] = Outline.parse(body)
+        o = self.outlines[span.document_name]
+        path = list(span.heading_path) or o.path(span.line_start)
+        return SpanContext(path, o.block(span.line_start), entity_from_path(path, self.entity_labels()))
 
     def fact_by_handle(self, handle: str) -> Optional[Fact]:
         ev = self.evidence.get(handle)

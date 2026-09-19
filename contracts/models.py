@@ -1,4 +1,4 @@
-"""Shared service contract — Pydantic v2 models (contract version 1.0).
+"""Shared service contract — Pydantic v2 models (contract version 1.1).
 
 Both developers import these models; neither redefines them. Developer A produces
 IngestReport, DatasetProfile, ValidationFinding and the evidence records behind
@@ -23,7 +23,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-CONTRACT_VERSION = "1.0"
+CONTRACT_VERSION = "1.1"
 
 
 class _Model(BaseModel):
@@ -157,6 +157,7 @@ class QuestionCategory(str, Enum):
     currency_ambiguity = "currency_ambiguity"
     decline = "decline"
     false_premise = "false_premise"
+    identification = "identification"   # "which company..." questions answered from several clues (v1.1)
 
 
 # ---------------------------------------------------------------------------

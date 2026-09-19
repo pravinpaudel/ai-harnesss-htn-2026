@@ -40,6 +40,8 @@ class OpenAIResponsesClient:
         from openai import OpenAI
 
         self.model = model
+        client_kwargs.setdefault("timeout", 60.0)      # a stalled request must not hang a live answer
+        client_kwargs.setdefault("max_retries", 1)
         self._client = OpenAI(api_key=api_key, **client_kwargs)
         self._instructions = ""
 

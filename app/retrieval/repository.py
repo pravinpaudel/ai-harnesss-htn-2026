@@ -270,7 +270,15 @@ class PgEvidenceRepository:
 
     def search_lexical(self, dataset_version_id: UUID, query: str, k: int = 20) -> list[EvidenceHit]:
         sql = """
-        WITH q AS (SELECT websearch_to_tsquery('english', :q) AS en, websearch_to_tsquery('simple', :q) AS si),
+        WITH q AS (
+          -- OR together every query term so partial matches still rank (AND semantics missed passages
+          -- that lack one query word, e.g. a ticker the prose never uses).
+          SELECT to_tsquery('english', coalesce(nullif(array_to_string(ARRAY(
+                   SELECT quote_literal(x) FROM unnest(tsvector_to_array(to_tsvector('english', :q))) x), ' | '), ''),
+                   'zzqqnomatch')) AS en,
+                 to_tsquery('simple', coalesce(nullif(array_to_string(ARRAY(
+                   SELECT quote_literal(x) FROM unnest(tsvector_to_array(to_tsvector('simple', :q))) x), ' | '), ''),
+                   'zzqqnomatch')) AS si),
         hits AS (
           SELECT 'chunk' AS kind, k.chunk_id AS id, k.text AS body, k.span_id,
                  ts_rank_cd(k.search_tsv, q.en) AS score

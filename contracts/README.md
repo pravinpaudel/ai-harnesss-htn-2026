@@ -1,4 +1,4 @@
-# Shared contract — v1.0
+# Shared contract — v1.1
 
 This folder is the "Shared contract — complete before parallel work" from `developer-work-plan.md`. It's the only thing Developer A (Evidence Platform) and Developer B (Research Engine) share until Checkpoint 1. A change needs both developers, a bump of `CONTRACT_VERSION` in `models.py`, and a migration if the schema changes.
 
@@ -7,6 +7,10 @@ Check everything with one command from the repo root:
 ```bash
 uv run python -m contracts.check
 ```
+
+## Changes
+
+- **1.1** — `QuestionCategory.identification` added for RBC-style "which company…" questions (additive; no schema change).
 
 ## Contents
 

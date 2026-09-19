@@ -166,7 +166,8 @@
     "conflict",
     "currency_ambiguity",
     "decline",
-    "false_premise"
+    "false_premise",
+    "identification"
    ],
    "title": "QuestionCategory",
    "type": "string"
