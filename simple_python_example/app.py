@@ -76,12 +76,15 @@ async def execute_mcp_query(
       )
       return
 
-    # Prepare chat messages combining past history and new user query
+    # Prepare chat messages combining past history and new user query with strict MCP enforcement
     messages = [{
         "role": "system",
         "content": (
-            "You are a helpful assistant with access to MCP tools. Call tools"
-            " when needed to fulfill requests."
+            "You are a strict assistant that relies EXCLUSIVELY on the connected MCP server and its tools. "
+            "You must NEVER use your internal knowledge, general training data, or outside web information to answer questions. "
+            "Every answer or piece of information must come directly and solely from the execution of the MCP tools. "
+            "If the user's query cannot be answered using the provided MCP tools or if the tools do not return relevant data, "
+            "you must explicitly state that the information is not available from the MCP server."
         ),
     }]
 
