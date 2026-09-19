@@ -12,6 +12,7 @@ from app.settings import settings
 from contracts.models import DatasetProfile, DatasetStatus, DocumentReport, IngestReport, IngestRequest, ProfileEntry, SourceType
 
 from .adapters import FileSourceAdapter, McpSourceAdapter, SnapshotDocument
+from .embeddings import EmbeddingProvider, NoopEmbeddingProvider, default_embedding_provider
 from .canonical import CanonicalDocument, canonicalize_text
 from .normalize import normalize_number
 from .parse import ParsedTable, parse_csv_table, parse_markdown_tables
@@ -30,11 +31,14 @@ def get_ingest_service() -> "FileIngestService":
 class FileIngestService:
     """Writes raw, citable evidence only to a new immutable dataset version."""
 
+    embed_batch = 128
+
     def __init__(self, engine: Engine, storage: ImmutableRawStorage, parser_version: str,
-                 mcp_adapter: McpSourceAdapter | None = None) -> None:
+                 mcp_adapter: McpSourceAdapter | None = None, embedder: EmbeddingProvider | None = None) -> None:
         self.engine, self.storage, self.parser_version = engine, storage, parser_version
         self.adapter = FileSourceAdapter()
         self.mcp_adapter = mcp_adapter
+        self.embedder = embedder if embedder is not None else default_embedding_provider()
 
     def submit(self, request: IngestRequest) -> UUID:
         with self.engine.begin() as conn:
@@ -120,12 +124,42 @@ class FileIngestService:
             version_id = self._version(conn, dataset_id, source_hash)
             reports = [self._ingest_document(conn, version_id, raw) for raw in documents]
             findings = self._validate_duplicates(conn, version_id)
+            conn.execute(text("UPDATE dataset_version SET status = 'validating' WHERE dataset_version_id = :id"),
+                         {"id": version_id})
+        parsed_ms = round((time.monotonic() - started) * 1000)
+        # Raw evidence is committed; embeddings come second and can never undo it.
+        embedded, warnings = self._embed_chunks(version_id)
+        with self.engine.begin() as conn:
             conn.execute(text("UPDATE dataset_version SET status = 'ready', ready_at = now() WHERE dataset_version_id = :id"), {"id": version_id})
         elapsed = round((time.monotonic() - started) * 1000)
         return IngestReport(job_id=uuid4(), dataset_id=dataset_id, dataset_version_id=version_id,
                             status=DatasetStatus.ready, source=request.source, source_hash=source_hash,
                             parser_version=self.parser_version, documents=reports, findings=findings,
-                            timings_ms={"total": elapsed})
+                            warnings=warnings,
+                            timings_ms={"parse": parsed_ms, "embed": elapsed - parsed_ms, "total": elapsed})
+
+    def _embed_chunks(self, version: UUID) -> tuple[int, list[str]]:
+        """Embed every chunk of a version in batches. Returns (count embedded, warnings)."""
+        if isinstance(self.embedder, NoopEmbeddingProvider):
+            return 0, ["chunk embeddings skipped: no embedding provider configured (semantic search disabled)"]
+        with self.engine.connect() as conn:
+            rows = conn.execute(text("SELECT chunk_id, text FROM chunk WHERE dataset_version_id = :v "
+                                     "AND embedding IS NULL ORDER BY chunk_id"), {"v": version}).all()
+        done = 0
+        for i in range(0, len(rows), self.embed_batch):
+            batch = rows[i:i + self.embed_batch]
+            try:
+                vectors = self.embedder.embed([r.text for r in batch])
+            except Exception as exc:  # noqa: BLE001 - provider/API failure must not block ingest
+                return done, [f"chunk embeddings stopped after {done}/{len(rows)}: {type(exc).__name__}: {exc}"[:300]]
+            if len(vectors) != len(batch):
+                return done, [f"embedding provider returned {len(vectors)} vectors for {len(batch)} chunks"]
+            with self.engine.begin() as conn:
+                conn.execute(text("UPDATE chunk SET embedding = CAST(:e AS vector) WHERE chunk_id = :id"),
+                             [{"id": r.chunk_id, "e": "[" + ",".join(f"{x:.7g}" for x in vec) + "]"}
+                              for r, vec in zip(batch, vectors)])
+            done += len(batch)
+        return done, []
 
     def _dataset(self, conn, request: IngestRequest) -> UUID:
         row = conn.execute(text("""INSERT INTO dataset (name, source_type, source_uri)
