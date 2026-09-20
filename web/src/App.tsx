@@ -39,7 +39,7 @@ export default function App() {
   const [online, setOnline] = useState<boolean | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [active, setActive] = useState<{ runId: string; citationId: number } | undefined>();
-  const [questionsOpen, setQuestionsOpen] = useState(true);
+  const [questionsOpen, setQuestionsOpen] = useState(false);
   const conversationRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const answerRefs = useRef(new Map<string, HTMLDivElement>());

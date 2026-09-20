@@ -241,6 +241,7 @@ it("names the dataset that answers, and how fresh it is", async () => {
 it("offers the benchmark questions for the loaded corpus and loads one into the composer", async () => {
   render(<App />);
 
+  fireEvent.click(screen.getByRole("button", { name: "Questions" }));
   expect(await screen.findByText("RBC benchmark set")).toBeInTheDocument();
   expect(screen.getByText("30 questions")).toBeInTheDocument();
 
@@ -252,15 +253,15 @@ it("offers the benchmark questions for the loaded corpus and loads one into the 
     .toContain("Which major gold producer");
 });
 
-it("lets the user collapse and reopen the question sidebar", async () => {
+it("starts with the question sidebar collapsed and lets the user open it", async () => {
   render(<App />);
 
-  expect(await screen.findByRole("region", { name: "Question library" })).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Hide questions" }));
   expect(screen.queryByRole("region", { name: "Question library" })).not.toBeInTheDocument();
-
   fireEvent.click(screen.getByRole("button", { name: "Questions" }));
   expect(screen.getByRole("region", { name: "Question library" })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: "Hide questions" }));
+  expect(screen.queryByRole("region", { name: "Question library" })).not.toBeInTheDocument();
 });
 
 it("starts a new research conversation from the Sources view", async () => {
@@ -277,6 +278,7 @@ it("offers the benchmark questions whatever corpus is loaded, saying which one t
   vi.mocked(client.listDatasets).mockResolvedValue([{ ...dataset, name: "surprise-industry-corpus" }]);
   render(<App />);
 
+  fireEvent.click(screen.getByRole("button", { name: "Questions" }));
   // the set belongs to the benchmark, not to a dataset version: judging day serves the same shape
   expect(await screen.findByRole("tab", { name: "Financials" })).toBeInTheDocument();
   expect(screen.getByText(/Which Big 6 Canadian bank crushed consensus estimates/)).toBeInTheDocument();
