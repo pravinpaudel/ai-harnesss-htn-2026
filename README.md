@@ -146,6 +146,42 @@ browser origins. Build and test the frontend with `npm run build` and
 
 For the complete RBC evaluation setup, see [evals/README.md](evals/README.md).
 
+## HTTP API for a frontend
+
+| Route | Purpose |
+|---|---|
+| `POST /v1/queries` | Answer one question. Returns the `AnswerResponse` contract; `?dataset=` selects a dataset, default `latest` |
+| `POST /v1/queries/stream` | The same answer as server-sent events: each step as it happens, then the answer |
+| `GET /v1/runs/{run_id}` | The answer and every recorded step, for replaying a run |
+| `GET /v1/conflicts` | Recorded contradictions for a dataset |
+| `GET /v1/datasets/{name}` | Dataset profile: documents, entities, metrics, periods, table coverage |
+| `GET /healthz` | Liveness, including a database round-trip |
+
+Two things a client must handle. Answers take 10–20 seconds, and the API admits
+`HARNESS_API_MAX_CONCURRENT_QUERIES` (default 4) at a time, answering `503` with `Retry-After: 5`
+when it is saturated. Responses omit null fields (`response_model_exclude_none`), so optional fields
+are absent rather than `null`.
+
+### Streaming a question
+
+```bash
+curl -N -X POST localhost:8000/v1/queries/stream -H 'Content-Type: application/json' \
+  -d '{"question": "Which streaming company closed the largest transaction in history?"}'
+```
+
+Frames arrive in this order, and a `: keep-alive` comment goes out after 15 quiet seconds:
+
+```
+event: run     {"run_id": "…", "dataset_version": "…"}
+event: step    {"seq": 1, "kind": "policy", "name": "route", "detail": "routed as identification", "latency_ms": 28}
+event: step    {"seq": 3, "kind": "tool_call", "name": "find_candidates", "detail": "precious metals streaming…"}
+event: answer  {…the same body POST /v1/queries returns…}
+event: done    {"run_id": "…"}
+```
+
+`kind` is one of `policy`, `tool_call`, `llm`, `verify`; `detail` is a short line for display and may
+be absent. A failure arrives as `event: error {"detail": "…"}` rather than a dropped connection.
+
 ## Configuration
 
 Settings are read from environment variables (or a local `.env` file).
