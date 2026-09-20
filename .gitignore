@@ -6,3 +6,7 @@ __pycache__/
 .eval-runs/
 
 .DS_Store
+
+.release-corpus/
+.release-variants/
+release-scorecard.json

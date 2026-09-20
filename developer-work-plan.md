@@ -229,6 +229,11 @@ Do not expand extraction formats or agent behavior until this path passes.
 
 ### Checkpoint 2 — known-corpus evaluation
 
+**Done.** The benchmark is the RBC 30 plus the 10 contract cases, not the 47 first sketched here.
+Triage in `docs/checkpoint-2-triage.md`: two failures were extraction gaps the Phase 2 work fixed, the
+rest were benchmark ambiguity in our own anchors.
+
+
 Ingest all three reports and execute the 47-question benchmark. Triage failures
 into one of: extraction gap, normalization issue, retrieval miss, calculation
 issue, policy/citation failure, or benchmark ambiguity. Fix the owning layer;
@@ -236,12 +241,19 @@ do not add ad-hoc question-specific logic.
 
 ### Checkpoint 3 — Phase 2 rehearsal
 
+**Done.** `evals/variants.py` and `evals/rehearsal.py`; findings and fixes in `docs/phase2-rehearsal.md`.
+
+
 Developer A creates structural variants of the corpus: reordered headings,
 changed table columns, changed labels, alternate periods, and missing tables.
 Developer B runs the unchanged API/CLI and evaluation suite. No code or prompt
 changes are allowed between ingest and test execution.
 
 ### Checkpoint 4 — release candidate
+
+**Automated.** `uv run python -m evals.release_check` runs every item below from a clean install and
+writes `docs/scorecard.md`. See `evals/README.md` for the stages and their bars.
+
 
 Run a clean Docker Compose install, MCP ingestion smoke test, known-corpus
 evaluation, cold-start rehearsal, API/CLI smoke tests, and trace replay. Freeze
