@@ -1,0 +1,14 @@
+# Overrides for the release check (evals/release_check.py): its own ports, so a clean install can run
+# beside a working stack. Used with a separate project name, which also gives it its own volumes:
+#
+#   docker compose -p htn-release -f docker-compose.yml -f docker-compose.release.yml up -d postgres api
+#
+# `!override` replaces the base file's list instead of appending to it, so the release stack does not
+# try to publish the same host ports as a running one.
+services:
+  postgres:
+    ports: !override ["55496:5432"]
+  api:
+    ports: !override ["8010:8000"]
+  adminer:
+    ports: !override ["8081:8080"]

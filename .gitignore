@@ -6,3 +6,12 @@ __pycache__/
 .eval-runs/
 
 .DS_Store
+
+.release-corpus/
+.release-variants/
+release-scorecard.json
+
+# web frontend build output and dependencies
+web/node_modules/
+web/dist/
+web/*.tsbuildinfo

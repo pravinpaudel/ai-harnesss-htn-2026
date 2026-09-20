@@ -29,6 +29,21 @@
     "must_cite_any": [
      {
       "document_name": "canadian-financials-research.md",
+      "line_start": 503,
+      "line_end": 512
+     },
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 24,
+      "line_end": 29
+     },
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 514,
+      "line_end": 544
+     },
+     {
+      "document_name": "canadian-financials-research.md",
       "line_start": 514,
       "line_end": 544
      },
@@ -63,7 +78,28 @@
     ],
     "ordered_items": [],
     "must_cite": [],
-    "must_cite_any": [],
+    "must_cite_any": [
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 273,
+      "line_end": 303
+     },
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 52,
+      "line_end": 59
+     },
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 273,
+      "line_end": 303
+     },
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 233,
+      "line_end": 233
+     }
+    ],
     "must_mention": [],
     "finding_rules": [],
     "requires_calculation": false
@@ -90,6 +126,21 @@
     "ordered_items": [],
     "must_cite": [],
     "must_cite_any": [
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 1606,
+      "line_end": 1636
+     },
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 52,
+      "line_end": 59
+     },
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 204,
+      "line_end": 216
+     },
      {
       "document_name": "canadian-financials-research.md",
       "line_start": 1606,
@@ -129,6 +180,16 @@
     "must_cite_any": [
      {
       "document_name": "canadian-financials-research.md",
+      "line_start": 776,
+      "line_end": 785
+     },
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 787,
+      "line_end": 817
+     },
+     {
+      "document_name": "canadian-financials-research.md",
       "line_start": 787,
       "line_end": 817
      },
@@ -164,6 +225,16 @@
     "ordered_items": [],
     "must_cite": [],
     "must_cite_any": [
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 503,
+      "line_end": 512
+     },
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 674,
+      "line_end": 704
+     },
      {
       "document_name": "canadian-financials-research.md",
       "line_start": 674,
@@ -208,6 +279,21 @@
      },
      {
       "document_name": "canadian-financials-research.md",
+      "line_start": 1322,
+      "line_end": 1331
+     },
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 1320,
+      "line_end": 1320
+     },
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 1333,
+      "line_end": 1363
+     },
+     {
+      "document_name": "canadian-financials-research.md",
       "line_start": 1324,
       "line_end": 1324
      }
@@ -237,7 +323,28 @@
     ],
     "ordered_items": [],
     "must_cite": [],
-    "must_cite_any": [],
+    "must_cite_any": [
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 230,
+      "line_end": 239
+     },
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 401,
+      "line_end": 431
+     },
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 401,
+      "line_end": 431
+     },
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 237,
+      "line_end": 237
+     }
+    ],
     "must_mention": [],
     "finding_rules": [],
     "requires_calculation": false
@@ -264,6 +371,16 @@
     "ordered_items": [],
     "must_cite": [],
     "must_cite_any": [
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 776,
+      "line_end": 785
+     },
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 1011,
+      "line_end": 1041
+     },
      {
       "document_name": "canadian-financials-research.md",
       "line_start": 1011,
@@ -301,6 +418,16 @@
     "ordered_items": [],
     "must_cite": [],
     "must_cite_any": [
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 1595,
+      "line_end": 1604
+     },
+     {
+      "document_name": "canadian-financials-research.md",
+      "line_start": 1638,
+      "line_end": 1668
+     },
      {
       "document_name": "canadian-financials-research.md",
       "line_start": 1638,
@@ -345,6 +472,11 @@
      },
      {
       "document_name": "canadian-financials-research.md",
+      "line_start": 433,
+      "line_end": 463
+     },
+     {
+      "document_name": "canadian-financials-research.md",
       "line_start": 238,
       "line_end": 238
      }
@@ -375,6 +507,21 @@
     "ordered_items": [],
     "must_cite": [],
     "must_cite_any": [
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 76,
+      "line_end": 76
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 92,
+      "line_end": 95
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 426,
+      "line_end": 456
+     },
      {
       "document_name": "canadian-mining-research.md",
       "line_start": 426,
@@ -411,6 +558,21 @@
       "document_name": "canadian-mining-research.md",
       "line_start": 1498,
       "line_end": 1528
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 206,
+      "line_end": 206
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 1466,
+      "line_end": 1496
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 1498,
+      "line_end": 1528
      }
     ],
     "must_mention": [],
@@ -438,7 +600,23 @@
     ],
     "ordered_items": [],
     "must_cite": [],
-    "must_cite_any": [],
+    "must_cite_any": [
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 239,
+      "line_end": 239
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 1726,
+      "line_end": 1756
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 239,
+      "line_end": 239
+     }
+    ],
     "must_mention": [],
     "finding_rules": [],
     "requires_calculation": false
@@ -464,7 +642,18 @@
     ],
     "ordered_items": [],
     "must_cite": [],
-    "must_cite_any": [],
+    "must_cite_any": [
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 11,
+      "line_end": 11
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 109,
+      "line_end": 109
+     }
+    ],
     "must_mention": [],
     "finding_rules": [],
     "requires_calculation": false
@@ -491,6 +680,16 @@
     "ordered_items": [],
     "must_cite": [],
     "must_cite_any": [
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 1270,
+      "line_end": 1300
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 53,
+      "line_end": 60
+     },
      {
       "document_name": "canadian-mining-research.md",
       "line_start": 1270,
@@ -523,6 +722,26 @@
     "ordered_items": [],
     "must_cite": [],
     "must_cite_any": [
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 150,
+      "line_end": 154
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 914,
+      "line_end": 944
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 143,
+      "line_end": 148
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 141,
+      "line_end": 141
+     },
      {
       "document_name": "canadian-mining-research.md",
       "line_start": 914,
@@ -559,6 +778,16 @@
       "document_name": "canadian-mining-research.md",
       "line_start": 1758,
       "line_end": 1788
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 255,
+      "line_end": 258
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 1758,
+      "line_end": 1788
      }
     ],
     "must_mention": [],
@@ -591,6 +820,11 @@
       "document_name": "canadian-mining-research.md",
       "line_start": 394,
       "line_end": 424
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 394,
+      "line_end": 424
      }
     ],
     "must_mention": [],
@@ -618,7 +852,28 @@
     ],
     "ordered_items": [],
     "must_cite": [],
-    "must_cite_any": [],
+    "must_cite_any": [
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 1434,
+      "line_end": 1464
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 1370,
+      "line_end": 1400
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 1466,
+      "line_end": 1496
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 206,
+      "line_end": 206
+     }
+    ],
     "must_mention": [],
     "finding_rules": [],
     "requires_calculation": false
@@ -644,7 +899,28 @@
     ],
     "ordered_items": [],
     "must_cite": [],
-    "must_cite_any": [],
+    "must_cite_any": [
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 141,
+      "line_end": 141
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 1895,
+      "line_end": 1905
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 11,
+      "line_end": 11
+     },
+     {
+      "document_name": "canadian-mining-research.md",
+      "line_start": 141,
+      "line_end": 141
+     }
+    ],
     "must_mention": [],
     "finding_rules": [],
     "requires_calculation": false
@@ -671,6 +947,16 @@
     "ordered_items": [],
     "must_cite": [],
     "must_cite_any": [
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 243,
+      "line_end": 252
+     },
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 318,
+      "line_end": 348
+     },
      {
       "document_name": "canadian-technology-research.md",
       "line_start": 318,
@@ -707,7 +993,28 @@
     ],
     "ordered_items": [],
     "must_cite": [],
-    "must_cite_any": [],
+    "must_cite_any": [
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 516,
+      "line_end": 525
+     },
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 514,
+      "line_end": 514
+     },
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 687,
+      "line_end": 717
+     },
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 523,
+      "line_end": 523
+     }
+    ],
     "must_mention": [],
     "finding_rules": [],
     "requires_calculation": false
@@ -734,6 +1041,16 @@
     "ordered_items": [],
     "must_cite": [],
     "must_cite_any": [
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 789,
+      "line_end": 798
+     },
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 896,
+      "line_end": 926
+     },
      {
       "document_name": "canadian-technology-research.md",
       "line_start": 896,
@@ -778,6 +1095,16 @@
      },
      {
       "document_name": "canadian-technology-research.md",
+      "line_start": 1062,
+      "line_end": 1071
+     },
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 1073,
+      "line_end": 1103
+     },
+     {
+      "document_name": "canadian-technology-research.md",
       "line_start": 1064,
       "line_end": 1064
      }
@@ -808,6 +1135,16 @@
     "ordered_items": [],
     "must_cite": [],
     "must_cite_any": [
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 215,
+      "line_end": 229
+     },
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 1608,
+      "line_end": 1617
+     },
      {
       "document_name": "canadian-technology-research.md",
       "line_start": 1811,
@@ -844,7 +1181,23 @@
     ],
     "ordered_items": [],
     "must_cite": [],
-    "must_cite_any": [],
+    "must_cite_any": [
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 187,
+      "line_end": 201
+     },
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 1333,
+      "line_end": 1333
+     },
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 187,
+      "line_end": 201
+     }
+    ],
     "must_mention": [],
     "finding_rules": [],
     "requires_calculation": false
@@ -871,6 +1224,16 @@
     "ordered_items": [],
     "must_cite": [],
     "must_cite_any": [
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 75,
+      "line_end": 88
+     },
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 286,
+      "line_end": 316
+     },
      {
       "document_name": "canadian-technology-research.md",
       "line_start": 286,
@@ -915,6 +1278,11 @@
      },
      {
       "document_name": "canadian-technology-research.md",
+      "line_start": 800,
+      "line_end": 830
+     },
+     {
+      "document_name": "canadian-technology-research.md",
       "line_start": 791,
       "line_end": 791
      }
@@ -945,6 +1313,16 @@
     "ordered_items": [],
     "must_cite": [],
     "must_cite_any": [
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 1608,
+      "line_end": 1617
+     },
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 1715,
+      "line_end": 1745
+     },
      {
       "document_name": "canadian-technology-research.md",
       "line_start": 1715,
@@ -982,6 +1360,16 @@
     "ordered_items": [],
     "must_cite": [],
     "must_cite_any": [
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 1062,
+      "line_end": 1071
+     },
+     {
+      "document_name": "canadian-technology-research.md",
+      "line_start": 1233,
+      "line_end": 1263
+     },
      {
       "document_name": "canadian-technology-research.md",
       "line_start": 1233,
