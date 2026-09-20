@@ -66,14 +66,14 @@ class McpSourceAdapter:
     def snapshot(self, request: IngestRequest) -> list[SnapshotDocument]:
         if request.source != SourceType.mcp:
             raise ValueError("McpSourceAdapter requires an MCP IngestRequest")
-        if not request.mcp_tool:
-            raise ValueError("mcp_tool is required after MCP capability discovery")
-        arguments = self._arguments(request)
-        payload = self.client.call_tool(request.mcp_tool, arguments)
+        tools = self.client.list_tools()
+        tool = request.mcp_tool or self._default_tool(tools)
+        arguments = self._arguments(tool, tools)
+        payload = self.client.call_tool(tool, arguments)
         if isinstance(payload, dict) and payload.get("isError"):
             # A tool error must fail the ingest; never snapshot the error text as if it were a document.
             detail = " ".join(item.get("text", "") for item in payload.get("content", []) if isinstance(item, dict))
-            raise RuntimeError(f"MCP tool {request.mcp_tool!r} returned an error: {detail.strip()[:500]}")
+            raise RuntimeError(f"MCP tool {tool!r} returned an error: {detail.strip()[:500]}")
         items = self._documents(payload)
         documents: list[SnapshotDocument] = []
         for index, item in enumerate(items):
@@ -85,21 +85,31 @@ class McpSourceAdapter:
             raise ValueError("MCP tool returned no text documents")
         # what the server offered and exactly what was called, for the dataset's audit record
         self.last_capabilities = {
-            "tools": [{k: t.get(k) for k in ("name", "description", "inputSchema")} for t in self._tools],
-            "tool_called": request.mcp_tool, "arguments": arguments,
+            "tools": [{k: item.get(k) for k in ("name", "description", "inputSchema")} for item in tools],
+            "tool_called": tool, "arguments": arguments,
             "documents_returned": len(documents),
             "payload_shape": sorted(payload.keys()) if isinstance(payload, dict) else type(payload).__name__,
         }
         return documents
 
-    def _arguments(self, request: IngestRequest) -> dict[str, Any]:
+    @staticmethod
+    def _default_tool(tools: list[dict[str, Any]]) -> str:
+        """Choose the standard financial-data tool, or the only tool a server offers."""
+        names = [tool.get("name") for tool in tools if isinstance(tool.get("name"), str)]
+        if "financialDataRetrieval" in names:
+            return "financialDataRetrieval"
+        if len(names) == 1:
+            return names[0]
+        available = ", ".join(names) or "none"
+        raise ValueError(f"MCP server did not identify one data tool; available tools: {available}")
+
+    @staticmethod
+    def _arguments(tool: str, tools: list[dict[str, Any]]) -> dict[str, Any]:
         """Check the tool is offered and send only what its input schema declares. The dataset name is
         our own snapshot namespace, never a tool parameter, so a schemaless tool is called with {}."""
-        self._tools = self.client.list_tools()
-        schema = next((t.get("inputSchema") or {} for t in self._tools
-                       if t.get("name") == request.mcp_tool), None)
+        schema = next((item.get("inputSchema") or {} for item in tools if item.get("name") == tool), None)
         if schema is None:
-            raise ValueError(f"MCP tool {request.mcp_tool!r} not offered by the server")
+            raise ValueError(f"MCP tool {tool!r} not offered by the server")
         return {}
 
     @staticmethod

@@ -11,6 +11,10 @@ __pycache__/
 .release-variants/
 release-scorecard.json
 
+# Local recovery artifacts and the original logo source; the cropped web asset is tracked.
+backups/
+RBC_logo.png
+
 # web frontend build output and dependencies
 web/node_modules/
 web/dist/

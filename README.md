@@ -154,9 +154,11 @@ For the complete RBC evaluation setup, see [evals/README.md](evals/README.md).
 | `POST /v1/queries/stream` | The same answer as server-sent events: each step as it happens, then the answer |
 | `GET /v1/datasets` | Every dataset with its newest ready version, freshest first: for a picker or a "data as of" line |
 | `GET /v1/runs?session_id=&limit=` | Past answers, newest first: a conversation's history after a reload |
+| `GET /v1/conversations` | Recent saved conversations, newest first, for a history picker |
 | `GET /v1/runs/{run_id}` | One run's answer and every recorded step, for rehydrating it or replaying the trace |
 | `GET /v1/conflicts` | Recorded contradictions for a dataset |
 | `GET /v1/datasets/{name}` | Dataset profile: documents, entities, metrics, periods, table coverage |
+| `GET /v1/config` | Default MCP URL, MCP tool, and dataset name for the load form |
 | `GET /healthz` | Liveness, including a database round-trip |
 
 Two things a client must handle. Answers take 10–20 seconds, and the API admits

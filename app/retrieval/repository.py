@@ -15,7 +15,7 @@ from sqlalchemy import Engine, create_engine, text
 
 from contracts.models import (
     Basis, DatasetProfile, DatasetStatus, DatasetSummary, DocumentReport, EvidenceHit, EvidenceKind, Fact,
-    FactFilter, FactValue, FindingRule, Period, PeriodType, ProfileEntry, Role, RunSummary, SourceSpan, Unit,
+    ConversationSummary, FactFilter, FactValue, FindingRule, Period, PeriodType, ProfileEntry, Role, RunSummary, SourceSpan, Unit,
     ValidationFinding,
 )
 
@@ -57,6 +57,14 @@ def _span(r: Any) -> SourceSpan:
         char_start=r.char_start, char_end=r.char_end, exact_text=r.exact_text,
         heading_path=list(r.heading_path or []),
     )
+
+
+def _conversation_title(question: str, limit: int = 72) -> str:
+    """Use the first question as a compact, stable label for a conversation."""
+    title = " ".join(question.split())
+    if len(title) <= limit:
+        return title
+    return f"{title[:limit - 1].rstrip()}…"
 
 
 def _fact(r: Any) -> Fact:
@@ -142,6 +150,22 @@ class PgEvidenceRepository:
                                          "version": str(dataset_version_id) if dataset_version_id else None,
                                          "limit": limit}).mappings().all()
         return [RunSummary.model_validate(dict(r)) for r in rows]
+
+    def list_conversations(self, limit: int = 20) -> list[ConversationSummary]:
+        """Recent completed conversations, newest first, labelled by their first question."""
+        sql = """SELECT session_id,
+                        (array_agg(question ORDER BY created_at ASC))[1] AS title,
+                        count(*)::integer AS run_count,
+                        max(coalesce(completed_at, created_at)) AS updated_at
+                 FROM answer_run
+                 WHERE session_id IS NOT NULL AND status IS NOT NULL
+                 GROUP BY session_id
+                 ORDER BY max(coalesce(completed_at, created_at)) DESC
+                 LIMIT :limit"""
+        with self.engine.connect() as connection:
+            rows = connection.execute(text(sql), {"limit": limit}).mappings().all()
+        return [ConversationSummary.model_validate({**dict(row), "title": _conversation_title(row["title"])})
+                for row in rows]
 
     def profile(self, dataset_version_id: UUID) -> DatasetProfile:
         v = str(dataset_version_id)

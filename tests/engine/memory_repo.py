@@ -59,6 +59,9 @@ class MemoryEvidenceRepository:
     def list_runs(self, *, session_id=None, dataset_version_id=None, limit: int = 20):
         return []                      # the memory repository keeps no audit trail
 
+    def list_conversations(self, limit: int = 20):
+        return []                      # the memory repository keeps no audit trail
+
     def profile(self, dataset_version_id: UUID) -> DatasetProfile:
         self._check(dataset_version_id)
         d = self.data

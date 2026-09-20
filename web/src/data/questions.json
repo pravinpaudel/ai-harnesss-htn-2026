@@ -1,0 +1,244 @@
+{
+  "sets": [
+    {
+      "dataset": "mcp-financial-data",
+      "title": "RBC benchmark set",
+      "note": "30 sample questions supplied with the corpus. Judging-day questions are similar in shape.",
+      "groups": [
+        {
+          "id": "financials",
+          "label": "Financials",
+          "questions": [
+            {
+              "n": 1,
+              "question": "Which Big 6 Canadian bank crushed consensus estimates by 13% with record adjusted earnings and achieved its fifth consecutive quarter of positive operating leverage, while simultaneously navigating a multi-year AML remediation program with a binding asset cap on U.S. growth?",
+              "expected": "TD",
+              "period": "Q3 FY2026",
+              "confidence": "High"
+            },
+            {
+              "n": 2,
+              "question": "Which Canadian bank delivered record net income with the highest ROE among the Big 6, while simultaneously achieving the tightest efficiency ratio in Canadian Banking, yet saw its stock decline in pre-market trading due to profit-taking after a significant run-up?",
+              "expected": "RY",
+              "period": "Q2 FY2026",
+              "confidence": "Medium"
+            },
+            {
+              "n": 3,
+              "question": "Which Big 6 bank reported cumulative acquisition synergies far exceeding year-1 targets, achieved the best efficiency ratio among peers, yet saw its stock decline sharply on the earnings release despite beating consensus?",
+              "expected": "NA",
+              "period": "Q3 FY2026",
+              "confidence": "High"
+            },
+            {
+              "n": 4,
+              "question": "Which Canadian bank achieved record pre-provision pretax earnings across all four operating segments, took a large goodwill impairment charge related to strategic divestitures, and beat consensus by over 20% on adjusted EPS while targeting a 15% ROE by fiscal 2027?",
+              "expected": "BMO",
+              "period": "Q3 FY2026",
+              "confidence": "High"
+            },
+            {
+              "n": 5,
+              "question": "Which Big 6 bank executed a landmark Schwab divestiture generating a massive after-tax gain and surging CET1, yet reported adjusted net income declining year-over-year despite the capital windfall?",
+              "expected": "TD",
+              "period": "Q2 FY2025",
+              "confidence": "High"
+            },
+            {
+              "n": 6,
+              "question": "Which Canadian bank achieved nine consecutive quarters of double-digit EPS growth, beat consensus in all eight quarters of the trailing period, yet saw its stock decline on the day of its most recent earnings release despite a strong EPS beat?",
+              "expected": "CM",
+              "period": "Q3 FY2026",
+              "confidence": "High"
+            },
+            {
+              "n": 7,
+              "question": "Which Big 6 bank reported a rare EPS miss due to a sharp surge in provisions for credit losses driven by tariff-related precautionary builds, yet still achieved record net income and beat revenue expectations?",
+              "expected": "RY",
+              "period": "Q2 FY2025",
+              "confidence": "Medium"
+            },
+            {
+              "n": 8,
+              "question": "Which Canadian bank marked the trough quarter of a major acquisition integration cycle with adjusted EPS plunging sharply year-over-year, provisions for credit losses surging to their highest level, yet management guided that credit losses had peaked and the stock subsequently rallied as investors focused on forward guidance?",
+              "expected": "BMO",
+              "period": "Q4 FY2024",
+              "confidence": "High"
+            },
+            {
+              "n": 9,
+              "question": "Which Big 6 bank achieved the best efficiency ratio among peers, raised its dividend, and increased acquisition synergy targets, yet reported sequential NIM compression due to deposit mix shifts and competitive pricing pressure?",
+              "expected": "NA",
+              "period": "Q2 FY2026",
+              "confidence": "High"
+            },
+            {
+              "n": 10,
+              "question": "Which Canadian bank delivered record quarterly net income with a remarkable 43% year-over-year increase, ROE surging dramatically and efficiency ratio improving substantially, yet the stock declined in pre-market trading due to investor concerns about rising impaired loans and the broader Canadian economic outlook?",
+              "expected": "RY",
+              "period": "Q1 FY2025",
+              "confidence": "High"
+            }
+          ]
+        },
+        {
+          "id": "mining",
+          "label": "Mining",
+          "questions": [
+            {
+              "n": 1,
+              "question": "Which major gold producer announced a transformative North American asset separation evaluation, targeting completion by year-end and estimated to unlock tens of billions in shareholder value?",
+              "expected": "ABX",
+              "period": "Q4 2025",
+              "confidence": "High"
+            },
+            {
+              "n": 2,
+              "question": "Which precious metals streaming company closed the largest streaming transaction in history, doubling its silver entitlement at a major Peruvian mine and adding significant annual GEO production?",
+              "expected": "WPM",
+              "period": "Q1 2026 (closed Apr 1)",
+              "confidence": "High"
+            },
+            {
+              "n": 3,
+              "question": "Which African copper producer saw copper production decline sharply from peak levels during a smelter transition, yet the smelter's first anodes transformed the cost structure by dramatically reducing logistics costs?",
+              "expected": "IVN",
+              "period": "Q4 2025 / Q1–Q2 2026",
+              "confidence": "High"
+            },
+            {
+              "n": 4,
+              "question": "Which gold producer beat EPS estimates in nearly all quarters and transformed its balance sheet from net debt to substantial net cash in just two years, while maintaining AISC discipline?",
+              "expected": "AEM",
+              "period": "Trailing 8Q",
+              "confidence": "High"
+            },
+            {
+              "n": 5,
+              "question": "Which copper miner's all copper hedges expired at period-end, removing a significant drag on realized prices, yet the company still carried over $5 billion in net debt?",
+              "expected": "FM",
+              "period": "Q2 2026",
+              "confidence": "High"
+            },
+            {
+              "n": 6,
+              "question": "Which copper producer announced a transformative merger of equals with a global diversified miner, expected to create a top-five global copper producer, yet its flagship copper mine remained constrained by tailings management issues?",
+              "expected": "TECK.B",
+              "period": "Q3 2025",
+              "confidence": "High"
+            },
+            {
+              "n": 7,
+              "question": "Which African copper producer's DRC operations faced a substantial tax settlement for multi-year audits, impacting headline EPS despite strong underlying performance, while simultaneously achieving record zinc production at a sister asset?",
+              "expected": "IVN",
+              "period": "Q1 2026",
+              "confidence": "High"
+            },
+            {
+              "n": 8,
+              "question": "Which gold producer saw its CEO depart unexpectedly after leading since the 2019 Randgold merger, creating leadership uncertainty, while simultaneously an activist investor disclosed a major stake advocating for restructuring?",
+              "expected": "ABX",
+              "period": "Q3 2025",
+              "confidence": "High"
+            },
+            {
+              "n": 9,
+              "question": "Which streaming company achieved commercial production at two new silver-gold mines within the same calendar year, expanding its portfolio to over 20 operating mines, while simultaneously announcing the largest streaming transaction in history?",
+              "expected": "WPM",
+              "period": "2025 (Blackwater Q1, Goose Q3; Antamina announced Q4)",
+              "confidence": "High"
+            },
+            {
+              "n": 10,
+              "question": "Which copper producer's gross margin expanded by nearly 30 percentage points in two years, driven by a transformative coal divestiture and copper price appreciation, yet beat EPS estimates in all eight quarters despite persistent tailings management constraints at its flagship mine?",
+              "expected": "TECK.B",
+              "period": "Trailing 8Q",
+              "confidence": "High"
+            }
+          ]
+        },
+        {
+          "id": "technology",
+          "label": "Technology",
+          "questions": [
+            {
+              "n": 1,
+              "question": "Which Canadian e-commerce platform announced a multi-billion-dollar share repurchase program while achieving record quarterly revenue and crossing a major GMV milestone for the first time?",
+              "expected": "SHOP",
+              "period": "Q4 2025",
+              "confidence": "High"
+            },
+            {
+              "n": 2,
+              "question": "Which serial acquirer of vertical market software saw net income double year-over-year despite organic growth near zero—the weakest in the trailing period—raising concerns about structural headwinds?",
+              "expected": "CSU",
+              "period": "Q1 2025 (organic 0.3%)",
+              "confidence": "Medium"
+            },
+            {
+              "n": 3,
+              "question": "Which Canadian IT services firm achieved an exceptionally high book-to-bill ratio in its U.S. Federal segment while announcing a double-digit dividend increase and reporting an AI pipeline that expanded by billions year-over-year?",
+              "expected": "GIB.A",
+              "period": "Q4 FY2025",
+              "confidence": "High"
+            },
+            {
+              "n": 4,
+              "question": "Which enterprise content management company saw cloud revenue cross a major quarterly milestone for the first time while license revenue surged 24% and the company announced a margin reset for the upcoming fiscal year?",
+              "expected": "OTEX",
+              "period": "Q4 FY2026",
+              "confidence": "High"
+            },
+            {
+              "n": 5,
+              "question": "Which supply chain planning SaaS company reported its weakest quarter in the trailing period with an operating loss and negative GAAP net income, marking the investment cycle trough before a dramatic turnaround?",
+              "expected": "KXS",
+              "period": "Q4 2024",
+              "confidence": "High"
+            },
+            {
+              "n": 6,
+              "question": "Which Canadian logistics and supply chain SaaS company met or beat earnings estimates in all eight trailing quarters while gross margin expanded substantially and the company operated with zero debt?",
+              "expected": "DSG",
+              "period": "Trailing 8Q",
+              "confidence": "High"
+            },
+            {
+              "n": 7,
+              "question": "Which commerce infrastructure company's stock fell sharply despite an operational beat when GMV crossed a major round-number threshold for the second consecutive quarter, due to GAAP loss optics?",
+              "expected": "SHOP",
+              "period": "Q1 2026",
+              "confidence": "High"
+            },
+            {
+              "n": 8,
+              "question": "Which IT services company saw organic constant-currency growth decelerate to just over 1% while the stock declined over 20% year-to-date, significantly underperforming despite a new CEO appointment?",
+              "expected": "GIB.A",
+              "period": "Q3 FY2026",
+              "confidence": "High"
+            },
+            {
+              "n": 9,
+              "question": "Which supply chain SaaS company marked a pivotal shift by achieving its first EPS beat after three consecutive quarters of misses, while revenue growth decelerated to the weakest rate in the trailing period?",
+              "expected": "KXS",
+              "period": "Q3 2025",
+              "confidence": "High"
+            },
+            {
+              "n": 10,
+              "question": "Which data management company reported its weakest quarter in the trailing period with minimal cloud growth while enterprise cloud bookings declined—the only quarter of negative bookings growth in the period?",
+              "expected": "OTEX",
+              "period": "Q3 FY2025",
+              "confidence": "High"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "generic": [
+    "Which company grew revenue fastest in the most recent reported quarter?",
+    "Where do the reports contradict each other?",
+    "What risks are flagged for the weakest performer, and on what evidence?"
+  ]
+}

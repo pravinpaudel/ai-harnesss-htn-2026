@@ -135,9 +135,11 @@ class FileIngestService:
         capabilities = None
         if request.source == SourceType.file:
             documents = self.adapter.snapshot(request)
-        elif self.mcp_adapter:
-            documents = self.mcp_adapter.snapshot(request)
-            capabilities = getattr(self.mcp_adapter, "last_capabilities", None)
+        elif adapter := self._mcp_for(request):
+            documents = adapter.snapshot(request)
+            capabilities = getattr(adapter, "last_capabilities", None)
+            if capabilities and capabilities.get("tool_called"):
+                request = request.model_copy(update={"mcp_tool": capabilities["tool_called"]})
         else:
             raise RuntimeError("MCP ingestion requires a configured McpSourceAdapter")
         source_hash = hashlib.sha256("".join(sorted(hashlib.sha256(d.content).hexdigest() for d in documents)).encode()).hexdigest()
@@ -198,8 +200,23 @@ class FileIngestService:
             done += len(batch)
         return done, []
 
+    def _mcp_for(self, request: IngestRequest) -> McpSourceAdapter | None:
+        """The configured MCP server, or the one this request names.
+
+        An operator can point a load at another server from the UI; the URL travels on the request so
+        that the worker running the job later reaches the same endpoint. The contract has already
+        checked it is an http(s) URL without credentials."""
+        if not request.mcp_url:
+            return self.mcp_adapter
+        from .http_mcp import HttpMcpClient
+
+        return McpSourceAdapter(HttpMcpClient(request.mcp_url))
+
     def _dataset(self, conn, request: IngestRequest) -> UUID:
-        source_uri = self.source_uri if request.source == SourceType.mcp and self.source_uri else request.path or ""
+        configured = self.source_uri if request.source == SourceType.mcp else None
+        if request.source == SourceType.mcp and request.mcp_url:
+            configured = f"{request.mcp_url}#{request.mcp_tool or settings.mcp_financial_data_tool}"
+        source_uri = configured if configured else request.path or ""
         row = conn.execute(text("""INSERT INTO dataset (name, source_type, source_uri)
             VALUES (:name, :source, :uri) ON CONFLICT (name) DO UPDATE SET source_uri = EXCLUDED.source_uri
             RETURNING dataset_id"""), {"name": request.dataset_name, "source": request.source.value, "uri": source_uri}).scalar_one()

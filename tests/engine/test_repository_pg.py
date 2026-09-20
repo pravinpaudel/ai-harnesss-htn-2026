@@ -17,7 +17,7 @@ from app.reasoning.engine import ResearchEngine
 from app.llm.embeddings import HashingEmbedder
 from app.reasoning.context import RunContext
 from app.reasoning.verifier import verify_span
-from app.retrieval.repository import PgEvidenceRepository
+from app.retrieval.repository import PgEvidenceRepository, _conversation_title
 from tests.engine.conftest import db_url, pick, submit
 from tests.engine.fixture_data import load
 from tests.engine.seed_fixture import reset_schema, seed
@@ -166,3 +166,11 @@ def test_list_runs_filters_by_session_and_orders_newest_first(pg, settings):
     assert mine[0].question.startswith("What was Ivanhoe") and mine[0].status.value == "answered"
     assert repo.list_runs(session_id="no-such-session") == []
     assert len(repo.list_runs(limit=1)) == 1
+    conversations = repo.list_conversations()
+    assert conversations[0].session_id == "session-under-test"
+    assert conversations[0].title.startswith("What was Ivanhoe") and conversations[0].run_count == 1
+
+
+def test_conversation_titles_are_compact_first_question_labels():
+    question = "How did the company perform across every segment, geography, and reporting period during the quarter?"
+    assert _conversation_title(question) == "How did the company perform across every segment, geography, and report…"

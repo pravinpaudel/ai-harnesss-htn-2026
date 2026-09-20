@@ -17,11 +17,12 @@ Conventions (see contracts/README.md for the full text):
 from __future__ import annotations
 
 from datetime import date, datetime
+from urllib.parse import urlparse
 from enum import Enum
 from typing import Literal, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 CONTRACT_VERSION = "1.2"
 
@@ -227,6 +228,7 @@ class Fact(_Model):
 class IngestRequest(_Model):
     source: SourceType
     path: Optional[str] = None               # required when source=file
+    mcp_url: Optional[str] = None            # null = the server's configured endpoint
     mcp_tool: Optional[str] = None           # null = discover
     dataset_name: str
     idempotency_key: Optional[str] = None
@@ -236,6 +238,21 @@ class IngestRequest(_Model):
         if self.source == SourceType.file and not self.path:
             raise ValueError("path is required for file ingestion")
         return self
+
+    @field_validator("mcp_url")
+    @classmethod
+    def _plain_http_url(cls, v: Optional[str]) -> Optional[str]:
+        """An operator may point an ingest at another server, but only over http(s) and without
+        credentials in the URL, so a mistyped value fails here rather than at the socket."""
+        if v is None or not v.strip():
+            return None
+        url = v.strip()
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https") or not parsed.hostname:
+            raise ValueError("mcp_url must be an http(s) URL")
+        if parsed.username or parsed.password:
+            raise ValueError("mcp_url must not carry credentials")
+        return url
 
 
 class DocumentReport(_Model):
@@ -320,6 +337,14 @@ class RunSummary(_Model):
     created_at: datetime
     completed_at: Optional[datetime] = None
     latency_ms: Optional[int] = None
+
+
+class ConversationSummary(_Model):
+    """One persisted conversation, represented by its most recent completed answer."""
+    session_id: str
+    title: str
+    run_count: int
+    updated_at: datetime
 
 
 # ---------------------------------------------------------------------------

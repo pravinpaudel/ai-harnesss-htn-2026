@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 
 from app.settings import settings
 from contracts.models import (
-    AnswerRequest, AnswerResponse, DatasetProfile, DatasetSummary, RunSummary, ValidationFinding,
+    AnswerRequest, AnswerResponse, ConversationSummary, DatasetProfile, DatasetSummary, RunSummary, ValidationFinding,
 )
 
 router = APIRouter(prefix="/v1", tags=["research"])
@@ -104,6 +104,12 @@ def list_runs(session_id: Optional[str] = Query(None, description="Only this con
               limit: int = Query(20, ge=1, le=100), repo=Depends(get_repo)) -> list[RunSummary]:
     """Past answers, newest first. Fetch a run by id for its body and steps."""
     return repo.list_runs(session_id=session_id, limit=limit)
+
+
+@router.get("/conversations", response_model=list[ConversationSummary])
+def list_conversations(limit: int = Query(20, ge=1, le=100), repo=Depends(get_repo)) -> list[ConversationSummary]:
+    """Recent saved conversations, for switching between research threads."""
+    return repo.list_conversations(limit=limit)
 
 
 @router.get("/runs/{run_id}")

@@ -37,6 +37,13 @@ def healthz() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/v1/config")
+def config() -> dict[str, str | None]:
+    """What a client needs to fill the load form: the configured MCP endpoint and default corpus name."""
+    return {"mcp_url": settings.mcp_url, "mcp_tool": settings.mcp_financial_data_tool,
+            "dataset_name": settings.mcp_dataset_name}
+
+
 @app.post("/v1/ingests", status_code=202)
 def submit_ingest(request: IngestRequest) -> dict[str, str]:
     return {"job_id": str(ingest_service().submit(request))}

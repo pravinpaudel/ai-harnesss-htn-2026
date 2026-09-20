@@ -164,3 +164,5 @@ def test_list_runs_defaults_and_filters(client):
     assert client.get("/v1/runs").status_code == 200
     assert client.get("/v1/runs", params={"session_id": "abc", "limit": 5}).json() == []
     assert client.get("/v1/runs", params={"limit": 0}).status_code == 422
+    assert client.get("/v1/conversations").json() == []
+    assert client.get("/v1/conversations", params={"limit": 0}).status_code == 422

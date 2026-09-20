@@ -5,7 +5,7 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
+from sqlalchemy.dialects.postgresql import ENUM as PG_ENUM, JSONB, UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -39,7 +39,12 @@ class Job(Base):
     job_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     job_type: Mapped[str] = mapped_column("type", String(64), nullable=False)
     idempotency_key: Mapped[str | None] = mapped_column(String(255), unique=True)
-    state: Mapped[str] = mapped_column(String(16), nullable=False, index=True, default="queued")
+    state: Mapped[str] = mapped_column(
+        PG_ENUM("queued", "running", "succeeded", "failed", "retrying", name="job_state", create_type=False),
+        nullable=False,
+        index=True,
+        default="queued",
+    )
     payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     max_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
