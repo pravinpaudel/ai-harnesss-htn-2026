@@ -2,27 +2,52 @@
 
 from __future__ import annotations
 
+import threading
 from typing import Any, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 
-from contracts.models import AnswerRequest, AnswerResponse, DatasetProfile, ValidationFinding
+from app.settings import settings
+from contracts.models import (
+    AnswerRequest, AnswerResponse, DatasetProfile, DatasetSummary, RunSummary, ValidationFinding,
+)
 
 router = APIRouter(prefix="/v1", tags=["research"])
+
+# Answering is slow and CPU-cheap but connection- and API-bound; admit a bounded number at a time and
+# tell the rest to retry, rather than letting every request sit on a worker thread.
+_slots = threading.BoundedSemaphore(settings.api_max_concurrent_queries)
+
+
+def _take_slot() -> None:
+    """Reserve one of the concurrent-answer slots, or fail the request with 503."""
+    if not _slots.acquire(blocking=False):
+        raise HTTPException(status_code=503, detail="busy answering other questions; retry shortly",
+                            headers={"Retry-After": "5"})
+
+
+class _Slot:
+    def __enter__(self):
+        _take_slot()
+        return self
+
+    def __exit__(self, *exc) -> None:
+        _slots.release()
 
 
 def get_repo():
     from app.reasoning.factory import build_repo
 
-    return build_repo()
+    return build_repo()                      # shared pool, not one per request
 
 
 def get_engine():
-    from app.reasoning.factory import EngineConfigError, build_engine
+    from app.reasoning.factory import EngineConfigError, shared_engine
 
     try:
-        return build_engine(audit=True)
+        return shared_engine(audit=True)     # shared model client and pool
     except EngineConfigError as e:
         raise HTTPException(status_code=503, detail=str(e)) from e
 
@@ -38,11 +63,47 @@ def _version(repo, dataset: str, version: str):
 def create_query(request: AnswerRequest, dataset: str = Query("latest", description="Dataset name or 'latest'"),
                  engine=Depends(get_engine)) -> AnswerResponse:
     """Answer one question from one dataset version, with verified citations and an audit trail."""
-    try:
-        return engine.ask(request.question, dataset=dataset, version=request.dataset_version,
+    with _Slot():
+        try:
+            return engine.ask(request.question, dataset=dataset, version=request.dataset_version,
+                              session_id=request.session_id, budget=request.budget)
+        except LookupError as e:
+            raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@router.post("/queries/stream")
+async def stream_query(request: AnswerRequest, dataset: str = Query("latest", description="Dataset name or 'latest'"),
+                       engine=Depends(get_engine)) -> StreamingResponse:
+    """The same answer as POST /v1/queries, as server-sent events: each step first, then the answer."""
+    from app.api.streaming import answer_stream, watched
+
+    _take_slot()                      # before the response starts, so a busy server can still answer 503
+    engine_, sink = watched(engine)
+    steps = answer_stream(engine_, sink, request.question, dataset=dataset, version=request.dataset_version,
                           session_id=request.session_id, budget=request.budget)
-    except LookupError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
+
+    async def released():
+        try:
+            async for chunk in steps:
+                yield chunk
+        finally:
+            _slots.release()
+
+    return StreamingResponse(released(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+@router.get("/datasets", response_model=list[DatasetSummary])
+def list_datasets(limit: int = Query(50, ge=1, le=200), repo=Depends(get_repo)) -> list[DatasetSummary]:
+    """Every dataset with its newest ready version, freshest first: for a picker or a freshness line."""
+    return repo.list_datasets(limit=limit)
+
+
+@router.get("/runs", response_model=list[RunSummary])
+def list_runs(session_id: Optional[str] = Query(None, description="Only this conversation's runs"),
+              limit: int = Query(20, ge=1, le=100), repo=Depends(get_repo)) -> list[RunSummary]:
+    """Past answers, newest first. Fetch a run by id for its body and steps."""
+    return repo.list_runs(session_id=session_id, limit=limit)
 
 
 @router.get("/runs/{run_id}")

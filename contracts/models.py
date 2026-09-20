@@ -290,6 +290,38 @@ class DatasetProfile(_Model):
     findings_by_rule: dict[FindingRule, int]
 
 
+class DatasetSummary(_Model):
+    """One dataset and its newest ready version: what a client lists or picks from."""
+
+    dataset_id: UUID
+    dataset_version_id: UUID
+    name: str
+    version_no: int
+    status: DatasetStatus
+    source_type: str
+    source_hash: str
+    parser_version: str
+    created_at: datetime
+    ready_at: Optional[datetime] = None       # when this version became answerable
+    documents: int = 0
+    facts: int = 0
+    findings: int = 0
+
+
+class RunSummary(_Model):
+    """One past answer, without its body: enough to list a session's history."""
+
+    run_id: UUID
+    dataset_version_id: UUID
+    question: str
+    status: Optional[AnswerStatus] = None                 # unset while a run is still in flight
+    evidence_status: Optional[EvidenceStatus] = None
+    session_id: Optional[str] = None
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+    latency_ms: Optional[int] = None
+
+
 # ---------------------------------------------------------------------------
 # Retrieval
 # ---------------------------------------------------------------------------

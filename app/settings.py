@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     mcp_financial_data_tool: str = "financialDataRetrieval"
     mcp_dataset_name: str = "mcp-financial-data"
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    # A question occupies a worker for 10-20s; past this many at once the API says "busy" instead of
+    # queueing every browser tab behind the same threadpool.
+    api_max_concurrent_queries: int = 4
 
     @property
     def allowed_cors_origins(self) -> tuple[str, ...]:
