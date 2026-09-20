@@ -152,7 +152,9 @@ For the complete RBC evaluation setup, see [evals/README.md](evals/README.md).
 |---|---|
 | `POST /v1/queries` | Answer one question. Returns the `AnswerResponse` contract; `?dataset=` selects a dataset, default `latest` |
 | `POST /v1/queries/stream` | The same answer as server-sent events: each step as it happens, then the answer |
-| `GET /v1/runs/{run_id}` | The answer and every recorded step, for replaying a run |
+| `GET /v1/datasets` | Every dataset with its newest ready version, freshest first: for a picker or a "data as of" line |
+| `GET /v1/runs?session_id=&limit=` | Past answers, newest first: a conversation's history after a reload |
+| `GET /v1/runs/{run_id}` | One run's answer and every recorded step, for rehydrating it or replaying the trace |
 | `GET /v1/conflicts` | Recorded contradictions for a dataset |
 | `GET /v1/datasets/{name}` | Dataset profile: documents, entities, metrics, periods, table coverage |
 | `GET /healthz` | Liveness, including a database round-trip |
@@ -181,6 +183,20 @@ event: done    {"run_id": "…"}
 
 `kind` is one of `policy`, `tool_call`, `llm`, `verify`; `detail` is a short line for display and may
 be absent. A failure arrives as `event: error {"detail": "…"}` rather than a dropped connection.
+
+### History and dataset freshness
+
+Pass a `session_id` with each question and the API groups that conversation:
+
+```bash
+curl -s 'localhost:8000/v1/runs?session_id=demo-session-1'
+# [{"run_id": "…", "question": "…", "status": "answered", "created_at": "…", "latency_ms": 13726}, …]
+```
+
+`GET /v1/runs` returns summaries without answer bodies; fetch `GET /v1/runs/{run_id}` for the stored
+`response` and its steps, which is what a client rehydrates a conversation from after a reload.
+`GET /v1/datasets` carries `ready_at`, `documents`, `facts` and `findings` per dataset, so a picker
+can show which corpus answered and how fresh it is.
 
 ## Configuration
 

@@ -147,3 +147,20 @@ def test_api_shares_one_pool_and_one_model_client():
     from app.reasoning.factory import build_repo
 
     assert build_repo() is build_repo()
+
+
+# ------------------------------------------------------------ datasets and history --
+
+def test_list_datasets_for_a_picker(client):
+    r = client.get("/v1/datasets")
+    assert r.status_code == 200
+    first = r.json()[0]
+    assert first["name"] == "fixture" and first["status"] == "ready"
+    assert first["documents"] == 2 and first["facts"] > 0
+    assert first["ready_at"] and first["parser_version"]          # freshness line has what it needs
+
+
+def test_list_runs_defaults_and_filters(client):
+    assert client.get("/v1/runs").status_code == 200
+    assert client.get("/v1/runs", params={"session_id": "abc", "limit": 5}).json() == []
+    assert client.get("/v1/runs", params={"limit": 0}).status_code == 422

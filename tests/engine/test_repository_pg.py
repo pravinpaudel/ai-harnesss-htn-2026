@@ -133,3 +133,36 @@ def test_semantic_search_and_hybrid_fusion(pg):
                       embedder=emb)
     ctx1.search("revenue miss logistics", k=5)
     assert ctx1.search_mode == "lexical"                   # no embeddings in v1 -> lexical only
+
+
+def test_list_datasets_reports_the_newest_ready_version(pg):
+    repo, _v1, v2 = pg
+    datasets = repo.list_datasets()
+    assert datasets, "the fixture dataset should be listed"
+    fixture = next(d for d in datasets if d.documents)
+    assert fixture.dataset_version_id == v2.dataset_version_id      # the newest ready version, not the first
+    assert fixture.status.value == "ready" and fixture.facts > 0
+    assert fixture.ready_at is not None
+    assert [d.ready_at or d.created_at for d in datasets] == sorted(
+        (d.ready_at or d.created_at for d in datasets), reverse=True)        # freshest first
+
+
+def test_list_runs_filters_by_session_and_orders_newest_first(pg, settings):
+    repo, _v1, _v2 = pg
+    from app.audit.recorder import PgRecorder
+    from app.llm.client import ScriptedLLM
+    from app.reasoning.engine import ResearchEngine
+    from tests.engine.conftest import pick, submit
+
+    script = [
+        [("find_facts", {"entity": "IVN", "metric": "revenue", "period": "Q2 2026", "role": "actual"})],
+        [submit("answered", "Revenue was $152.6M [1].", [(1, pick("find_facts", source="mining-excerpt.md:95"))])],
+    ]
+    engine = ResearchEngine(repo, ScriptedLLM(script), settings, PgRecorder(repo.engine))
+    answer = engine.ask("What was Ivanhoe's revenue in Q2 2026?", session_id="session-under-test")
+
+    mine = repo.list_runs(session_id="session-under-test")
+    assert [r.run_id for r in mine] == [answer.run_id]
+    assert mine[0].question.startswith("What was Ivanhoe") and mine[0].status.value == "answered"
+    assert repo.list_runs(session_id="no-such-session") == []
+    assert len(repo.list_runs(limit=1)) == 1

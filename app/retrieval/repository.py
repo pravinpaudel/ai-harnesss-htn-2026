@@ -14,8 +14,9 @@ from uuid import UUID
 from sqlalchemy import Engine, create_engine, text
 
 from contracts.models import (
-    Basis, DatasetProfile, DatasetStatus, DocumentReport, EvidenceHit, EvidenceKind, Fact, FactFilter,
-    FactValue, FindingRule, Period, PeriodType, ProfileEntry, Role, SourceSpan, Unit, ValidationFinding,
+    Basis, DatasetProfile, DatasetStatus, DatasetSummary, DocumentReport, EvidenceHit, EvidenceKind, Fact,
+    FactFilter, FactValue, FindingRule, Period, PeriodType, ProfileEntry, Role, RunSummary, SourceSpan, Unit,
+    ValidationFinding,
 )
 
 
@@ -107,6 +108,40 @@ class PgEvidenceRepository:
         if r is None:
             raise LookupError(f"no ready dataset version for dataset={dataset!r} version={version!r}")
         return VersionInfo(r.dataset_id, r.dataset_version_id, r.name, r.source_hash or "", r.parser_version)
+
+    def list_datasets(self, limit: int = 50) -> list[DatasetSummary]:
+        """Every dataset with its newest ready version, freshest first — what a client picks from."""
+        sql = """
+            SELECT DISTINCT ON (d.dataset_id) d.dataset_id, d.name, d.source_type::text AS source_type,
+                   dv.dataset_version_id, dv.version_no, dv.status::text AS status, dv.source_hash,
+                   dv.parser_version, dv.created_at, dv.ready_at,
+                   (SELECT count(*) FROM document doc WHERE doc.dataset_version_id = dv.dataset_version_id) AS documents,
+                   (SELECT count(*) FROM fact f WHERE f.dataset_version_id = dv.dataset_version_id) AS facts,
+                   (SELECT count(*) FROM validation_finding vf
+                     WHERE vf.dataset_version_id = dv.dataset_version_id) AS findings
+            FROM dataset d JOIN dataset_version dv USING (dataset_id)
+            WHERE dv.status = 'ready'
+            ORDER BY d.dataset_id, dv.version_no DESC
+        """
+        with self.engine.connect() as c:
+            rows = c.execute(text(sql)).mappings().all()
+        newest = sorted(rows, key=lambda r: (r["ready_at"] or r["created_at"]), reverse=True)[:limit]
+        return [DatasetSummary.model_validate(dict(r)) for r in newest]
+
+    def list_runs(self, *, session_id: Optional[str] = None, dataset_version_id: Optional[UUID] = None,
+                  limit: int = 20) -> list[RunSummary]:
+        """Past answers, newest first: one session's history, or the whole log."""
+        sql = """SELECT run_id, dataset_version_id, question, status::text AS status,
+                        evidence_status::text AS evidence_status, session_id, created_at, completed_at, latency_ms
+                 FROM answer_run
+                 WHERE (CAST(:session AS text) IS NULL OR session_id = CAST(:session AS text))
+                   AND (CAST(:version AS uuid) IS NULL OR dataset_version_id = CAST(:version AS uuid))
+                 ORDER BY created_at DESC LIMIT :limit"""
+        with self.engine.connect() as c:
+            rows = c.execute(text(sql), {"session": session_id,
+                                         "version": str(dataset_version_id) if dataset_version_id else None,
+                                         "limit": limit}).mappings().all()
+        return [RunSummary.model_validate(dict(r)) for r in rows]
 
     def profile(self, dataset_version_id: UUID) -> DatasetProfile:
         v = str(dataset_version_id)

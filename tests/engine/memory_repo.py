@@ -7,6 +7,7 @@ need PostgreSQL. The PostgreSQL repository itself is tested in test_repository_p
 from __future__ import annotations
 
 import re
+from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
@@ -43,6 +44,20 @@ class MemoryEvidenceRepository:
     def _check(self, v: UUID) -> None:
         if v != self.data.dataset_version_id:
             raise LookupError(f"unknown dataset version {v}")
+
+    def list_datasets(self, limit: int = 50):
+        from contracts.models import DatasetSummary
+
+        return [DatasetSummary(dataset_id=self.data.dataset_id, dataset_version_id=self.data.dataset_version_id,
+                               name="fixture", version_no=1, status=DatasetStatus.ready, source_type="file",
+                               source_hash=self.data.source_hash, parser_version="fixture-seed",
+                               created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+                               ready_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+                               documents=len(self.data.docs), facts=len(self.data.facts),
+                               findings=len(self.data.findings))][:limit]
+
+    def list_runs(self, *, session_id=None, dataset_version_id=None, limit: int = 20):
+        return []                      # the memory repository keeps no audit trail
 
     def profile(self, dataset_version_id: UUID) -> DatasetProfile:
         self._check(dataset_version_id)

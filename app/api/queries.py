@@ -10,7 +10,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 
 from app.settings import settings
-from contracts.models import AnswerRequest, AnswerResponse, DatasetProfile, ValidationFinding
+from contracts.models import (
+    AnswerRequest, AnswerResponse, DatasetProfile, DatasetSummary, RunSummary, ValidationFinding,
+)
 
 router = APIRouter(prefix="/v1", tags=["research"])
 
@@ -89,6 +91,19 @@ async def stream_query(request: AnswerRequest, dataset: str = Query("latest", de
 
     return StreamingResponse(released(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+@router.get("/datasets", response_model=list[DatasetSummary])
+def list_datasets(limit: int = Query(50, ge=1, le=200), repo=Depends(get_repo)) -> list[DatasetSummary]:
+    """Every dataset with its newest ready version, freshest first: for a picker or a freshness line."""
+    return repo.list_datasets(limit=limit)
+
+
+@router.get("/runs", response_model=list[RunSummary])
+def list_runs(session_id: Optional[str] = Query(None, description="Only this conversation's runs"),
+              limit: int = Query(20, ge=1, le=100), repo=Depends(get_repo)) -> list[RunSummary]:
+    """Past answers, newest first. Fetch a run by id for its body and steps."""
+    return repo.list_runs(session_id=session_id, limit=limit)
 
 
 @router.get("/runs/{run_id}")
